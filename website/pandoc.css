@@ -148,6 +148,10 @@ pre {
   word-wrap: break-word;
 }
 
+pre.sourceCode {
+  line-height: 1.4;
+}
+
 b,
 strong {
   font-weight: bold;
