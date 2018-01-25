@@ -1,0 +1,124 @@
+<!doctype html>
+<html$if(lang)$ lang="$lang$"$endif$$if(dir)$ dir="$dir$"$endif$>
+    <head>
+        <meta charset="utf-8">
+        <meta name="generator" content="pandoc">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        $if(description)$
+        <meta name="description" content="$description$">
+        $endif$
+        $for(author-meta)$
+        <meta name="author" content="$author-meta$">
+        $endfor$
+        $if(date-meta)$
+        <meta name="dcterms.date" content="$date-meta$">
+        $endif$
+        <title>$if(title-prefix)$$title-prefix$ - $endif$$pagetitle$</title>
+
+        <!-- Extra styles -->
+        <style>
+         body{margin:1em 0 0}.pure-g{padding:0 1em}nav{margin:0 0 1em;padding:0 0 1em;border-bottom:1px solid #ccc}footer{margin:5em 0 1em}pre{white-space:pre-wrap;margin-left:3em}code{font-size:89%;color:#191919}.author{margin-bottom:0;padding-bottom:0}.headnote,.published,.license{font-size:89%;margin-bottom:.75em}@media screen and (max-width:35.5em){thead{display:none}tr,th,td{display:block}td{border-top:0}tr td:first-child{border-top:1px solid #ddd;font-weight:700}}
+        </style>
+
+        $if(quotes)$
+        <style>q {quotes: "“" "”" "‘" "’";}</style>
+        $endif$
+        $if(highlighting-css)$
+        <style>
+         $highlighting-css$
+        </style>
+        $endif$
+        $for(css)$
+        <link rel="stylesheet" href="$css$">
+        $endfor$
+        $if(math)$
+        $math$
+        $endif$
+        $for(header-includes)$
+        $header-includes$
+        $endfor$
+
+        <link rel="stylesheet" href="/pandoc.css">
+    </head>
+    <body>
+        <header>
+            <ul class="nav">
+                <a href="/" class="selected">Home</a>
+                <a href="/project1/index.html">Project 1</a>
+                <a href="/project2/index.html">Project 2</a>
+                <a href="#">Placeholder</a>
+            </ul>
+        </header>
+        <section class="page-content">
+            <!-- page content begins here -->
+
+            $for(include-before)$
+            $include-before$
+            $endfor$
+            $if(headnote)$
+            <div class="headnote">$headnote$</div>
+            $endif$
+            $if(published)$
+            <div class="published">$published$</div>
+            $endif$
+            $if(license)$
+            <div class="license">$license$</div>$endif$
+            $if(title)$
+            <header>
+                <h1 class="title">$title$</h1>
+                $if(subtitle)$
+                <h1 class="subtitle">$subtitle$</h1>
+                $endif$
+                $if(author)$
+                $for(author)$
+                $if(author.name)$
+                <h2 class="author">$author.name$</h2>
+                $else$
+                <h2 class="author">$author$</h2>
+                $endif$
+                $if(author.affiliation)$
+                <div class="affiliation">$author.affiliation$</div>
+                $endif$
+                $if(author.email)$
+                <div class="email"><a href="mailto:$author.email$">$author.email$</a></div>
+                $endif$
+                $endfor$
+                $endif$
+                $if(version)$
+                <h3 class="version">Version $version$</h3>
+                $endif$
+                $if(date)$
+                <h3 class="date">$date$</h3>
+                $endif$
+            </header>
+            $endif$
+            $if(abstract)$
+            <div class="abstract">
+                <h3>Abstract</h3>
+                $abstract$
+            </div>
+            $endif$
+            $if(toc)$
+            <nav id="$idprefix$TOC">
+                $toc$
+            </nav>
+            $endif$
+            $body$
+            $for(include-after)$
+            $include-after$
+            $endfor$
+
+            <!-- page content ends here -->
+
+        </section> <!-- page-content -->
+
+        <footer>
+          <h4>Project by</h4>
+
+          <a href="mailto:jakerunzer@gmail.com">Jake Runzer</a>
+          and
+          <a href="#">Zev Isert</a>
+        </footer>
+
+    </body>
+</html>
