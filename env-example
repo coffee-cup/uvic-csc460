@@ -1,0 +1,2 @@
+export ARDMK_DIR=/Users/susie/dev/arduino/arduino-mk
+export AVR_TOOLS_DIR=/usr/local
