@@ -23,6 +23,7 @@ Arm init_Arm(int pinX, int pinY) {
 
   servoX.attach(pinX);
   servoY.attach(pinY);
+
   return arm;
 }
 
@@ -52,8 +53,9 @@ void tick(Arm *arm) {
     if (arm->speedX < 0) {
       v = -1;
     }
+
     arm->posX = constrain(arm->posX + v, S_MIN, S_MAX);
-    arm->servoX.write(arm->posX);
+    setServoPos(arm->servoX, arm->posX);
     arm->lastRunX = now;
   }
 
@@ -65,7 +67,7 @@ void tick(Arm *arm) {
       v = -1;
     }
     arm->posY = constrain(arm->posY + v, S_MIN, S_MAX);
-    arm->servoY.write(arm->posY);
+    setServoPos(arm->servoY, arm->posY);
     arm->lastRunY = now;
   }
 }
