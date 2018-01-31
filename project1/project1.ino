@@ -11,6 +11,8 @@ const int servoPinX = 8;
 const int servoPinY = 7;
 int pos = 0;
 
+int laserPin = 53;
+
 void clearScreen();
 void updateArm();
 
@@ -27,12 +29,12 @@ String strings[LCDKeypad::LCD_BUTTONS::COUNT_BUTTONS] = {
 void setup() {
   Serial.begin(9600);
   arm = init_Arm(servoPinX, servoPinY);
-  stick = init_Joy(A0, A1, 20, -70, 70);
 
   pad = LCDKeypad();
   pad.clear();
 
-  setSpeedX(&arm, 10);
+  stick = init_Joy(A0, A1, 3, -30, 30);
+  pinMode(laserPin, OUTPUT);
 }
 
 void loop() {
@@ -56,8 +58,14 @@ void updateArm() {
   int xVal = getX(stick);
   setSpeedX(&arm, xVal);
 
-  int yVal = getY(stick);
+  int yVal = getY(stick) * -1;
   setSpeedY(&arm, yVal);
+
+  if (getClick(stick)) {
+    digitalWrite(laserPin, HIGH);
+  } else {
+    digitalWrite(laserPin, LOW);
+  }
 
   /* Serial.print(xVal); */
   /* Serial.print(" "); */

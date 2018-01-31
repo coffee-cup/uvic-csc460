@@ -214,3 +214,4 @@ $RECYCLE.BIN/
 
 .env
 build-mega-atmega2560
+.python-version

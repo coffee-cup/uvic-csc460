@@ -2,8 +2,8 @@
 #include "joystick.h"
 
 Joy init_Joy(int pinX, int pinY, int pinClick, int boundMin, int boundMax) {
-  Joy stick = (Joy){ pinX, pinY, pinClick, boundMin, boundMax };
-  pinMode(pinClick, INPUT);
+  Joy stick = (Joy){ pinX, pinY, pinClick, boundMin, boundMax, 0 };
+  pinMode(pinClick, INPUT_PULLUP);
   return stick;
 }
 
@@ -12,7 +12,7 @@ int normalize(Joy stick, int v) {
   v = constrain(v, stick.boundMin, stick.boundMax);
 
   // deadband
-  if (abs(v) <= 10) {
+  if (abs(v) <= 5) {
     v = 0;
   }
   return v;
@@ -29,6 +29,5 @@ int getY(Joy stick) {
 }
 
 int getClick(Joy stick) {
-  int value = digitalRead(stick.pinClick);
-  return value;
+  return !digitalRead(stick.pinClick);
 }

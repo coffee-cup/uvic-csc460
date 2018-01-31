@@ -6,7 +6,7 @@
 
 #define S_MIN 1
 #define S_MAX 179
-#define S_MAX_SPEED 70 // deg / sec
+#define S_MAX_SPEED 30 // deg / sec
 
 typedef struct {
   int pinX;
