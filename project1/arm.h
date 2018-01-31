@@ -9,16 +9,16 @@
 #define S_MAX_SPEED 30 // deg / sec
 
 typedef struct {
-  int pinX;
-  int pinY;
-  int posX;
-  int posY;
-  int speedX;
-  int speedY;
-  unsigned long lastRunX;
-  unsigned long lastRunY;
-  Servo servoX;
-  Servo servoY;
+    int pinX;
+    int pinY;
+    int posX;
+    int posY;
+    int speedX;
+    int speedY;
+    unsigned long lastRunX;
+    unsigned long lastRunY;
+    Servo servoX;
+    Servo servoY;
 } Arm;
 
 Arm init_Arm(int pinX, int pinY);

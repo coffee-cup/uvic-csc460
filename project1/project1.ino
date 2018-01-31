@@ -27,11 +27,11 @@ String strings[LCDKeypad::LCD_BUTTONS::COUNT_BUTTONS] = {
 };
 
 void setup() {
-  Serial.begin(9600);
-  arm = init_Arm(servoPinX, servoPinY);
+    Serial.begin(9600);
+    arm = init_Arm(servoPinX, servoPinY);
 
-  pad = LCDKeypad();
-  pad.clear();
+    pad = LCDKeypad();
+    pad.clear();
 
     byte delta[8] = {
         0b00000,
@@ -45,13 +45,11 @@ void setup() {
 
     pad.getLCD()->createChar(7, delta);
 
-  stick = init_Joy(A0, A1, 3, -30, 30);
-  pinMode(laserPin, OUTPUT);
+    stick = init_Joy(A0, A1, 3, -30, 30);
+    pinMode(laserPin, OUTPUT);
 }
 
 void loop() {
-  /* clearScreen(); */
-
     pad.print(LCDKeypad::LCD_ROW::TOP, "Hello!");
     pad.getLCD()->write(7);
 
@@ -61,43 +59,28 @@ void loop() {
         pad.print(LCDKeypad::LCD_ROW::BOTTOM, strings[pad.getLastButton()]);
     }
 
-  updateArm();
-
-  /* delay(50); */
+    updateArm();
 }
 
 void updateArm() {
-  int xVal = getX(stick);
-  setSpeedX(&arm, xVal);
+    int xVal = getX(stick);
+    setSpeedX(&arm, xVal);
 
-  int yVal = getY(stick) * -1;
-  setSpeedY(&arm, yVal);
+    int yVal = getY(stick) * -1;
+    setSpeedY(&arm, yVal);
 
-  if (getClick(stick)) {
-    digitalWrite(laserPin, HIGH);
-  } else {
-    digitalWrite(laserPin, LOW);
-  }
+    if (getClick(stick)) {
+        digitalWrite(laserPin, HIGH);
+    } else {
+        digitalWrite(laserPin, LOW);
+    }
 
-  /* Serial.print(xVal); */
-  /* Serial.print(" "); */
-  /* Serial.print(arm.speedX); */
-  /* Serial.print(" "); */
-  /* Serial.print(arm.posX); */
-
-  /* Serial.print("\n"); */
-  /* Serial.print(yVal); */
-  /* Serial.print(" "); */
-  /* Serial.print(arm.speedY); */
-  /* Serial.print(" "); */
-  /* Serial.print(arm.posY); */
-
-  tick(&arm);
+    tick(&arm);
 }
 
 void clearScreen() {
-  Serial.write(27);       // ESC command
-  Serial.print("[2J");    // clear screen command
-  Serial.write(27);
-  Serial.print("[H");     // cursor to home command
+    Serial.write(27);       // ESC command
+    Serial.print("[2J");    // clear screen command
+    Serial.write(27);
+    Serial.print("[H");     // cursor to home command
 }
