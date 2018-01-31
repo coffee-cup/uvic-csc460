@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include "joystick.h"
 #include "arm.h"
+#include "LCDKeypad.h"
+#include <LiquidCrystal.h>
 
 Joy stick;
 Arm arm;
@@ -12,16 +14,38 @@ int pos = 0;
 void clearScreen();
 void updateArm();
 
+LCDKeypad pad;
+String strings[LCDKeypad::LCD_BUTTONS::COUNT_BUTTONS] = {
+    "--      ",
+    "RIGHT   ",
+    "UP      ",
+    "DOWN    ",
+    "LEFT    ",
+    "SELECT  ",
+};
+
 void setup() {
   Serial.begin(9600);
   arm = init_Arm(servoPinX, servoPinY);
   stick = init_Joy(A0, A1, 20, -70, 70);
+
+  pad = LCDKeypad();
+  pad.clear();
 
   setSpeedX(&arm, 10);
 }
 
 void loop() {
   /* clearScreen(); */
+
+  pad.print(LCDKeypad::LCD_ROW::TOP, "Hello!");
+
+  // Make sure getLastButton is called first, pollButtons will update it
+  if(pad.getLastButton() != pad.pollButtons()); {
+      // update the display
+      pad.print(LCDKeypad::LCD_ROW::BOTTOM, strings[pad.getLastButton()]);
+  }
+
 
   updateArm();
 
@@ -57,3 +81,4 @@ void clearScreen() {
   Serial.write(27);
   Serial.print("[H");     // cursor to home command
 }
+
