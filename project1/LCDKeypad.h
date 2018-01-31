@@ -22,16 +22,17 @@ class LCDKeypad {
             BUTTON_SELECT,
             COUNT_BUTTONS // Must be last
         };
-    
-    protected: 
+
+    protected:
         LiquidCrystal lcd;
         LCD_BUTTONS lastButton;
-        
-    public: 
+
+    public:
         LCDKeypad();
         void clear(void);
         void clear(LCD_ROW);
         void print(LCD_ROW, String);
         LCD_BUTTONS pollButtons();
         LCD_BUTTONS getLastButton();
+        LiquidCrystal* getLCD();
 };
