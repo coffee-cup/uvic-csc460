@@ -48,7 +48,6 @@ void loop() {
       pad.print(LCDKeypad::LCD_ROW::BOTTOM, strings[pad.getLastButton()]);
   }
 
-
   updateArm();
 
   /* delay(50); */
