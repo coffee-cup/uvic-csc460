@@ -6,8 +6,8 @@ LCDKeypad::LCDKeypad() : lcd(8, 9, 4, 5, 6, 7) {
     lcd.print("Push the buttons");
 }
 
-void LCDKeypad::print(LCD_ROW row, String text) {
-    lcd.setCursor(0, row);
+void LCDKeypad::print(LCD_ROW row, String text, bool resetCursor = true) {
+    if (resetCursor) lcd.setCursor(0, row);
     lcd.print(text);
 }
 

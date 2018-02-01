@@ -30,7 +30,7 @@ public:
     LCDKeypad();
     void clear(void);
     void clear(LCD_ROW);
-    void print(LCD_ROW, String);
+    void print(LCD_ROW, String, bool=true);
     LCD_BUTTONS pollButtons();
     LCD_BUTTONS getLastButton();
     LiquidCrystal* getLCD();
