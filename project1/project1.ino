@@ -2,6 +2,7 @@
 #include "arm.h"
 #include "LCDKeypad.h"
 #include <LiquidCrystal.h>
+#include "Scheduler.h"
 
 #define DELTA_CHAR "\x07"
 
@@ -15,6 +16,7 @@ typedef struct {
     const unsigned int joy2Y;
     const unsigned int joy2SW;
     const unsigned int laser;
+    const unsigned int idle;
 } PinDefs;
 
 PinDefs pin = {
@@ -26,7 +28,8 @@ PinDefs pin = {
     .joy2X  = A3,
     .joy2Y  = A4,
     .joy2SW = 31,
-    .laser  = 40
+    .laser  = 40,
+    .idle   = 50
 };
 
 String button_names[LCDKeypad::LCD_BUTTONS::COUNT_BUTTONS] = {
@@ -65,21 +68,32 @@ void setup() {
         0b11111
     };
     pad.getLCD()->createChar(7, delta);
+
+    Scheduler_Init();
+    Scheduler_StartTask(0, 10, updateArm);
+
+}
+
+// idle task
+void idle(uint32_t idle_period)
+{
+	// this function can perform some low-priority task while the scheduler has nothing to run.
+	// It should return before the idle period (measured in ms) has expired.  For example, it
+	// could sleep or respond to I/O.
+
+	// example idle function that just pulses a pin.
+	digitalWrite(pin.idle, HIGH);
+	delay(idle_period);
+	digitalWrite(pin.idle, LOW);
 }
 
 void loop() {
 
-    /// Weee printf
-    sprintf(row_buf, DELTA_CHAR"X:%3d | "DELTA_CHAR"Y:%3d", arm.speedX, arm.speedY);
-    pad.print(LCDKeypad::LCD_ROW::TOP, row_buf);
-
-    // Make sure getLastButton is called first, pollButtons will update it
-    if(pad.getLastButton() != pad.pollButtons()); {
-        // update the display
-        pad.print(LCDKeypad::LCD_ROW::BOTTOM, button_names[pad.getLastButton()]);
-    }
-
-    updateArm();
+    uint32_t idle_period = Scheduler_Dispatch();
+	if (idle_period)
+	{
+		idle(idle_period);
+	}
 }
 
 void updateArm() {
