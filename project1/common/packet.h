@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-typedef struct {
+typedef __attribute__((__packed__)) struct {
     uint8_t speedX;
     uint8_t speedY;
     uint8_t laserOn;
