@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-Packet create_packet(uint16_t speedX, uint16_t speedY, uint16_t laserOn) {
+Packet create_packet(uint16_t speedX, uint16_t speedY, uint8_t laserOn) {
     Packet p = {
         .speedX = speedX,
         .speedY = speedY,
