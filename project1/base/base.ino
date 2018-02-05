@@ -1,9 +1,11 @@
 #include <Servo.h>
 #include <LiquidCrystal.h>
+/* #include <Serial.h> */
 #include "../common/joystick.h"
 #include "../common/arm.h"
 #include "../common/LCDKeypad.h"
 #include "../common/Scheduler.h"
+#include "../common/packet.h"
 
 #define DELTA_CHAR "\x07"
 
@@ -50,6 +52,8 @@ char row_buf[16];
 void updateArm();
 
 void setup() {
+    Serial.begin(9600);
+    Serial2.begin(9600);
     arm = init_Arm(pin.servoX, pin.servoY);
     stick = init_Joy(pin.joy1X, pin.joy1Y, pin.joy1SW, -30, 30);
     pinMode(pin.laser, OUTPUT);
@@ -78,23 +82,28 @@ void setup() {
 // idle task
 void idle(uint32_t idle_period)
 {
-	// this function can perform some low-priority task while the scheduler has nothing to run.
-	// It should return before the idle period (measured in ms) has expired.  For example, it
-	// could sleep or respond to I/O.
+    // this function can perform some low-priority task while the scheduler has nothing to run.
+    // It should return before the idle period (measured in ms) has expired.  For example, it
+    // could sleep or respond to I/O.
 
-	// example idle function that just pulses a pin.
-	digitalWrite(pin.idle, HIGH);
-	delay(idle_period);
-	digitalWrite(pin.idle, LOW);
+    // example idle function that just pulses a pin.
+    digitalWrite(pin.idle, HIGH);
+    delay(idle_period);
+    digitalWrite(pin.idle, LOW);
 }
 
 void loop() {
-
-    uint32_t idle_period = Scheduler_Dispatch();
-	if (idle_period)
-	{
-		idle(idle_period);
-	}
+    if (Serial2.available()) {
+        Serial.print(Serial2.read());
+    }
+    if (Serial.available()) {
+        Serial2.write(Serial.read());
+    }
+    /* uint32_t idle_period = Scheduler_Dispatch(); */
+    /* if (idle_period) */
+    /* { */
+    /* idle(idle_period); */
+    /* } */
 }
 
 void updateArm() {
