@@ -1,4 +1,4 @@
 export ARDMK_DIR=/usr/local/arduino/arduino-mk
 export AVR_TOOLS_DIR=/usr/local
-export ARDUINO_PORT=/dev/tty.usbmodem1411
-
+export BASE_PORT=/dev/tty.usbmodem1411
+export REMOTE_PORT=/dev/tty.usbmodem1411
