@@ -4,11 +4,11 @@
 #include <stdint.h>
 
 typedef __attribute__((__packed__)) struct {
-    uint8_t speedX;
-    uint8_t speedY;
+    uint16_t speedX;
+    uint16_t speedY;
     uint8_t laserOn;
 } Packet;
 
-Packet create_packet(uint8_t speedX, uint8_t speedY, uint8_t laserOn);
+Packet create_packet(uint16_t speedX, uint16_t speedY, uint8_t laserOn);
 
 #endif
