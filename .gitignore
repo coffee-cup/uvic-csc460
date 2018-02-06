@@ -216,3 +216,6 @@ $RECYCLE.BIN/
 build-mega-atmega2560
 .python-version
 website/build/
+
+project1/base/build-mega-atmega2560/
+project1/remote/build-mega-atmega2560/

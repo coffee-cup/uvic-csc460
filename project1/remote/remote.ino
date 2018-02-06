@@ -1,78 +1,41 @@
-#include <Servo.h>
-#include <LiquidCrystal.h>
-#include "../common/joystick.h"
-#include "../common/arm.h"
-#include "../common/LCDKeypad.h"
-#include "../common/Scheduler.h"
 
-#define DELTA_CHAR "\x07"
+#include <stdint.h>
+#include <Servo.h>
+#include "../common/arm.h"
+#include "../common/Scheduler.h"
+#include "../common/packet.h"
 
 typedef struct {
-    const unsigned int servoX;
-    const unsigned int servoY;
-    const unsigned int joy1X;
-    const unsigned int joy1Y;
-    const unsigned int joy1SW;
-    const unsigned int joy2X;
-    const unsigned int joy2Y;
-    const unsigned int joy2SW;
-    const unsigned int laser;
-    const unsigned int idle;
+    const uint8_t servoX;
+    const uint8_t servoY;
+    const uint8_t laser;
+    const uint8_t idle;
 } PinDefs;
 
 PinDefs pin = {
     .servoX = 11,
     .servoY = 12,
-    .joy1X  = A1,
-    .joy1Y  = A2,
-    .joy1SW = 30,
-    .joy2X  = A3,
-    .joy2Y  = A4,
-    .joy2SW = 31,
     .laser  = 40,
     .idle   = 50
 };
 
-String button_names[LCDKeypad::LCD_BUTTONS::COUNT_BUTTONS] = {
-    "--      ",
-    "RIGHT   ",
-    "UP      ",
-    "DOWN    ",
-    "LEFT    ",
-    "SELECT  ",
-};
-
-Joy stick;
 Arm arm;
-LCDKeypad pad;
-char row_buf[16];
+Packet p;
 
+void getData();
 void updateArm();
 
 void setup() {
     arm = init_Arm(pin.servoX, pin.servoY);
-    stick = init_Joy(pin.joy1X, pin.joy1Y, pin.joy1SW, -30, 30);
+
     pinMode(pin.laser, OUTPUT);
 
-    pad = LCDKeypad();
-    pad.clear();
-
-    // Define a delta character in the LCD's custom character
-    // memory in position number 7 (of 7 [0-7])
-    byte delta[8] = {
-        0b00000,
-        0b00100,
-        0b00100,
-        0b01010,
-        0b01010,
-        0b10001,
-        0b11111
-    };
-    pad.getLCD()->createChar(7, delta);
-
     Scheduler_Init();
-    Scheduler_StartTask(0, 10, updateArm);
+    Scheduler_StartTask(0, 50, updateArm);
+    Scheduler_StartTask(15, 10, getData);
 
+    Serial.begin(38400);
+    Serial2.begin(9600);
 }
 
 // idle task
@@ -89,7 +52,6 @@ void idle(uint32_t idle_period)
 }
 
 void loop() {
-
     uint32_t idle_period = Scheduler_Dispatch();
 	if (idle_period)
 	{
@@ -97,14 +59,40 @@ void loop() {
 	}
 }
 
+void getData() {
+    if (5 <= Serial2.available()){
+        uint8_t buffer[5];
+
+        if (Serial2.readBytes(buffer, 5)){
+            p = create_packet(buffer);
+
+            Serial.print("-- SpeedX: ");
+            Serial.print(p.speedX, DEC);
+
+            Serial.print(" SpeedY: ");
+            Serial.print(p.speedY, DEC);
+            Serial.print("\n\r");
+        }
+    }
+}
+
+int16_t filterSpeed(int16_t v) {
+    v = map(v, 20, 1010, -1 * S_MAX_SPEED, S_MAX_SPEED);
+    v = constrain(v, -1 * S_MAX_SPEED, S_MAX_SPEED);
+
+    // deadband
+    if (abs(v) <= 5) {
+        v = 0;
+    }
+    return v;
+}
+
 void updateArm() {
-    int x_val = getX(stick);
-    setSpeedX(&arm, x_val);
 
-    int y_val = getY(stick) * -1;
-    setSpeedY(&arm, y_val);
+    setSpeedX(&arm, filterSpeed(p.speedX));
+    setSpeedY(&arm, filterSpeed(p.speedY));
 
-    digitalWrite(pin.laser, getClick(stick) ? HIGH : LOW);
+    digitalWrite(pin.laser, p.laserOn ? HIGH : LOW);
 
     tick(&arm);
 }
