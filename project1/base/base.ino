@@ -115,7 +115,7 @@ void updateLcd() {
     sprintf(row_buf, DELTA_CHAR"X:%4d "DELTA_CHAR"Y:%4d", packet.speedX, packet.speedY);
     pad.print(LCDKeypad::LCD_ROW::TOP, row_buf);
 
-    pad.print(LCDKeypad::LCD_ROW::BOTTOM, lightOn ? "ON" : "OFF");
+    pad.print(LCDKeypad::LCD_ROW::BOTTOM, lightOn ? "ON " : "OFF");
 }
 
 void readLightSensor() {
