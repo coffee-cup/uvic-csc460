@@ -1,12 +1,11 @@
-#include <Servo.h>
 #include <LiquidCrystal.h>
-/* #include <Serial.h> */
+#include <stdint.h>
+
 #include "../common/joystick.h"
 #include "../common/arm.h"
 #include "../common/LCDKeypad.h"
 #include "../common/Scheduler.h"
 #include "../common/packet.h"
-#include <stdint.h>
 
 #define DELTA_CHAR "\x07"
 
@@ -87,8 +86,7 @@ void setup() {
 }
 
 // idle task
-void idle(uint32_t idle_period)
-{
+void idle(uint32_t idle_period) {
     // this function can perform some low-priority task while the scheduler has nothing to run.
     // It should return before the idle period (measured in ms) has expired.  For example, it
     // could sleep or respond to I/O.
