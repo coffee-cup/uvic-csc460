@@ -6,33 +6,37 @@
 #include "../common/LCDKeypad.h"
 #include "../common/Scheduler.h"
 #include "../common/packet.h"
+#include <stdint.h>
 
 #define DELTA_CHAR "\x07"
 
 typedef struct {
-    const unsigned int servoX;
-    const unsigned int servoY;
     const unsigned int joy1X;
     const unsigned int joy1Y;
     const unsigned int joy1SW;
     const unsigned int joy2X;
     const unsigned int joy2Y;
     const unsigned int joy2SW;
-    const unsigned int laser;
+    const unsigned int lightSensor;
     const unsigned int idle;
 } PinDefs;
 
 PinDefs pin = {
-    .servoX = 11,
-    .servoY = 12,
     .joy1X  = A1,
     .joy1Y  = A2,
     .joy1SW = 30,
     .joy2X  = A3,
     .joy2Y  = A4,
     .joy2SW = 31,
-    .laser  = 40,
+    .lightSensor = 32,
     .idle   = 50
+};
+
+int lightOn = 0;
+Packet packet = {
+    .speedX = 0,
+    .speedY = 0,
+    .laserOn = 0
 };
 
 String button_names[LCDKeypad::LCD_BUTTONS::COUNT_BUTTONS] = {
@@ -50,13 +54,14 @@ LCDKeypad pad;
 char row_buf[16];
 
 void updateArm();
+void readLightSensor();
+void sendPacket();
+void updateLcd();
 
 void setup() {
-    Serial.begin(9600);
     Serial2.begin(9600);
-    arm = init_Arm(pin.servoX, pin.servoY);
-    stick = init_Joy(pin.joy1X, pin.joy1Y, pin.joy1SW, -30, 30);
-    pinMode(pin.laser, OUTPUT);
+    Serial.begin(9600);
+    stick = init_Joy(pin.joy1X, pin.joy1Y, pin.joy1SW);
 
     pad = LCDKeypad();
     pad.clear();
@@ -75,8 +80,10 @@ void setup() {
     pad.getLCD()->createChar(7, delta);
 
     Scheduler_Init();
-    Scheduler_StartTask(0, 10, updateArm);
-
+    Scheduler_StartTask(0, 50, updateArm);
+    Scheduler_StartTask(3, 20, readLightSensor);
+    Scheduler_StartTask(5, 150, sendPacket);
+    Scheduler_StartTask(7, 1000, updateLcd);
 }
 
 // idle task
@@ -93,27 +100,39 @@ void idle(uint32_t idle_period)
 }
 
 void loop() {
-    if (Serial2.available()) {
-        Serial.print(Serial2.read());
+    uint32_t idle_period = Scheduler_Dispatch();
+    if (idle_period) {
+        idle(idle_period);
     }
-    if (Serial.available()) {
-        Serial2.write(Serial.read());
+}
+
+void sendPacket() {
+    if (Serial2.availableForWrite()) {
+        Serial2.write((byte*)&packet, sizeof(packet));
     }
-    /* uint32_t idle_period = Scheduler_Dispatch(); */
-    /* if (idle_period) */
-    /* { */
-    /* idle(idle_period); */
-    /* } */
+}
+
+void updateLcd() {
+    char row_buf[256];
+    sprintf(row_buf, DELTA_CHAR"X:%4d "DELTA_CHAR"Y:%4d", packet.speedX, packet.speedY);
+    pad.print(LCDKeypad::LCD_ROW::TOP, row_buf);
+
+    pad.print(LCDKeypad::LCD_ROW::BOTTOM, lightOn ? "ON" : "OFF");
+}
+
+void readLightSensor() {
+    lightOn = digitalRead(pin.lightSensor);
 }
 
 void updateArm() {
     int x_val = getX(stick);
-    setSpeedX(&arm, x_val);
+    packet.speedX = (uint16_t)x_val;
 
-    int y_val = getY(stick) * -1;
-    setSpeedY(&arm, y_val);
+    int y_val = getY(stick);
+    packet.speedY = (uint16_t)y_val;
 
-    digitalWrite(pin.laser, getClick(stick) ? HIGH : LOW);
+    int z_val = getClick(stick);
+    packet.laserOn = (uint8_t)z_val;
 
     tick(&arm);
 }

@@ -1,18 +1,18 @@
 #include <Arduino.h>
 #include "joystick.h"
 
-Joy init_Joy(int pinX, int pinY, int pinClick, int boundMin, int boundMax) {
-    Joy stick = (Joy){ pinX, pinY, pinClick, boundMin, boundMax, 0 };
+Joy init_Joy(int pinX, int pinY, int pinClick) {
+    Joy stick = (Joy){ pinX, pinY, pinClick, 0 };
     pinMode(pinClick, INPUT_PULLUP);
     return stick;
 }
 
 int normalize(Joy stick, int v) {
-    v = map(v, 20, 1010, stick.boundMin, stick.boundMax);
-    v = constrain(v, stick.boundMin, stick.boundMax);
+    v = map(v, 20, 1010, 0, 1023);
+    v = constrain(v, 0, 1023);
 
     // deadband
-    if (abs(v) <= 5) {
+    if (abs(v) <= 20) {
         v = 0;
     }
     return v;

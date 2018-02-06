@@ -7,12 +7,10 @@ typedef struct {
     int pinX;
     int pinY;
     int pinClick;
-    int boundMin;
-    int boundMax;
     int clicked;
 } Joy;
 
-Joy init_Joy(int pinX, int pinY, int pinClick, int boundMin, int boundMax);
+Joy init_Joy(int pinX, int pinY, int pinClick);
 
 int getX(Joy stick);
 int getY(Joy stick);
