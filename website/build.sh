@@ -34,7 +34,7 @@ do
     done
 
     # Run pandoc on tmp file to generate html
-    pandoc $OPTS $TMP -o "$POUT/index.html"
+    pandoc $OPTS --toc $TMP -o "$POUT/index.html"
 done
 
 # Copy css to build dir
