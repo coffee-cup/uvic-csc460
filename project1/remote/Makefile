@@ -1,5 +1,4 @@
-USER_LIB_PATH=/Users/susie/dev/university/csc460/uvic-csc460/project1/common
-LOCAL_CPP_SRCS=$(wildcard $(realpath ../common)/*.cpp)
+USER_LIB_PATH=$(realpath ../common)
 
 BOARD_TAG    = mega
 BOARD_SUB    = atmega2560

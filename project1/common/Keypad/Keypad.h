@@ -1,10 +1,10 @@
-#ifndef LCDKEYPAD_H
-#define LCDKEYPAD_H
+#ifndef KEYPAD_H
+#define KEYPAD_H
 
 #include <Arduino.h>
 #include <LiquidCrystal.h>
 
-class LCDKeypad {
+class Keypad {
 
 public:
     enum LCD_ROW {
@@ -27,13 +27,12 @@ protected:
     LCD_BUTTONS lastButton;
 
 public:
-    LCDKeypad();
+    Keypad();
     void clear(void);
     void clear(LCD_ROW);
     void print(LCD_ROW, String, bool=true);
     LCD_BUTTONS pollButtons();
     LCD_BUTTONS getLastButton();
-    LiquidCrystal* getLCD();
 };
 
 #endif

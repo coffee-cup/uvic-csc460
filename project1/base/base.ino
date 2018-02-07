@@ -1,13 +1,19 @@
+// Required
 #include <LiquidCrystal.h>
+#include <Servo.h>
+// Compiler always tries to compile Keypad.cpp/Arm.cpp since it's in the LOCAL_CPP_SRCS env
+
 #include <stdint.h>
 
-#include "../common/joystick.h"
-#include "../common/arm.h"
-#include "../common/LCDKeypad.h"
-#include "../common/Scheduler.h"
-#include "../common/packet.h"
+#include "Joystick.h"
+#include "Arm.h"
+#include "Keypad.h"
+#include "Scheduler.h"
+#include "Packet.h"
 
 #define DELTA_CHAR "\x07"
+#define YBAR_CHAR  "\x06"
+#define XBAR_CHAR  "\x05"
 
 typedef struct {
     const unsigned int joy1X;
@@ -38,21 +44,10 @@ Packet packet = {
     .laserOn = 0
 };
 
-String button_names[LCDKeypad::LCD_BUTTONS::COUNT_BUTTONS] = {
-    "--      ",
-    "RIGHT   ",
-    "UP      ",
-    "DOWN    ",
-    "LEFT    ",
-    "SELECT  ",
-};
+Joystick  joystick(pin.joy1X, pin.joy1Y, pin.joy1SW);
+Keypad pad;
 
-Joy stick;
-Arm arm;
-LCDKeypad pad;
-char row_buf[16];
-
-void updateArm();
+void updatePacket();
 void readLightSensor();
 void sendPacket();
 void updateLcd();
@@ -60,29 +55,12 @@ void updateLcd();
 void setup() {
     Serial2.begin(9600);
     Serial.begin(9600);
-    stick = init_Joy(pin.joy1X, pin.joy1Y, pin.joy1SW);
-
-    pad = LCDKeypad();
-    pad.clear();
-
-    // Define a delta character in the LCD's custom character
-    // memory in position number 7 (of 7 [0-7])
-    byte delta[8] = {
-        0b00000,
-        0b00100,
-        0b00100,
-        0b01010,
-        0b01010,
-        0b10001,
-        0b11111
-    };
-    pad.getLCD()->createChar(7, delta);
 
     Scheduler_Init();
-    Scheduler_StartTask(0, 50, updateArm);
-    Scheduler_StartTask(3, 20, readLightSensor);
-    Scheduler_StartTask(5, 150, sendPacket);
-    Scheduler_StartTask(7, 1000, updateLcd);
+    Scheduler_StartTask(0, 50, updatePacket);
+    // Scheduler_StartTask(50, 1000, readLightSensor);
+    // Scheduler_StartTask(5, 500, sendPacket);
+    Scheduler_StartTask(7, 20, updateLcd);
 }
 
 // idle task
@@ -104,6 +82,7 @@ void loop() {
     }
 }
 
+
 void sendPacket() {
     if (Serial2.availableForWrite()) {
         Serial2.write((byte*)&packet, sizeof(packet));
@@ -111,26 +90,18 @@ void sendPacket() {
 }
 
 void updateLcd() {
-    char row_buf[256];
-    sprintf(row_buf, DELTA_CHAR"X:%4d "DELTA_CHAR"Y:%4d", packet.speedX, packet.speedY);
-    pad.print(LCDKeypad::LCD_ROW::TOP, row_buf);
-
-    pad.print(LCDKeypad::LCD_ROW::BOTTOM, lightOn ? "ON " : "OFF");
+    char row_buf[16];
+    sprintf(row_buf, " " XBAR_CHAR ":%4d  " YBAR_CHAR ":%4d", joystick.rawX, joystick.rawY);
+    pad.print(Keypad::LCD_ROW::TOP, row_buf);
+    pad.print(Keypad::LCD_ROW::BOTTOM, joystick.rawSW ? "ON " : "OFF");
 }
 
 void readLightSensor() {
     lightOn = digitalRead(pin.lightSensor);
 }
 
-void updateArm() {
-    int x_val = getX(stick);
-    packet.speedX = (uint16_t)x_val;
-
-    int y_val = getY(stick);
-    packet.speedY = (uint16_t)y_val;
-
-    int z_val = getClick(stick);
-    packet.laserOn = (uint8_t)z_val;
-
-    tick(&arm);
+void updatePacket() {
+    packet.speedX = joystick.getX();
+    packet.speedY = joystick.getY();
+    packet.laserOn = joystick.getClick();
 }
