@@ -1,12 +1,7 @@
-// Required
-#include <LiquidCrystal.h>
-#include <Servo.h>
-// Compiler always tries to compile Keypad.cpp/Arm.cpp since it's in the LOCAL_CPP_SRCS env
-
 #include <stdint.h>
 
 #include "Joystick.h"
-#include "Arm.h"
+#include <LiquidCrystal.h> // ARDMK doesn't recognize that keypad requires this lib
 #include "Keypad.h"
 #include "Scheduler.h"
 #include "Packet.h"
