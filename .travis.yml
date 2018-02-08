@@ -12,7 +12,6 @@ deploy:
   provider: script
   skip_cleanup: true
   script:
-    - cd website
     - ./deploy.sh
   on:
     branch: website
