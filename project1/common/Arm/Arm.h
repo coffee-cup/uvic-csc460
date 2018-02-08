@@ -33,7 +33,7 @@ class Arm {
 
     void tick();
     void attach(uint8_t pinForX, uint8_t pinForY);
-    int8_t filterSpeed(int16_t value);
+    static int8_t filterSpeed(int16_t value);
 };
 
 #endif
