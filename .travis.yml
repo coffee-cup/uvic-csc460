@@ -3,6 +3,7 @@ pandoc_version: 1.19
 before_install:
   - tlmgr install pagecolor
   - tlmgr install mdframed
+  - tlmgr install needspace
 install:
   - . $HOME/.nvm/nvm.sh
   - nvm install stable
