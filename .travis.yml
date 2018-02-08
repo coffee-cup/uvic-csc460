@@ -4,6 +4,7 @@ install:
   - . $HOME/.nvm/nvm.sh
   - nvm install stable
   - nvm use stable
+  - cd website
   - npm install
 script:
   - cd website
