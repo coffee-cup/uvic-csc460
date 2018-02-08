@@ -379,6 +379,10 @@ table td {
     }
 }
 
+.author {
+    display: none;
+}
+
 .page-content h1:first-of-type {
     margin-top: 1rem;
 }

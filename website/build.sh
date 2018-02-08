@@ -7,6 +7,7 @@ OUTDIR=build
 PROJECTS=("project1")
 
 OPTS="-f markdown -t html5 --template template.html --mathjax"
+OPTS_PDF="-f markdown --template template.tex --listings --toc"
 
 # Create build directory
 mkdir -p $OUTDIR
@@ -33,8 +34,12 @@ do
         (cat "$file"; echo '') >> $TMP
     done
 
+    # Run pandoc on tmp file to generate pdfs
+    pandoc $OPTS_PDF $TMP -o "$POUT/${f}.pdf"
+
     # Run pandoc on tmp file to generate html
     pandoc $OPTS --toc $TMP -o "$POUT/index.html"
+
 done
 
 # Copy css to build dir
