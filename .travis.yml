@@ -1,0 +1,12 @@
+language: r
+pandoc_version: 1.19
+before_install:
+  - cd website
+script:
+  - ./build.sh
+deploy:
+  provider: script
+  skip_cleanup: true
+  script: "website/deploy.sh"
+  on:
+    branch: website
