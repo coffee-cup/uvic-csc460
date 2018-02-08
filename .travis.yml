@@ -7,7 +7,6 @@ install:
   - cd website
   - npm install
 script:
-  - cd website
   - ./build.sh
 deploy:
   provider: script
