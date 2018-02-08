@@ -390,7 +390,8 @@ table td {
     padding-left: 0;
     width: 100%;
     max-width: 26rem;
-    justify-content: space-between;
+    justify-content: space-evenly;
+    list-style: none;
 }
 
 .nav li {

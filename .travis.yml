@@ -1,6 +1,10 @@
 language: r
 pandoc_version: 1.19
-install: true
+install:
+  - . $HOME/.nvm/nvm.sh
+  - nvm install stable
+  - nvm use stable
+  - npm install
 script:
   - cd website
   - ./build.sh
@@ -8,7 +12,6 @@ deploy:
   provider: script
   skip_cleanup: true
   script:
-    - ls
     - cd website
     - ./deploy.sh
   on:

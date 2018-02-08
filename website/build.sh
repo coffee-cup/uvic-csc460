@@ -4,7 +4,7 @@ SRCDIR=src
 OUTDIR=build
 
 # Projects
-PROJECTS=("project1" "project2")
+PROJECTS=("project1")
 
 OPTS="-f markdown -t html5 --template template.html --mathjax"
 
