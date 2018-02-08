@@ -6,6 +6,7 @@ before_install:
   - tlmgr install needspace
   - tlmgr install sourcesanspro
   - tlmgr install titling
+  - tlmgr install ly1
 install:
   - . $HOME/.nvm/nvm.sh
   - nvm install stable
