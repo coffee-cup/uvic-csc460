@@ -5,6 +5,8 @@
 #include "Scheduler.h"
 #include "Packet.h"
 
+#define CLEAR_TERM "\x1B[2J\x1B[H"
+
 typedef struct {
     const uint8_t servoX;
     const uint8_t servoY;
@@ -20,14 +22,16 @@ PinDefs pin = {
 };
 
 Arm arm;
-Packet p = create_packet(504, 517, 0);
+Packet packet(512, 512, 0, 512, 512, 0);
 
 void getData();
 void updateArm();
+void commandRoomba();
 
 void setup() {
     Serial.begin(38400);
     Serial2.begin(9600);
+    Serial3.begin(9600);
 
     arm.attach(pin.servoX, pin.servoY);
 
@@ -36,6 +40,7 @@ void setup() {
 
     Scheduler_Init();
     Scheduler_StartTask(0, 50, updateArm);
+    Scheduler_StartTask(50, 50, commandRoomba);
     Scheduler_StartTask(15, 100, getData);
 }
 
@@ -59,27 +64,62 @@ void loop() {
 }
 
 void getData() {
-    if (5 <= Serial2.available()) {
-        uint8_t buffer[5];
+    if (sizeof(packet.data) <= Serial2.available()) {
+        uint8_t packet_buf[sizeof(packet.data)];
 
-        if (Serial2.readBytes(buffer, 5)) {
-            p = create_packet(buffer);
+        if (Serial2.readBytes(packet_buf, sizeof(packet.data))) {
+            packet = Packet(packet_buf);
+
+            Serial.print(CLEAR_TERM);
+            Serial.print("packet.field.joy1X  : "); Serial.println(packet.field.joy1X);
+            Serial.print("packet.field.joy1Y  : "); Serial.println(packet.field.joy1Y);
+            Serial.print("packet.field.joy1SW : "); Serial.println(packet.field.joy1SW);
+            Serial.print("packet.field.joy2X  : "); Serial.println(packet.field.joy2X);
+            Serial.print("packet.field.joy2Y  : "); Serial.println(packet.field.joy2Y);
+            Serial.print("packet.field.joy2SW : "); Serial.println(packet.field.joy2SW);
+
+            Serial.print("packet.data         : ");
+            for (int i = 0; i < 10; i ++){
+                Serial.print(packet.data[i], HEX);
+                Serial.print(":");
+            }
+            Serial.println(" ");
         }
     }
 }
 
+void commandRoomba() {
+    // Map down to reduce jitter
+    int8_t x = map(packet.field.joy2X, 0, 1023, -5, 5);
+    int8_t y = map(packet.field.joy2Y, 0, 1023, -5, 5);
+
+    char command = 's'; // Stop
+
+    // Threshold for movement
+    if (abs(x) > 2 || abs(y) > 2) {
+
+        // which is biggest?
+        if (abs(x) > abs(y)) {
+            // x is: right or left?
+            command = x > 0 ? 'r' : 'l';
+        } else {
+            // y is: forward or back?
+            command = y > 0 ? 'f' : 'b';
+        }
+    }
+
+    // overwrite any command if we should be docking
+    command = packet.field.joy2SW == HIGH ? 'd' : command;
+
+    Serial3.write(command);
+
+}
+
 void updateArm() {
-    arm.setSpeedX(arm.filterSpeed(p.speedX));
-    arm.setSpeedY(arm.filterSpeed(p.speedY));
+    arm.setSpeedX(Arm::filterSpeed(packet.field.joy1X));
+    arm.setSpeedY(Arm::filterSpeed(packet.field.joy1Y));
 
-    digitalWrite(pin.laser, p.laserOn ? HIGH : LOW);
-
-    Serial.println("---");
-    Serial.print("SpeedX: ");  Serial.println(arm.X.speed, DEC);
-    Serial.print("SpeedY: ");   Serial.println(arm.Y.speed, DEC);
-
-    Serial.print(" : XPOS = "); Serial.println(arm.X.pos);
-    Serial.print(" : YPOS = "); Serial.println(arm.Y.pos);
+    digitalWrite(pin.laser, packet.field.joy1SW ? HIGH : LOW);
 
     arm.tick();
 }
