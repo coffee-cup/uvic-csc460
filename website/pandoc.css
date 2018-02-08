@@ -377,6 +377,10 @@ table td {
         margin-left: -6rem;
         padding-top: 2rem;
     }
+
+    footer {
+        margin-left: -6rem;
+    }
 }
 
 .author {
