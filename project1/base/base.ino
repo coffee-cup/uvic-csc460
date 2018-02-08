@@ -1,24 +1,27 @@
 #include <stdint.h>
 
+#include <Arduino.h>
 #include "Joystick.h"
 #include <LiquidCrystal.h> // ARDMK doesn't recognize that keypad requires this lib
 #include "Keypad.h"
 #include "Scheduler.h"
 #include "Packet.h"
 
-#define DELTA_CHAR "\x07"
-#define YBAR_CHAR  "\x06"
-#define XBAR_CHAR  "\x05"
+#define DELTA_CHAR '\x07'
+#define YBAR_CHAR  '\x06'
+#define XBAR_CHAR  '\x05'
+#define SWON_CHAR  '\x04'
+#define SWOFF_CHAR '\x03'
 
 typedef struct {
-    const unsigned int joy1X;
-    const unsigned int joy1Y;
-    const unsigned int joy1SW;
-    const unsigned int joy2X;
-    const unsigned int joy2Y;
-    const unsigned int joy2SW;
-    const unsigned int lightSensor;
-    const unsigned int idle;
+    const uint8_t joy1X;
+    const uint8_t joy1Y;
+    const uint8_t joy1SW;
+    const uint8_t joy2X;
+    const uint8_t joy2Y;
+    const uint8_t joy2SW;
+    const uint8_t lightSensor;
+    const uint8_t idle;
 } PinDefs;
 
 PinDefs pin = {
@@ -32,30 +35,34 @@ PinDefs pin = {
     .idle   = 50
 };
 
-int lightOn = 0;
 Packet packet = {
     .speedX = 0,
     .speedY = 0,
     .laserOn = 0
 };
 
-Joystick  joystick(pin.joy1X, pin.joy1Y, pin.joy1SW);
+Joystick joystick(pin.joy1X, pin.joy1Y, pin.joy1SW);
 Keypad pad;
+
+uint8_t lightOn = 0;
+char selectedLetter = 'A';
 
 void updatePacket();
 void readLightSensor();
 void sendPacket();
 void updateLcd();
+void updateChar();
 
 void setup() {
     Serial2.begin(9600);
     Serial.begin(9600);
 
     Scheduler_Init();
-    Scheduler_StartTask(0, 50, updatePacket);
-    // Scheduler_StartTask(50, 1000, readLightSensor);
-    // Scheduler_StartTask(5, 500, sendPacket);
-    Scheduler_StartTask(7, 20, updateLcd);
+    Scheduler_StartTask(0,    50, readLightSensor);
+    Scheduler_StartTask(10,   50, updateChar);
+    Scheduler_StartTask(50,  100, updatePacket);
+    Scheduler_StartTask(150, 250, sendPacket);
+    Scheduler_StartTask(500, 500, updateLcd);
 }
 
 // idle task
@@ -86,13 +93,43 @@ void sendPacket() {
 
 void updateLcd() {
     char row_buf[16];
-    sprintf(row_buf, " " XBAR_CHAR ":%4d  " YBAR_CHAR ":%4d", joystick.rawX, joystick.rawY);
+    sprintf(row_buf, "%c:%4d %c:%4d %c" , XBAR_CHAR, joystick.rawX, YBAR_CHAR, joystick.rawY, joystick.rawSW ? SWON_CHAR : SWOFF_CHAR);
     pad.print(Keypad::LCD_ROW::TOP, row_buf);
-    pad.print(Keypad::LCD_ROW::BOTTOM, joystick.rawSW ? "ON " : "OFF");
+
+    sprintf(row_buf, "%c               ", selectedLetter);
+    pad.print(Keypad::LCD_ROW::BOTTOM, row_buf);
 }
 
 void readLightSensor() {
     lightOn = digitalRead(pin.lightSensor);
+}
+
+void updateChar() {
+    if (pad.getLastButton() != pad.pollButtons()) {
+        Keypad::BUTTON pressed = pad.getLastButton();
+        int8_t offset = 0;
+        switch (pressed) {
+            case Keypad::BUTTON::BUTTON_UP:
+                offset = 1;
+                break;
+
+            case Keypad::BUTTON::BUTTON_RIGHT:
+                offset = 5;
+                break;
+
+            case Keypad::BUTTON::BUTTON_DOWN:
+                offset = -1;
+                break;
+
+            case Keypad::BUTTON::BUTTON_LEFT:
+                offset = -5;
+                break;
+
+            default: break;
+        }
+
+        selectedLetter = ((selectedLetter - 'A' + offset) % 26 + 26) % 26 + 'A';
+    }
 }
 
 void updatePacket() {

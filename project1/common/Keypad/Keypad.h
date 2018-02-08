@@ -12,7 +12,7 @@ public:
         BOTTOM
     };
 
-    enum LCD_BUTTONS {
+    enum BUTTON {
         BUTTON_NONE,
         BUTTON_RIGHT,
         BUTTON_UP,
@@ -24,15 +24,15 @@ public:
 
 protected:
     LiquidCrystal lcd;
-    LCD_BUTTONS lastButton;
+    BUTTON lastButton;
 
 public:
     Keypad();
     void clear(void);
     void clear(LCD_ROW);
     void print(LCD_ROW, String, bool=true);
-    LCD_BUTTONS pollButtons();
-    LCD_BUTTONS getLastButton();
+    BUTTON pollButtons();
+    BUTTON getLastButton();
 };
 
 #endif
