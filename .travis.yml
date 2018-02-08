@@ -1,8 +1,8 @@
 language: r
 pandoc_version: 1.19
-before_install:
-  - cd website
+install: true
 script:
+  - cd website
   - ./build.sh
 deploy:
   provider: script
