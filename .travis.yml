@@ -8,6 +8,7 @@ deploy:
   provider: script
   skip_cleanup: true
   script:
+    - ls
     - cd website
     - ./deploy.sh
   on:
