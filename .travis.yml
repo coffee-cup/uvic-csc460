@@ -6,6 +6,7 @@ install:
   - nvm use stable
   - cd website
   - npm install
+  - npm install --global surge
 script:
   - ./build.sh
 deploy:
