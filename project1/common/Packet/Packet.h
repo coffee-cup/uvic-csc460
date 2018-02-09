@@ -6,11 +6,11 @@
 
 #define PACKET_MAGIC 0xF3
 #define TO16BIT(h, l) (h << 8 | l)
+#define PACKET_SIZE 10
 
 struct Packet {
     union {
         struct {
-            static const uint8_t magic = 0xF3;
             uint16_t joy1X;
             uint16_t joy1Y;
             uint16_t joy2X;
@@ -18,7 +18,7 @@ struct Packet {
             uint8_t joy1SW;
             uint8_t joy2SW;
         } field;
-        uint8_t data[10];
+        uint8_t data[PACKET_SIZE];
     };
 
     Packet(uint8_t* buffer) {

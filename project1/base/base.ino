@@ -13,6 +13,8 @@
 #define SWON_CHAR  '\x04'
 #define SWOFF_CHAR '\x03'
 
+#define CLEAR_TERM "\x1B[2J\x1B[H"
+
 typedef struct {
     const uint8_t joy1X;
     const uint8_t joy1Y;
@@ -85,7 +87,25 @@ void loop() {
 
 void sendPacket() {
     if (Serial2.availableForWrite()) {
+        // Write magic number first
+        Serial2.write(PACKET_MAGIC, 1);
         Serial2.write(packet.data, sizeof(packet.data));
+
+        Serial.print(CLEAR_TERM);
+        Serial.print("packet.field.joy1X  : "); Serial.println(packet.field.joy1X);
+        Serial.print("packet.field.joy1Y  : "); Serial.println(packet.field.joy1Y);
+        Serial.print("packet.field.joy1SW : "); Serial.println(packet.field.joy1SW);
+        Serial.print("packet.field.joy2X  : "); Serial.println(packet.field.joy2X);
+        Serial.print("packet.field.joy2Y  : "); Serial.println(packet.field.joy2Y);
+        Serial.print("packet.field.joy2SW : "); Serial.println(packet.field.joy2SW);
+
+        Serial.print("packet.data         : ");
+        for (int i = 0; i < 10; i++)
+        {
+            Serial.print(packet.data[i], HEX);
+            Serial.print(":");
+        }
+        Serial.println(" ");
     }
 }
 
@@ -133,10 +153,10 @@ void updateChar() {
 }
 
 void updatePacket() {
-    packet.field.joy1X  = joystick1.getX();
-    packet.field.joy1Y  = joystick1.getY();
-    packet.field.joy1SW = joystick1.getClick();
-    packet.field.joy2X  = joystick2.getX();
-    packet.field.joy2Y  = joystick2.getY();
-    packet.field.joy2SW = joystick2.getClick();
+    packet.field.joy1X  = 0; //joystick1.getX();
+    packet.field.joy1Y  = 0; //joystick1.getY();
+    packet.field.joy1SW = 0; //joystick1.getClick();
+    packet.field.joy2X  = 1; //joystick2.getX();
+    packet.field.joy2Y  = 0; //joystick2.getY();
+    packet.field.joy2SW = 0; //joystick2.getClick();
 }
