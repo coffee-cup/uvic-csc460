@@ -88,7 +88,7 @@ void loop() {
 void sendPacket() {
     if (Serial2.availableForWrite()) {
         // Write magic number first
-        Serial2.write(PACKET_MAGIC, 1);
+        Serial2.write(PACKET_MAGIC);
         Serial2.write(packet.data, sizeof(packet.data));
 
         Serial.print(CLEAR_TERM);
