@@ -54,14 +54,14 @@ void updateLcd();
 void updateChar();
 
 void setup() {
-    Serial2.begin(9600);
     Serial.begin(9600);
+    Serial1.begin(9600);
 
     Scheduler_Init();
     Scheduler_StartTask(0,    50, readLightSensor);
     Scheduler_StartTask(10,   50, updateChar);
     Scheduler_StartTask(50,  100, updatePacket);
-    Scheduler_StartTask(150, 250, sendPacket);
+    Scheduler_StartTask(150, 100, sendPacket);
     Scheduler_StartTask(500, 500, updateLcd);
 }
 
@@ -86,10 +86,10 @@ void loop() {
 
 
 void sendPacket() {
-    if (Serial2.availableForWrite()) {
+    if (Serial1.availableForWrite()) {
         // Write magic number first
-        Serial2.write(PACKET_MAGIC);
-        Serial2.write(packet.data, sizeof(packet.data));
+        Serial1.write(PACKET_MAGIC);
+        Serial1.write(packet.data, PACKET_SIZE);
 
         Serial.print(CLEAR_TERM);
         Serial.print("packet.field.joy1X  : "); Serial.println(packet.field.joy1X);
@@ -153,10 +153,10 @@ void updateChar() {
 }
 
 void updatePacket() {
-    packet.field.joy1X  = 0; //joystick1.getX();
-    packet.field.joy1Y  = 0; //joystick1.getY();
-    packet.field.joy1SW = 0; //joystick1.getClick();
-    packet.field.joy2X  = 1; //joystick2.getX();
-    packet.field.joy2Y  = 0; //joystick2.getY();
-    packet.field.joy2SW = 0; //joystick2.getClick();
+    packet.field.joy1X  = joystick1.getX();
+    packet.field.joy1Y  = joystick1.getY();
+    packet.field.joy1SW = joystick1.getClick();
+    packet.field.joy2X  = joystick2.getX();
+    packet.field.joy2Y  = joystick2.getY();
+    packet.field.joy2SW = joystick2.getClick();
 }
