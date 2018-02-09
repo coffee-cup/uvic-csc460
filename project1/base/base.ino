@@ -91,21 +91,21 @@ void sendPacket() {
         Serial1.write(PACKET_MAGIC);
         Serial1.write(packet.data, PACKET_SIZE);
 
-        Serial.print(CLEAR_TERM);
-        Serial.print("packet.field.joy1X  : "); Serial.println(packet.field.joy1X);
-        Serial.print("packet.field.joy1Y  : "); Serial.println(packet.field.joy1Y);
-        Serial.print("packet.field.joy1SW : "); Serial.println(packet.field.joy1SW);
-        Serial.print("packet.field.joy2X  : "); Serial.println(packet.field.joy2X);
-        Serial.print("packet.field.joy2Y  : "); Serial.println(packet.field.joy2Y);
-        Serial.print("packet.field.joy2SW : "); Serial.println(packet.field.joy2SW);
+        /* Serial.print(CLEAR_TERM); */
+        /* Serial.print("packet.field.joy1X  : "); Serial.println(packet.field.joy1X); */
+        /* Serial.print("packet.field.joy1Y  : "); Serial.println(packet.field.joy1Y); */
+        /* Serial.print("packet.field.joy1SW : "); Serial.println(packet.field.joy1SW); */
+        /* Serial.print("packet.field.joy2X  : "); Serial.println(packet.field.joy2X); */
+        /* Serial.print("packet.field.joy2Y  : "); Serial.println(packet.field.joy2Y); */
+        /* Serial.print("packet.field.joy2SW : "); Serial.println(packet.field.joy2SW); */
 
-        Serial.print("packet.data         : ");
-        for (int i = 0; i < 10; i++)
-        {
-            Serial.print(packet.data[i], HEX);
-            Serial.print(":");
-        }
-        Serial.println(" ");
+        /* Serial.print("packet.data         : "); */
+        /* for (int i = 0; i < 10; i++) */
+        /* { */
+        /*     Serial.print(packet.data[i], HEX); */
+        /*     Serial.print(":"); */
+        /* } */
+        /* Serial.println(" "); */
     }
 }
 

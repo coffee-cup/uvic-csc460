@@ -59,11 +59,11 @@ void Roomba::power_off() {
 
 void Roomba::init()
 {
-    Serial1.println("Init");
+    // Serial1.println("Init");
     start_serial(19200U);
     digitalWrite(m_brc_pin, HIGH);
 
-    Serial1.println("Setting Baud");
+    // Serial1.println("Setting Baud");
     //Set baud rate by togling the brc pin 3 times.
     delay(2500);
     digitalWrite(m_brc_pin, LOW);
@@ -98,7 +98,7 @@ void Roomba::init()
 }
 
 void Roomba::drive(int velocity, int radius) {
-    Serial1.println("Drive");
+    // Serial1.println("Drive");
     write_serial(DRIVE);
     write_serial(HIGH_BYTE(velocity));
     write_serial(LOW_BYTE(velocity));
@@ -183,5 +183,3 @@ void Roomba::write_serial(char val) {
         break;
     }
 }
-
-

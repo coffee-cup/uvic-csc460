@@ -25,7 +25,8 @@ PinDefs pin = {
 Arm arm;
 Packet packet(512, 512, 0, 512, 512, 0);
 
-Roomba r(2, 30);
+Roomba r(3, 30);
+char last_command = 's';
 
 void getData();
 void updateArm();
@@ -35,20 +36,20 @@ void printPacket();
 void setup() {
     Serial.begin(38400);
     Serial2.begin(9600);
-    /* Serial3.begin(9600); */
+    Serial3.begin(9600);
 
-    /* arm.attach(pin.servoX, pin.servoY); */
+    arm.attach(pin.servoX, pin.servoY);
 
-    /* r.init(); */
-    /* delay(1000); */
+    r.init();
+    delay(1000);
 
-    /* pinMode(pin.laser, OUTPUT); */
-    /* pinMode(pin.idle, OUTPUT); */
+    pinMode(pin.laser, OUTPUT);
+    pinMode(pin.idle, OUTPUT);
 
     Scheduler_Init();
-    /* Scheduler_StartTask(0, 50, updateArm); */
-    /* Scheduler_StartTask(50, 50, commandRoomba); */
-    Scheduler_StartTask(15, 100, getData);
+    Scheduler_StartTask(0, 50, updateArm);
+    Scheduler_StartTask(50, 200, commandRoomba);
+    Scheduler_StartTask(10, 50, getData);
 }
 
 // idle task
@@ -83,7 +84,10 @@ void getData() {
             if (Serial2.readBytes(packet_buf, PACKET_SIZE) == PACKET_SIZE) {
                 packet = Packet(packet_buf);
 
-                printPacket();
+                /* printPacket(); */
+                for (int i=0; i < bytesAvailable - 1 - PACKET_SIZE; i += 1) {
+                    Serial.read();
+                }
             }
         }
     }
@@ -122,6 +126,17 @@ void commandRoomba() {
     // overwrite any command if we should be docking
     command = packet.field.joy2SW == HIGH ? 'd' : command;
 
+    /* unsigned int power = 0; */
+    /* bool success = r.check_power(&power); */
+    /* Serial.print("Power: "); */
+    /* Serial.print(power); */
+    /* Serial.println(command); */
+
+    if (command == last_command) {
+        return;
+    }
+    last_command = command;
+
     switch(command)
         {
         case 'f':
@@ -148,6 +163,8 @@ void commandRoomba() {
         default:
             break;
         }
+
+
 
     /* Serial.println(command); */
     /* Serial3.write(command); */
