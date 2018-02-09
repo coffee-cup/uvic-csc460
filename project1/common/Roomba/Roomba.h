@@ -10,7 +10,7 @@
 
 #define START 128   // start the Roomba's serial command interface
 #define BAUD  129   // set the SCI's baudrate (default on full power cycle is 57600
-#define CONTROL 130   // enable control via SCI
+#define CONTROL 130 // enable control via SCI
 #define SAFE  131   // enter safe mode
 #define FULL  132   // enter full mode
 #define POWER 133   // put the Roomba to sleep
@@ -53,6 +53,8 @@ class Roomba{
     bool check_power(unsigned int *power);
     bool check_power_capacity(unsigned int *power);
     void power_off();
+    void control();
+    void sing();
 
  private:
     int m_serial_num;

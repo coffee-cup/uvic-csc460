@@ -42,6 +42,7 @@ void setup() {
 
     r.init();
     delay(1000);
+    /* r.control(); */
 
     pinMode(pin.laser, OUTPUT);
     pinMode(pin.idle, OUTPUT);
@@ -155,7 +156,9 @@ void commandRoomba() {
             r.drive(0,0);
             break;
         case 'd':
-            r.dock();
+            /* r.dock(); */
+            r.control();
+            r.sing();
             break;
         case 'p':
             r.power_off();
@@ -163,8 +166,6 @@ void commandRoomba() {
         default:
             break;
         }
-
-
 
     /* Serial.println(command); */
     /* Serial3.write(command); */

@@ -84,17 +84,17 @@ void Roomba::init()
     delay(200);
     //Enter safe mode
     write_serial(SAFE);
+    write_serial(CONTROL);
 
-    /*
-      unsigned int power_cap = 0;
-      check_power(&power);
-      check_power_capacity(&power_cap);
-      //Serial.printt("Power: ");
-      //Serial.printt(power);
-      //Serial.printt(" / ");
-      //Serial.printtln(power_cap);
-      //Serial.printtln("Done Startup");
-      */
+    unsigned int power = 0;
+    unsigned int power_cap = 0;
+    check_power(&power);
+    check_power_capacity(&power_cap);
+    Serial.print("Power: ");
+    Serial.print(power);
+    Serial.print(" / ");
+    Serial.println(power_cap);
+    Serial.println("Done Startup");
 }
 
 void Roomba::drive(int velocity, int radius) {
@@ -108,6 +108,14 @@ void Roomba::drive(int velocity, int radius) {
 
 void Roomba::dock() {
     write_serial(DOCK);
+}
+
+void Roomba::control() {
+    write_serial(CONTROL);
+}
+
+void Roomba::sing() {
+    write_serial(PLAY);
 }
 
 void Roomba::get_data() {
