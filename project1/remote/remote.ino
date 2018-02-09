@@ -35,19 +35,19 @@ void printPacket();
 void setup() {
     Serial.begin(38400);
     Serial2.begin(9600);
-    Serial3.begin(9600);
+    /* Serial3.begin(9600); */
 
-    arm.attach(pin.servoX, pin.servoY);
+    /* arm.attach(pin.servoX, pin.servoY); */
 
-    r.init();
-    delay(1000);
+    /* r.init(); */
+    /* delay(1000); */
 
-    pinMode(pin.laser, OUTPUT);
-    pinMode(pin.idle, OUTPUT);
+    /* pinMode(pin.laser, OUTPUT); */
+    /* pinMode(pin.idle, OUTPUT); */
 
     Scheduler_Init();
-    Scheduler_StartTask(0, 50, updateArm);
-    Scheduler_StartTask(50, 50, commandRoomba);
+    /* Scheduler_StartTask(0, 50, updateArm); */
+    /* Scheduler_StartTask(50, 50, commandRoomba); */
     Scheduler_StartTask(15, 100, getData);
 }
 
@@ -71,15 +71,32 @@ void loop() {
 }
 
 void getData() {
-    if (sizeof(packet.data) <= Serial2.available()) {
-        uint8_t packet_buf[sizeof(packet.data)];
+    int bytesAvailable = Serial2.available();
 
-        if (Serial2.readBytes(packet_buf, sizeof(packet.data))) {
-            packet = Packet(packet_buf);
+    if (bytesAvailable > 0) {
+        uint8_t r = Serial2.read();
 
-            printPacket();
+        // If the first byte isn't magic, don't attempt to read in a packet
+        if (r == PACKET_MAGIC && bytesAvailable >= PACKET_SIZE + 1) {
+            uint8_t packet_buf[PACKET_SIZE];
+
+            if (Serial2.readBytes(packet_buf, PACKET_SIZE) == PACKET_SIZE) {
+                packet = Packet(packet_buf);
+
+                printPacket();
+            }
         }
     }
+
+    /* if (sizeof(packet.data) <= Serial2.available()) { */
+    /*     uint8_t packet_buf[sizeof(packet.data)]; */
+
+    /*     if (Serial2.readBytes(packet_buf, sizeof(packet.data))) { */
+    /*         packet = Packet(packet_buf); */
+
+    /*         printPacket(); */
+    /*     } */
+    /* } */
 }
 
 void commandRoomba() {
