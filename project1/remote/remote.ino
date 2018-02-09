@@ -48,9 +48,9 @@ void setup() {
     pinMode(pin.idle, OUTPUT);
 
     Scheduler_Init();
-    Scheduler_StartTask(0, 50, updateArm);
-    Scheduler_StartTask(50, 200, commandRoomba);
-    Scheduler_StartTask(10, 50, getData);
+    Scheduler_StartTask(UPDATE_ARM_DELAY, UPDATE_ARM_PERIOD, updateArm);
+    Scheduler_StartTask(COMMAND_ROOMBA_DELAY, COMMAND_ROOMBA_PERIOD, commandRoomba);
+    Scheduler_StartTask(GET_DATA_DELAY, GET_DATA_PERIOD, getData);
 }
 
 // idle task

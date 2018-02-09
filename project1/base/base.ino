@@ -58,11 +58,11 @@ void setup() {
     Serial1.begin(9600);
 
     Scheduler_Init();
-    Scheduler_StartTask(0,    50, readLightSensor);
-    Scheduler_StartTask(10,   50, updateChar);
-    Scheduler_StartTask(50,  100, updatePacket);
-    Scheduler_StartTask(150, 100, sendPacket);
-    Scheduler_StartTask(500, 500, updateLcd);
+    Scheduler_StartTask(LSENSOR_DELAY, LSENSOR_PERIOD, readLightSensor);
+    Scheduler_StartTask(UPDATE_CHAR_DELAY, UPDATE_CHAR_PERIOD, updateChar);
+    Scheduler_StartTask(UPDATE_PACKET_DELAY,  UPDATE_PACKET_PERIOD, updatePacket);
+    Scheduler_StartTask(SEND_PACKET_DELAY, SEND_PACKET_PERIOD, sendPacket);
+    Scheduler_StartTask(UPDATE_LCD_DELAY, UPDATE_LCD_DURATION, updateLcd);
 }
 
 // idle task
