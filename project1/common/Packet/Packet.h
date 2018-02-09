@@ -4,23 +4,32 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#define PACKET_MAGIC 0xF3
+#define TO16BIT(h, l) (h << 8 | l)
+
 struct Packet {
     union {
         struct {
-            uint16_t joy1X :10;
-            uint16_t joy1Y :10;
-            uint16_t joy2X :10;
-            uint16_t joy2Y :10;
-            uint8_t joy1SW : 1;
-            uint8_t joy2SW : 1;
+            static const uint8_t magic = 0xF3;
+            uint16_t joy1X;
+            uint16_t joy1Y;
+            uint16_t joy2X;
+            uint16_t joy2Y;
+            uint8_t joy1SW;
+            uint8_t joy2SW;
         } field;
         uint8_t data[10];
     };
 
-    Packet(uint8_t (&buffer)[10]) {
-        for (uint8_t i = 0; i < 10; i += 1){
-            this->data[i] = buffer[i];
-        }
+    Packet(uint8_t* buffer) {
+        this->field.joy1X = TO16BIT(buffer[1], buffer[0]);
+        this->field.joy1Y = TO16BIT(buffer[3], buffer[2]);
+
+        this->field.joy2X = TO16BIT(buffer[5], buffer[4]);
+        this->field.joy2Y = TO16BIT(buffer[7], buffer[6]);
+
+        this->field.joy1SW = buffer[8];
+        this->field.joy2SW = buffer[9];
     };
 
     Packet(uint16_t joy1X, uint16_t joy1Y, uint8_t joy1SW, uint16_t joy2X, uint16_t joy2Y, uint8_t joy2SW) {
