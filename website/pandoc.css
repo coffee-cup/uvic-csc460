@@ -377,6 +377,14 @@ table td {
         margin-left: -6rem;
         padding-top: 2rem;
     }
+
+    footer {
+        margin-left: -6rem;
+    }
+}
+
+.author {
+    display: none;
 }
 
 .page-content h1:first-of-type {
@@ -390,7 +398,8 @@ table td {
     padding-left: 0;
     width: 100%;
     max-width: 26rem;
-    justify-content: space-between;
+    justify-content: space-evenly;
+    list-style: none;
 }
 
 .nav li {

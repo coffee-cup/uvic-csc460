@@ -209,8 +209,13 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-
 # End of https://www.gitignore.io/api/c,macos,emacs,windows,sublimetext,visualstudiocode
+
+# Node stuff
+node_modules/
+
+# Emacs stuff
+auto/
 
 .env
 build-mega-atmega2560

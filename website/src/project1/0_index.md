@@ -1,48 +1,12 @@
-# This is Project 1 Index
+---
+title: "UVic CSC 460 Project 1"
+author: [Jake Runzer, Zev Isert]
+date: \today
+titlepage: true
+titlepage-color: "fcfcfc"
+titlepage-text-color: "333333"
+---
 
-```bash
-#!/bin/bash
+[View a PDF copy of this report](project1.pdf)
 
-SRCDIR=src
-OUTDIR=build
-
-# Projects
-PROJECTS=("project1" "project2")
-
-OPTS="-f markdown -t html5 --template template.html --mathjax"
-
-# Create build directory
-mkdir -p $OUTDIR
-
-# Create a tmp directory to use
-mkdir -p ./tmp
-
-# Run pandoc on all md files at top of src dir
-for f in $SRCDIR/*.md ;
-do
-    pandoc $OPTS "${f}" -s -o "$OUTDIR/$(basename ${f} .md).html"  ;
-done
-
-# Projects
-for f in "${PROJECTS[@]}"
-do
-    POUT=$OUTDIR/${f}
-    TMP=./tmp/${f}
-    mkdir -p $POUT
-
-    # Concat all md files into tmp one
-    for file in $SRCDIR/${f}/*.md
-    do
-        (cat "$file"; echo '') >> $TMP
-    done
-
-    # Run pandoc on tmp file to generate html
-    pandoc $OPTS $TMP -o "$POUT/index.html"
-done
-
-# Copy css to build dir
-cp pandoc.css $OUTDIR
-
-# Remove tmp
-rm -rf ./tmp
-```
+# Introduction
