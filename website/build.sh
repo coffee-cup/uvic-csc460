@@ -35,7 +35,10 @@ do
     done
 
     # Run pandoc on tmp file to generate pdfs
-    pandoc $OPTS_PDF $TMP -o "$POUT/${f}.pdf"
+    if [ "$PDF" = "1" ]
+    then
+        pandoc $OPTS_PDF $TMP -o "$POUT/${f}.pdf"
+    fi
 
     # Run pandoc on tmp file to generate html
     pandoc $OPTS --toc $TMP -o "$POUT/index.html"
