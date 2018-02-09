@@ -22,7 +22,6 @@ class Arm {
     void setServoSpeed(Joint &joint, int8_t s);
 
   public:
-
     Joint X;
     Joint Y;
 
