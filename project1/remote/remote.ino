@@ -4,6 +4,7 @@
 #include "Arm.h"
 #include "Scheduler.h"
 #include "Packet.h"
+#include "Roomba.h"
 
 #define CLEAR_TERM "\x1B[2J\x1B[H"
 
@@ -15,18 +16,21 @@ typedef struct {
 } PinDefs;
 
 PinDefs pin = {
-    .servoX = 11,
-    .servoY = 12,
-    .laser = 40,
-    .idle = 50
+               .servoX = 11,
+               .servoY = 12,
+               .laser = 40,
+               .idle = 50
 };
 
 Arm arm;
 Packet packet(512, 512, 0, 512, 512, 0);
 
+Roomba r(2, 30);
+
 void getData();
 void updateArm();
 void commandRoomba();
+void printPacket();
 
 void setup() {
     Serial.begin(38400);
@@ -34,6 +38,9 @@ void setup() {
     Serial3.begin(9600);
 
     arm.attach(pin.servoX, pin.servoY);
+
+    r.init();
+    delay(1000);
 
     pinMode(pin.laser, OUTPUT);
     pinMode(pin.idle, OUTPUT);
@@ -70,20 +77,7 @@ void getData() {
         if (Serial2.readBytes(packet_buf, sizeof(packet.data))) {
             packet = Packet(packet_buf);
 
-            Serial.print(CLEAR_TERM);
-            Serial.print("packet.field.joy1X  : "); Serial.println(packet.field.joy1X);
-            Serial.print("packet.field.joy1Y  : "); Serial.println(packet.field.joy1Y);
-            Serial.print("packet.field.joy1SW : "); Serial.println(packet.field.joy1SW);
-            Serial.print("packet.field.joy2X  : "); Serial.println(packet.field.joy2X);
-            Serial.print("packet.field.joy2Y  : "); Serial.println(packet.field.joy2Y);
-            Serial.print("packet.field.joy2SW : "); Serial.println(packet.field.joy2SW);
-
-            Serial.print("packet.data         : ");
-            for (int i = 0; i < 10; i ++){
-                Serial.print(packet.data[i], HEX);
-                Serial.print(":");
-            }
-            Serial.println(" ");
+            printPacket();
         }
     }
 }
@@ -111,8 +105,35 @@ void commandRoomba() {
     // overwrite any command if we should be docking
     command = packet.field.joy2SW == HIGH ? 'd' : command;
 
-    Serial3.write(command);
+    switch(command)
+        {
+        case 'f':
+            r.drive(150, 32768);
+            break;
+        case 'b':
+            r.drive(-150, 32768);
+            break;
+        case 'r':
+            r.drive(50, -1);
+            break;
+        case 'l':
+            r.drive(50, 1);
+            break;
+        case 's':
+            r.drive(0,0);
+            break;
+        case 'd':
+            r.dock();
+            break;
+        case 'p':
+            r.power_off();
+            break;
+        default:
+            break;
+        }
 
+    /* Serial.println(command); */
+    /* Serial3.write(command); */
 }
 
 void updateArm() {
@@ -122,4 +143,21 @@ void updateArm() {
     digitalWrite(pin.laser, packet.field.joy1SW ? HIGH : LOW);
 
     arm.tick();
+}
+
+void printPacket() {
+    Serial.print(CLEAR_TERM);
+    Serial.print("packet.field.joy1X  : "); Serial.println(packet.field.joy1X);
+    Serial.print("packet.field.joy1Y  : "); Serial.println(packet.field.joy1Y);
+    Serial.print("packet.field.joy1SW : "); Serial.println(packet.field.joy1SW);
+    Serial.print("packet.field.joy2X  : "); Serial.println(packet.field.joy2X);
+    Serial.print("packet.field.joy2Y  : "); Serial.println(packet.field.joy2Y);
+    Serial.print("packet.field.joy2SW : "); Serial.println(packet.field.joy2SW);
+
+    Serial.print("packet.data         : ");
+    for (int i = 0; i < 10; i ++){
+        Serial.print(packet.data[i], HEX);
+        Serial.print(":");
+    }
+    Serial.println(" ");
 }
