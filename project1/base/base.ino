@@ -13,6 +13,8 @@
 #define SWON_CHAR  '\x04'
 #define SWOFF_CHAR '\x03'
 
+#define CLEAR_TERM "\x1B[2J\x1B[H"
+
 typedef struct {
     const uint8_t joy1X;
     const uint8_t joy1Y;
@@ -35,13 +37,11 @@ PinDefs pin = {
     .idle   = 50
 };
 
-Packet packet = {
-    .speedX = 0,
-    .speedY = 0,
-    .laserOn = 0
-};
+Packet packet(512, 512, 0, 512, 512, 0);
 
-Joystick joystick(pin.joy1X, pin.joy1Y, pin.joy1SW);
+Joystick joystick1(pin.joy1X, pin.joy1Y, pin.joy1SW);
+Joystick joystick2(pin.joy2X, pin.joy2Y, pin.joy2SW);
+
 Keypad pad;
 
 uint8_t lightOn = 0;
@@ -54,15 +54,15 @@ void updateLcd();
 void updateChar();
 
 void setup() {
-    Serial2.begin(9600);
     Serial.begin(9600);
+    Serial1.begin(9600);
 
     Scheduler_Init();
-    Scheduler_StartTask(0,    50, readLightSensor);
-    Scheduler_StartTask(10,   50, updateChar);
-    Scheduler_StartTask(50,  100, updatePacket);
-    Scheduler_StartTask(150, 250, sendPacket);
-    Scheduler_StartTask(500, 500, updateLcd);
+    Scheduler_StartTask(LSENSOR_DELAY, LSENSOR_PERIOD, readLightSensor);
+    Scheduler_StartTask(UPDATE_CHAR_DELAY, UPDATE_CHAR_PERIOD, updateChar);
+    Scheduler_StartTask(UPDATE_PACKET_DELAY,  UPDATE_PACKET_PERIOD, updatePacket);
+    Scheduler_StartTask(SEND_PACKET_DELAY, SEND_PACKET_PERIOD, sendPacket);
+    Scheduler_StartTask(UPDATE_LCD_DELAY, UPDATE_LCD_DURATION, updateLcd);
 }
 
 // idle task
@@ -86,18 +86,38 @@ void loop() {
 
 
 void sendPacket() {
-    if (Serial2.availableForWrite()) {
-        Serial2.write((byte*)&packet, sizeof(packet));
+    if (Serial1.availableForWrite()) {
+        // Write magic number first
+        Serial1.write(PACKET_MAGIC);
+        Serial1.write(packet.data, PACKET_SIZE);
+
+        /* Serial.print(CLEAR_TERM); */
+        /* Serial.print("packet.field.joy1X  : "); Serial.println(packet.field.joy1X); */
+        /* Serial.print("packet.field.joy1Y  : "); Serial.println(packet.field.joy1Y); */
+        /* Serial.print("packet.field.joy1SW : "); Serial.println(packet.field.joy1SW); */
+        /* Serial.print("packet.field.joy2X  : "); Serial.println(packet.field.joy2X); */
+        /* Serial.print("packet.field.joy2Y  : "); Serial.println(packet.field.joy2Y); */
+        /* Serial.print("packet.field.joy2SW : "); Serial.println(packet.field.joy2SW); */
+
+        /* Serial.print("packet.data         : "); */
+        /* for (int i = 0; i < 10; i++) */
+        /* { */
+        /*     Serial.print(packet.data[i], HEX); */
+        /*     Serial.print(":"); */
+        /* } */
+        /* Serial.println(" "); */
     }
 }
 
 void updateLcd() {
     char row_buf[16];
-    sprintf(row_buf, "%c:%4d %c:%4d %c" , XBAR_CHAR, joystick.rawX, YBAR_CHAR, joystick.rawY, joystick.rawSW ? SWON_CHAR : SWOFF_CHAR);
+    sprintf(row_buf, "%c:%4d %c:%4d %c" , XBAR_CHAR, joystick1.rawX, YBAR_CHAR, joystick1.rawY, joystick1.rawSW ? SWON_CHAR : SWOFF_CHAR);
     pad.print(Keypad::LCD_ROW::TOP, row_buf);
 
-    sprintf(row_buf, "%c               ", selectedLetter);
+    sprintf(row_buf, "%c:%4d %c:%4d %c" , XBAR_CHAR, joystick2.rawX, YBAR_CHAR, joystick2.rawY, joystick2.rawSW ? SWON_CHAR : SWOFF_CHAR);
     pad.print(Keypad::LCD_ROW::BOTTOM, row_buf);
+    // sprintf(row_buf, "%c               ", selectedLetter);
+    // pad.print(Keypad::LCD_ROW::BOTTOM, row_buf);
 }
 
 void readLightSensor() {
@@ -133,7 +153,10 @@ void updateChar() {
 }
 
 void updatePacket() {
-    packet.speedX = joystick.getX();
-    packet.speedY = joystick.getY();
-    packet.laserOn = joystick.getClick();
+    packet.field.joy1X  = joystick1.getX();
+    packet.field.joy1Y  = joystick1.getY();
+    packet.field.joy1SW = joystick1.getClick();
+    packet.field.joy2X  = joystick2.getX();
+    packet.field.joy2Y  = joystick2.getY();
+    packet.field.joy2SW = joystick2.getClick();
 }

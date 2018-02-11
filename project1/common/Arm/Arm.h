@@ -22,7 +22,6 @@ class Arm {
     void setServoSpeed(Joint &joint, int8_t s);
 
   public:
-
     Joint X;
     Joint Y;
 
@@ -33,7 +32,7 @@ class Arm {
 
     void tick();
     void attach(uint8_t pinForX, uint8_t pinForY);
-    int8_t filterSpeed(int16_t value);
+    static int8_t filterSpeed(int16_t value);
 };
 
 #endif

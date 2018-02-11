@@ -1,6 +1,5 @@
 :root {
-    --section-width: 35rem;
-    --toc-width: 18rem;
+
 }
 
 html {
@@ -21,7 +20,6 @@ body {
 }
 
 main {
-    max-width: var(--section-width);
     margin: auto;
 }
 
@@ -84,10 +82,11 @@ h3,
 h4,
 h5,
 h6 {
-    color: #111;
+    color: #333;
     line-height: 125%;
     margin-top: 2em;
-    font-weight: normal;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 700;
 }
 
 h4,
@@ -367,20 +366,13 @@ table td {
 }
 
 .page-content {
-    position: relative;
-    min-height: 100vh;
-    padding-top: 0;
+    display: grid;
+    grid-template-columns: 40fr;
+    grid-gap: 1em;
 }
 
-@media only screen and (min-width: 1000px) {
-    .page-content {
-        margin-left: -6rem;
-        padding-top: 2rem;
-    }
-
-    footer {
-        margin-left: -6rem;
-    }
+.page-content > * {
+    grid-column: 2 / 2;
 }
 
 .author {
@@ -406,24 +398,39 @@ table td {
     padding: 0 1rem;
 }
 
-#TOC {
-    position: absolute;
-    width: var(--toc-width);
-    right: calc(-1 * var(--toc-width));
-    top: 4rem;
-    border-bottom: none;
+#TOC::-webkit-scrollbar {
+    display: none;
 }
 
-@media only screen and (min-width: 1000px) {
+@media only screen and (min-width: 768px) {
+    main {
+        max-width: 80rem;
+    }
+
+    .page-content {
+        grid-template-columns: 1fr 8fr 4fr 1fr;
+        grid-template-rows: 5em;
+        grid-template-areas: "left . toc right";
+    }
+
     #TOC {
-        right: calc((-1 * var(--toc-width)) + 4rem);
+        grid-area: toc;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: scroll;
     }
 }
 
-@media only screen and (max-width: 1000px) {
-    #TOC {
-        position: static;
-        margin-bottom: 0;
-        padding: 0.5rem 0;
+@media screen and (min-width: 1240px) {
+    main {
+        max-width: 130rem;
     }
+
+    .page-content {
+        grid-template-columns: 1fr 8fr 3fr;
+        grid-template-rows: 5em;
+        grid-template-areas: "left . toc right";
+    }
+
 }
