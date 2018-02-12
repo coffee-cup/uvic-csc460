@@ -1,3 +1,1 @@
-## Timing Measurments
-
-### CPU Idle Time
+## CPU Idle Time

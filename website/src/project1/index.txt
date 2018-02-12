@@ -1,6 +1,7 @@
 index.md
 phase_1.md
-joystick_servo.md
+joystick.md
+servo.md
 laser_sensor.md
 lcd.md
 phase_2.md

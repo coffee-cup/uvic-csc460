@@ -8,8 +8,8 @@ For this phase we setup a two servo motors mounted inside a pan-and-tilt kit. Th
 
 A schematic of how our phase 1 is connected is shown in the following figure.
 
-![][phase1_schematic]
+![Phase 1 Schematic][phase1_schematic]
 
-[phase1_schematic]: https://drive.google.com/uc?export=view&id=1latYtdstTr6E2cctHEzoY27o2c_oGSTm "Phase 1 Schematic"
+[phase1_schematic]: https://i.imgur.com/92JV5Bg.png "Phase 1 Schematic"
 
 In the schematic, orange wires represent a signal connection between a hardware component and the ATMega2560. Red wires are connections between power and a component and black wires are ground.
