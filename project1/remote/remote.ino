@@ -8,6 +8,10 @@
 
 #define CLEAR_TERM "\x1B[2J\x1B[H"
 
+#define LOGIC_ARM 31
+#define LOGIC_DATA 45
+#define LOGIC_ROOMBA 51
+
 typedef struct {
     const uint8_t servoX;
     const uint8_t servoY;
@@ -19,7 +23,7 @@ PinDefs pin = {
     .servoX = 11,
     .servoY = 12,
     .laser  = 40,
-    .idle   = 50
+    .idle   = 34
 };
 
 Arm arm;
@@ -43,6 +47,10 @@ void setup() {
     r.init();
     delay(1000);
     /* r.control(); */
+
+    pinMode(LOGIC_ARM, OUTPUT);
+    pinMode(LOGIC_DATA, OUTPUT);
+    pinMode(LOGIC_ROOMBA, OUTPUT);
 
     pinMode(pin.laser, OUTPUT);
     pinMode(pin.idle, OUTPUT);
@@ -73,6 +81,8 @@ void loop() {
 }
 
 void getData() {
+    digitalWrite(LOGIC_DATA, HIGH);
+
     int bytesAvailable = Serial2.available();
 
     if (bytesAvailable > 0) {
@@ -93,9 +103,12 @@ void getData() {
             }
         }
     }
+    digitalWrite(LOGIC_DATA, LOW);
 }
 
 void commandRoomba() {
+    digitalWrite(LOGIC_ROOMBA, HIGH);
+
     // Map down to reduce jitter
     int8_t x = map(packet.field.joy2X, 0, 1023, -5, 5);
     int8_t y = map(packet.field.joy2Y, 0, 1023, -5, 5);
@@ -125,6 +138,7 @@ void commandRoomba() {
     /* Serial.println(command); */
 
     if (command == last_command) {
+        digitalWrite(LOGIC_ROOMBA, LOW);
         return;
     }
     last_command = command;
@@ -159,15 +173,21 @@ void commandRoomba() {
 
     /* Serial.println(command); */
     /* Serial3.write(command); */
+
+    digitalWrite(LOGIC_ROOMBA, LOW);
 }
 
 void updateArm() {
+    digitalWrite(LOGIC_ARM, HIGH);
+
     arm.setSpeedX(Arm::filterSpeed(packet.field.joy1X));
     arm.setSpeedY(Arm::filterSpeed(packet.field.joy1Y));
 
     digitalWrite(pin.laser, packet.field.joy1SW == 0xFF ? HIGH : LOW);
 
     arm.tick();
+
+    digitalWrite(LOGIC_ARM, LOW);
 }
 
 void printPacket() {

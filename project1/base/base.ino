@@ -15,6 +15,10 @@
 
 #define CLEAR_TERM "\x1B[2J\x1B[H"
 
+#define LOGIC_UPDATEPACKET 32
+#define LOGIC_LCD 34
+#define LOGIC_SENDPACKET 36
+
 typedef struct {
     const uint8_t joy1X;
     const uint8_t joy1Y;
@@ -57,6 +61,11 @@ void setup() {
     Serial.begin(9600);
     Serial1.begin(9600);
 
+    pinMode(pin.idle, OUTPUT);
+    pinMode(LOGIC_LCD, OUTPUT);
+    pinMode(LOGIC_UPDATEPACKET, OUTPUT);
+    pinMode(LOGIC_SENDPACKET, OUTPUT);
+
     Scheduler_Init();
     Scheduler_StartTask(LSENSOR_DELAY,       LSENSOR_PERIOD,       readLightSensor);
     Scheduler_StartTask(UPDATE_CHAR_DELAY,   UPDATE_CHAR_PERIOD,   updateChar);
@@ -86,14 +95,20 @@ void loop() {
 
 
 void sendPacket() {
+    digitalWrite(LOGIC_SENDPACKET, HIGH);
+
     if (Serial1.availableForWrite()) {
         // Write magic number first
         Serial1.write(PACKET_MAGIC);
         Serial1.write(packet.data, PACKET_SIZE);
     }
+
+    digitalWrite(LOGIC_SENDPACKET, LOW);
 }
 
 void updateLcd() {
+    digitalWrite(LOGIC_LCD, HIGH);
+
     char row_buf[16];
     sprintf(row_buf, "%c:%4d %c:%4d %c" , XBAR_CHAR, joystick1.rawX, YBAR_CHAR, joystick1.rawY, joystick1.rawSW ? SWON_CHAR : SWOFF_CHAR);
     pad.print(Keypad::LCD_ROW::TOP, row_buf);
@@ -102,6 +117,8 @@ void updateLcd() {
     pad.print(Keypad::LCD_ROW::BOTTOM, row_buf);
     // sprintf(row_buf, "%c               ", selectedLetter);
     // pad.print(Keypad::LCD_ROW::BOTTOM, row_buf);
+
+    digitalWrite(LOGIC_LCD, LOW);
 }
 
 void readLightSensor() {
@@ -137,10 +154,13 @@ void updateChar() {
 }
 
 void updatePacket() {
+    digitalWrite(LOGIC_UPDATEPACKET, HIGH);
+
     packet.field.joy1X  = joystick1.getX();
     packet.field.joy1Y  = joystick1.getY();
     packet.field.joy1SW = joystick1.getClick() == HIGH ? 0xFF : 0x00;
     packet.field.joy2X  = joystick2.getX();
     packet.field.joy2Y  = joystick2.getY();
     packet.field.joy2SW = joystick2.getClick() == HIGH ? 0xFF : 0x00;
+    digitalWrite(LOGIC_UPDATEPACKET, LOW);
 }
