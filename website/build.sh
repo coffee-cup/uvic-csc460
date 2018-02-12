@@ -24,24 +24,30 @@ done
 # Projects
 for f in "${PROJECTS[@]}"
 do
-    POUT=$OUTDIR/${f}
-    TMP=./tmp/${f}
-    mkdir -p $POUT
+    # Check for an index file in the project
+    PINDEX=$SRCDIR/${f}/index.txt
+    if [ -f $PINDEX ]; then
 
-    # Concat all md files into tmp one
-    for file in $SRCDIR/${f}/*.md
-    do
-        (cat "$file"; echo '') >> $TMP
-    done
+        POUT=$OUTDIR/${f}
+        TMP=./tmp/${f}
+        mkdir -p $POUT
 
-    # Run pandoc on tmp file to generate pdfs
-    if [ "$PDF" = "1" ]
-    then
-        pandoc $OPTS_PDF $TMP -o "$POUT/${f}.pdf"
+        # Using index order, concat all md files into tmp one
+        while read file; do
+            if [ -f $SRCDIR/${f}/$file ]; then
+                (cat "$SRCDIR/${f}/$file"; echo '') >> $TMP
+            fi
+        done < $PINDEX
+
+        # Run pandoc on tmp file to generate pdfs
+        if [ "$PDF" = "1" ]
+        then
+            pandoc $OPTS_PDF $TMP -o "$POUT/${f}.pdf"
+        fi
+
+        # Run pandoc on tmp file to generate html
+        pandoc $OPTS --toc $TMP -o "$POUT/index.html"
     fi
-
-    # Run pandoc on tmp file to generate html
-    pandoc $OPTS --toc $TMP -o "$POUT/index.html"
 
 done
 
