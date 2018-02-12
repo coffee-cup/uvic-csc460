@@ -5,8 +5,7 @@
 #include <LiquidCrystal.h>
 
 class Keypad {
-
-public:
+  public:
     enum LCD_ROW {
         TOP = 0,
         BOTTOM
@@ -22,15 +21,15 @@ public:
         COUNT_BUTTONS // Must be last
     };
 
-protected:
+  protected:
     LiquidCrystal lcd;
     BUTTON lastButton;
 
-public:
+  public:
     Keypad();
     void clear(void);
     void clear(LCD_ROW);
-    void print(LCD_ROW, String, bool=true);
+    void print(LCD_ROW, String, bool = true);
     BUTTON pollButtons();
     BUTTON getLastButton();
 };

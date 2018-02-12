@@ -58,11 +58,11 @@ void setup() {
     Serial1.begin(9600);
 
     Scheduler_Init();
-    Scheduler_StartTask(LSENSOR_DELAY, LSENSOR_PERIOD, readLightSensor);
-    Scheduler_StartTask(UPDATE_CHAR_DELAY, UPDATE_CHAR_PERIOD, updateChar);
-    Scheduler_StartTask(UPDATE_PACKET_DELAY,  UPDATE_PACKET_PERIOD, updatePacket);
-    Scheduler_StartTask(SEND_PACKET_DELAY, SEND_PACKET_PERIOD, sendPacket);
-    Scheduler_StartTask(UPDATE_LCD_DELAY, UPDATE_LCD_DURATION, updateLcd);
+    Scheduler_StartTask(LSENSOR_DELAY,       LSENSOR_PERIOD,       readLightSensor);
+    Scheduler_StartTask(UPDATE_CHAR_DELAY,   UPDATE_CHAR_PERIOD,   updateChar);
+    Scheduler_StartTask(UPDATE_PACKET_DELAY, UPDATE_PACKET_PERIOD, updatePacket);
+    Scheduler_StartTask(SEND_PACKET_DELAY,   SEND_PACKET_PERIOD,   sendPacket);
+    Scheduler_StartTask(UPDATE_LCD_DELAY,    UPDATE_LCD_PERIOD,    updateLcd);
 }
 
 // idle task
@@ -90,22 +90,6 @@ void sendPacket() {
         // Write magic number first
         Serial1.write(PACKET_MAGIC);
         Serial1.write(packet.data, PACKET_SIZE);
-
-        /* Serial.print(CLEAR_TERM); */
-        /* Serial.print("packet.field.joy1X  : "); Serial.println(packet.field.joy1X); */
-        /* Serial.print("packet.field.joy1Y  : "); Serial.println(packet.field.joy1Y); */
-        /* Serial.print("packet.field.joy1SW : "); Serial.println(packet.field.joy1SW); */
-        /* Serial.print("packet.field.joy2X  : "); Serial.println(packet.field.joy2X); */
-        /* Serial.print("packet.field.joy2Y  : "); Serial.println(packet.field.joy2Y); */
-        /* Serial.print("packet.field.joy2SW : "); Serial.println(packet.field.joy2SW); */
-
-        /* Serial.print("packet.data         : "); */
-        /* for (int i = 0; i < 10; i++) */
-        /* { */
-        /*     Serial.print(packet.data[i], HEX); */
-        /*     Serial.print(":"); */
-        /* } */
-        /* Serial.println(" "); */
     }
 }
 
@@ -155,8 +139,8 @@ void updateChar() {
 void updatePacket() {
     packet.field.joy1X  = joystick1.getX();
     packet.field.joy1Y  = joystick1.getY();
-    packet.field.joy1SW = joystick1.getClick();
+    packet.field.joy1SW = joystick1.getClick() == HIGH ? 0xFF : 0x00;
     packet.field.joy2X  = joystick2.getX();
     packet.field.joy2Y  = joystick2.getY();
-    packet.field.joy2SW = joystick2.getClick();
+    packet.field.joy2SW = joystick2.getClick() == HIGH ? 0xFF : 0x00;
 }
