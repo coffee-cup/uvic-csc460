@@ -399,6 +399,10 @@ header {
     max-width: 4rem;
 }
 
+.markdown {
+    min-height: 100vh;
+}
+
 .nav {
     display: flex;
     margin-left: auto;

@@ -61,64 +61,65 @@
                 </header>
                 <!-- page content begins here -->
 
-                $for(include-before)$
-                $include-before$
-                $endfor$
-                $if(headnote)$
-                <div class="headnote">$headnote$</div>
-                $endif$
-                $if(published)$
-                <div class="published">$published$</div>
-                $endif$
-                $if(license)$
-                <div class="license">$license$</div>$endif$
-                $if(title)$
-                <header>
-                    <h1 class="title">$title$</h1>
-                    $if(subtitle)$
-                    <h1 class="subtitle">$subtitle$</h1>
-                    $endif$
-                    $if(author)$
-                    $for(author)$
-                    $if(author.name)$
-                    <h2 class="author">$author.name$</h2>
-                    $else$
-                    <h2 class="author">$author$</h2>
-                    $endif$
-                    $if(author.affiliation)$
-                    <div class="affiliation">$author.affiliation$</div>
-                    $endif$
-                    $if(author.email)$
-                    <div class="email"><a href="mailto:$author.email$">$author.email$</a></div>
-                    $endif$
+                <div class="markdown">
+                    $for(include-before)$
+                    $include-before$
                     $endfor$
+                    $if(headnote)$
+                    <div class="headnote">$headnote$</div>
                     $endif$
-                    $if(version)$
-                    <h3 class="version">Version $version$</h3>
+                    $if(published)$
+                    <div class="published">$published$</div>
                     $endif$
-                    $if(date)$
-                    <h3 class="date">$date$</h3>
+                    $if(license)$
+                    <div class="license">$license$</div>$endif$
+                    $if(title)$
+                    <header>
+                        <h1 class="title">$title$</h1>
+                        $if(subtitle)$
+                        <h1 class="subtitle">$subtitle$</h1>
+                        $endif$
+                        $if(author)$
+                        $for(author)$
+                        $if(author.name)$
+                        <h2 class="author">$author.name$</h2>
+                        $else$
+                        <h2 class="author">$author$</h2>
+                        $endif$
+                        $if(author.affiliation)$
+                        <div class="affiliation">$author.affiliation$</div>
+                        $endif$
+                        $if(author.email)$
+                        <div class="email"><a href="mailto:$author.email$">$author.email$</a></div>
+                        $endif$
+                        $endfor$
+                        $endif$
+                        $if(version)$
+                        <h3 class="version">Version $version$</h3>
+                        $endif$
+                        $if(date)$
+                        <h3 class="date">$date$</h3>
+                        $endif$
+                    </header>
                     $endif$
-                </header>
-                $endif$
-                $if(abstract)$
-                <div class="abstract">
-                    <h3>Abstract</h3>
-                    $abstract$
+                    $if(abstract)$
+                    <div class="abstract">
+                        <h3>Abstract</h3>
+                        $abstract$
+                    </div>
+                    $endif$
+                    $if(toc)$
+                    <nav id="$idprefix$TOC">
+                        $toc$
+                    </nav>
+                    $endif$
+                    $body$
+                    $for(include-after)$
+                    $include-after$
+                    $endfor$
+
+                    <!-- page content ends here -->
                 </div>
-                $endif$
-                $if(toc)$
-                <nav id="$idprefix$TOC">
-                    $toc$
-                </nav>
-                $endif$
-                $body$
-                $for(include-after)$
-                $include-after$
-                $endfor$
-
-                <!-- page content ends here -->
-
                 <footer>
                     <h4>Project by</h4>
 
