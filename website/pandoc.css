@@ -282,6 +282,10 @@ table td {
     vertical-align: top;
 }
 
+table thead {
+    display: block;
+}
+
 .author {
     font-size: 1.2em;
     text-align: center;
