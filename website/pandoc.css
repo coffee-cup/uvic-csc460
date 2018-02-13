@@ -372,6 +372,15 @@ table td {
     }
 }
 
+.page-content {
+    display: grid;
+    grid-template-columns: 40fr;
+    grid-gap: 1em;
+}
+
+.page-content > * {
+    grid-column: 1 / 1;
+}
 
 .author {
     display: none;
@@ -410,6 +419,9 @@ header {
     padding: 0 1rem;
 }
 
+iframe {
+    max-width: 100%;
+}
 
 #TOC::-webkit-scrollbar {
     display: none;
@@ -421,11 +433,9 @@ header {
     }
 
     .page-content {
-        display: grid;
         grid-template-columns: 1fr 6fr 4fr 1fr;
         grid-template-rows: 7em;
         grid-template-areas: ". . toc .";
-        grid-gap: 1em;
     }
 
     .page-content > * {
