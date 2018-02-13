@@ -1,4 +1,5 @@
 index.md
+prior_work.md
 phase_1.md
 joystick.md
 laser_sensor.md

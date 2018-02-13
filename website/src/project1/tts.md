@@ -31,7 +31,7 @@ The scheduler is used by first calling the `Scheduler_Init()` function. Next, ta
 - `period`: How often in ms that the task will be repeat after
 - `task`: Function callback that represents the task and will be run every period
 
-Each iteration of the main loop the `Scheduler_Dispatch()` function is called. This function will figure out which task needs to be run based on the current running time. The amount of idle time remaining between the function call and the next task that needs to be run is returned as a `uint32_t`. This `idle_period` can be used to do some low priority task that does not take a lot of time.
+Each iteration of our code's main loop the `Scheduler_Dispatch()` function is called. This function will figure out which task needs to be run based on the current running time. The amount of idle time remaining between the function call and the next task that needs to be run is returned as a `uint32_t`. This `idle_period` can be used to do some low priority task that does not take a lot of time.
 
 ### Base Station
 

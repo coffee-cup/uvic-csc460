@@ -1,10 +1,10 @@
 # Phase 1
 
-The first phase of the project consisted of connecting the joysticks, servos, laser pointer, lcd screen, and analog light sensor to a single ATMega2560 board. The purpose of this phase was to familiarize ourselves with the hardware and the software required to run control each component.
+The first phase of the project consisted of connecting several joysticks and servos, a laser pointer, lcd screen, and analog light sensor to a single ATMega2560 board. The purpose of this phase was to familiarize ourselves with the hardware and the software required to run control each component.
 
 ## System Overview
 
-For this phase we setup a two servo motors mounted inside a pan-and-tilt kit. The two motors were controlled using both axes of a joystick. The push-button of the joystick controlled a laser mounted on top of the pan-and-tilt kit servos. On a separate component, we wired up a light sensor that would detect the presence of a light source hitting it. Finally, we connected an LCD display which showed the coordinates of the joystick and the status of the light sensor.
+For this phase we set up two servo motors mounted inside a pan-and-tilt kit. The two motors were controlled using independant axes of a joystick. The push-button of the joystick controlled a laser mounted on top of the pan-and-tilt kit servos. On a separate component, we wired a light sensor that could detect the presence of a light source hitting it. Finally, we connected an LCD display which showed the coordinates of the joystick and the status of the light sensor.
 
 A schematic of how our phase 1 is connected is shown in the following figure.
 
