@@ -4,11 +4,12 @@ Phase 2 consisted of using two ATMega2560 boards to control a Roomba robot and a
 
 ## System Overview
 
-One board was installed on the Roomba as the _remote_ station and the other was used as a _base_ station. Connected to the base station were two joysticks and an LCD screen. The positions of the joysticks were sent to remote station over WiFi. The WiFi modules were setup in such a way that they were automatically configured to the correct settings and ready to be used when powered on. A time-triggered-scheduler was used to control the execution of the various tasks performed on the remote and base stations.
+One board was installed on the Roomba as the _remote_ station and the other was used as a _base_ station. Connected to the base station were two joysticks, a light sensor, and an LCD screen. The positions of the joysticks were sent to remote station over WiFi. The WiFi modules were setup in such a way that they were automatically configured to the correct settings and ready to be used when powered on. A time-triggered-scheduler was used to control the execution of the various tasks performed on the remote and base stations.
 
 The components used in the base station are
 
 - two joysticks,
+- a light sensor,
 - an LCD display, and
 - a WiFi module
 
@@ -39,7 +40,7 @@ A demonstration of the our phase 2 can be seen in the below YouTube video
 
 <iframe width="720" height="360" src="https://www.youtube.com/embed/I5R19W6xEE0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
-[base]: https://i.imgur.com/naujmlM.png "Base Station"
+[base]: https://i.imgur.com/eIzdXMM.jpg "Base Station"
 [baseSchematic]: https://i.imgur.com/xBUbGb4.png "Base Station Schematic"
 [baseRender]: https://i.imgur.com/3J2LCfc.png "Base Station render"
 
