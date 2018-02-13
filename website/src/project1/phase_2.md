@@ -27,6 +27,10 @@ The remote station setup is shown in the following figure.
 
 ![Remote Station][remote]
 
+A demonstration of the our phase 2 can be seen in the below Youtube video
+
+<iframe width="720" height="360" src="https://www.youtube.com/embed/I5R19W6xEE0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
 [base]: https://i.imgur.com/naujmlM.png "Base Station"
 
 [remote]: https://i.imgur.com/8K3AXsR.png "Remote Station"
