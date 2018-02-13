@@ -10,7 +10,7 @@ Since the signals coming from the joystick for x and y position are analog, they
 
 ![Joystick Schematic][joystick_schematic]
 
-[joystick]: https://i.imgur.com/v6BjQxS.png "Joystick"
+[joystick]: https://i.imgur.com/v6BjQxS.png "Joystick" { width=50% }
 
 [joystick_schematic]: https://i.imgur.com/uGEt6Qf.png "Joystick Schematic"
 
