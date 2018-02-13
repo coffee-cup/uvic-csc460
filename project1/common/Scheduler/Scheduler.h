@@ -20,25 +20,25 @@
 #define UPDATE_CHAR_DELAY 10
 #define UPDATE_CHAR_PERIOD 50
 
-#define UPDATE_PACKET_DELAY 50
-#define UPDATE_PACKET_PERIOD 100
+#define UPDATE_PACKET_DELAY 0
+#define UPDATE_PACKET_PERIOD 50
 
-#define SEND_PACKET_DELAY 150
-#define SEND_PACKET_PERIOD 100
+#define SEND_PACKET_DELAY 2
+#define SEND_PACKET_PERIOD 50
 
-#define UPDATE_LCD_DELAY 500
+#define UPDATE_LCD_DELAY 4
 #define UPDATE_LCD_PERIOD 500
 
 // Remote Station
 
-#define UPDATE_ARM_DELAY 0
+#define GET_DATA_DELAY 0
+#define GET_DATA_PERIOD 50
+
+#define UPDATE_ARM_DELAY 2
 #define UPDATE_ARM_PERIOD 50
 
-#define COMMAND_ROOMBA_DELAY 50
+#define COMMAND_ROOMBA_DELAY 4
 #define COMMAND_ROOMBA_PERIOD 100
-
-#define GET_DATA_DELAY 10
-#define GET_DATA_PERIOD 50
 
 ///Up to this many tasks can be run, in addition to the idle task
 #define MAXTASKS	8
