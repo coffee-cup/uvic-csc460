@@ -16,10 +16,10 @@ typedef struct {
 } PinDefs;
 
 PinDefs pin = {
-               .servoX = 11,
-               .servoY = 12,
-               .laser = 40,
-               .idle = 50
+    .servoX = 11,
+    .servoY = 12,
+    .laser  = 40,
+    .idle   = 50
 };
 
 Arm arm;
@@ -48,9 +48,9 @@ void setup() {
     pinMode(pin.idle, OUTPUT);
 
     Scheduler_Init();
-    Scheduler_StartTask(UPDATE_ARM_DELAY, UPDATE_ARM_PERIOD, updateArm);
+    Scheduler_StartTask(UPDATE_ARM_DELAY,     UPDATE_ARM_PERIOD,     updateArm);
     Scheduler_StartTask(COMMAND_ROOMBA_DELAY, COMMAND_ROOMBA_PERIOD, commandRoomba);
-    Scheduler_StartTask(GET_DATA_DELAY, GET_DATA_PERIOD, getData);
+    Scheduler_StartTask(GET_DATA_DELAY,       GET_DATA_PERIOD,       getData);
 }
 
 // idle task
@@ -82,26 +82,17 @@ void getData() {
         if (r == PACKET_MAGIC && bytesAvailable >= PACKET_SIZE + 1) {
             uint8_t packet_buf[PACKET_SIZE];
 
+            // Read in a packet, and check its size
             if (Serial2.readBytes(packet_buf, PACKET_SIZE) == PACKET_SIZE) {
                 packet = Packet(packet_buf);
 
-                /* printPacket(); */
+                // Read and discard anything else available
                 for (int i=0; i < bytesAvailable - 1 - PACKET_SIZE; i += 1) {
                     Serial.read();
                 }
             }
         }
     }
-
-    /* if (sizeof(packet.data) <= Serial2.available()) { */
-    /*     uint8_t packet_buf[sizeof(packet.data)]; */
-
-    /*     if (Serial2.readBytes(packet_buf, sizeof(packet.data))) { */
-    /*         packet = Packet(packet_buf); */
-
-    /*         printPacket(); */
-    /*     } */
-    /* } */
 }
 
 void commandRoomba() {
@@ -138,8 +129,7 @@ void commandRoomba() {
     }
     last_command = command;
 
-    switch(command)
-        {
+    switch(command) {
         case 'f':
             r.drive(150, 32768);
             break;
@@ -165,7 +155,7 @@ void commandRoomba() {
             break;
         default:
             break;
-        }
+    }
 
     /* Serial.println(command); */
     /* Serial3.write(command); */
@@ -175,7 +165,7 @@ void updateArm() {
     arm.setSpeedX(Arm::filterSpeed(packet.field.joy1X));
     arm.setSpeedY(Arm::filterSpeed(packet.field.joy1Y));
 
-    digitalWrite(pin.laser, packet.field.joy1SW ? HIGH : LOW);
+    digitalWrite(pin.laser, packet.field.joy1SW == 0xFF ? HIGH : LOW);
 
     arm.tick();
 }
@@ -190,7 +180,7 @@ void printPacket() {
     Serial.print("packet.field.joy2SW : "); Serial.println(packet.field.joy2SW);
 
     Serial.print("packet.data         : ");
-    for (int i = 0; i < 10; i ++){
+    for (int i = 0; i < 10; i ++) {
         Serial.print(packet.data[i], HEX);
         Serial.print(":");
     }

@@ -27,7 +27,7 @@
 #define SEND_PACKET_PERIOD 100
 
 #define UPDATE_LCD_DELAY 500
-#define UPDATE_LCD_DURATION 500
+#define UPDATE_LCD_PERIOD 500
 
 // Remote Station
 
