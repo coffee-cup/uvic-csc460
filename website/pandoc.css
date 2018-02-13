@@ -397,6 +397,7 @@ header {
 
 .logo {
     max-width: 4rem;
+    margin: auto;
 }
 
 .markdown {
@@ -438,6 +439,12 @@ header {
         grid-column: 2 / 2;
     }
 
+    .logo {
+        grid-column: 1 / 1;
+        position: sticky;
+        top: 1em;
+    }
+
     #TOC {
         grid-area: toc;
         position: sticky;
@@ -458,9 +465,4 @@ header {
         grid-template-rows: 7em;
         grid-template-areas: ". . toc";
     }
-
-    .page-content > * {
-        grid-column: 2 / 2;
-    }
-
 }
