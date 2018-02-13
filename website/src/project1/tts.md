@@ -56,9 +56,9 @@ We first determined how long each of these tasks take to run. These values are s
 
 | Task             | Average Execution Time (ms) |
 | :--------------- |   ------------------------: |
-| Update packet    |                          12 |
+| Update packet    |                        0.65 |
 | Send packet      |                        0.05 |
-| Update LCD       |                        0.65 |
+| Update LCD       |                          12 |
 
 The logic analyzer capture from which these values were taken from is shown in the following figure.
 
