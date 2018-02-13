@@ -10,6 +10,7 @@ A schematic of how our phase 1 is connected is shown in the following figure.
 
 ![Phase 1 Schematic][phase1_schematic]
 
-[phase1_schematic]: https://i.imgur.com/92JV5Bg.png "Phase 1 Schematic"
 
-In the schematic, orange wires represent a signal connection between a hardware component and the ATMega2560. Red wires are connections between power and a component and black wires are ground.
+[phase1_schematic]: https://i.imgur.com/rY9LenJ.png "Phase 1 Schematic"
+
+In the schematic, blue wires represent a signal connection between a hardware component and the ATMega2560. Red wires are connections between power and a component and black wires are ground.
