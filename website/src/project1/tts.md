@@ -2,7 +2,7 @@
 
 A time triggered scheduler (TTS) executes tasks periodically at a very precise period. A TTS is less complicated than a real time operating system (RTOS) as tasks always run until completion and cannot be pre-empted. That is, there is no context switching between tasks. This design is much simpler than an RTOS as we do not need to worry about race-conditions. Shared memory and global variables can be used to effectively to share data between tasks.
 
-The TTS used for this project was provided for us by [Neil's Log Book](http://nrqm.ca/mechatronics-lab-guide/lab-guide-time-triggered-scheduling/). Only small modifications were made to make use C `inttypes`. The header of the `Scheduler.h` file is
+The TTS used for this project was provided for us by [Neil's Log Book](http://nrqm.ca/mechatronics-lab-guide/lab-guide-time-triggered-scheduling/). Only small modifications were made to make use of C `inttypes`. The header of the `Scheduler.h` file is
 
 ```c
 #include <inttypes.h>
