@@ -27,7 +27,7 @@ The remote station setup is shown in the following figure.
 
 ![Remote Station][remote]
 
-A demonstration of the our phase 2 can be seen in the below Youtube video
+A demonstration of the our phase 2 can be seen in the below YouTube video
 
 <iframe width="720" height="360" src="https://www.youtube.com/embed/I5R19W6xEE0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
 
