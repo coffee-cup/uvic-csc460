@@ -7,8 +7,6 @@ titlepage-color: "fcfcfc"
 titlepage-text-color: "333333"
 ---
 
-[View a PDF copy of this report](project1.pdf)
-
 # Introduction
 
 In this project, we build several of the components necessary for implementing a mobile robot laser tag game. Primary objectives of this project are listed below.

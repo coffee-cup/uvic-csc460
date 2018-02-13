@@ -16,33 +16,22 @@ The TTS used for this project was provided for us by [Neil's Log Book](http://nr
 ///A task callback function
 typedef void (*task_cb)();
 
-/**
- * Initialise the scheduler.  This should be called once in the setup routine.
- */
 void Scheduler_Init();
 
-/**
- * Start a task.
- * The function "task" will be called roughly every "period" milliseconds starting after "delay" milliseconds.
- * The scheduler does not guarantee that the task will run as soon as it can.  Tasks are executed until completion.
- * If a task misses its scheduled execution time then it simply executes as soon as possible.  Don't pass stupid
- * values (e.g. negatives) to the parameters.
- *
- * \param id The tasks ID number.  This must be between 0 and MAXTASKS (it is used as an array index).
- * \param delay The task will start after this many milliseconds.
- * \param period The task will repeat every "period" milliseconds.
- * \param task The callback function that the scheduler is to call.
- */
 void Scheduler_StartTask(int16_t delay, int16_t period, task_cb task);
 
-/**
- * Go through the task list and run any tasks that need to be run.  The main function should simply be this
- * function called as often as possible, plus any low-priority code that you want to run sporadically.
- */
 uint32_t Scheduler_Dispatch();
 
 #endif /* SCHEDULER_H_ */
 ```
+
+The scheduler is used by first calling the `Scheduler_Init()` function. Next, tasks which need to be run periodically are added to the scheduler with the `Scheduler_StartTask()` function. The parameters provided are
+
+- `delay`: Initial delay in ms that the task will be run after
+- `period`: How often in ms that the task will be repeat after
+- `task`: Function callback that represents the task and will be run every period
+
+Each iteration of the main loop the `Scheduler_Dispatch()` function is called. This function will figure out which task needs to be run based on the current running time. The amount of idle time remaining between the function call and the next task that needs to be run is returned as a `uint32_t`. This `idle_period` can be used to do some low priority task that does not take a lot of time.
 
 ### Base Station
 
