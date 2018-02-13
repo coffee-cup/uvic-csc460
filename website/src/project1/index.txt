@@ -1,8 +1,8 @@
 index.md
 phase_1.md
 joystick.md
-servo.md
 laser_sensor.md
+servo.md
 lcd.md
 phase_2.md
 wifi.md
