@@ -2,7 +2,7 @@
 
 As observed in the above logic analyzer timing diagrams, the CPU is idle for the majority of the time. For both the base and remote station, we are only executing three tasks, each of which use the CPU for a short amount of time. Using the average execution time of each task and its scheduled period for the TTS, we can calculate what percentage of the time the CPU is actually doing useful work.
 
-The calcuation for CPU utilization is as follows
+The calculation for CPU utilization is as follows
 
 \begin{equation*}
   \text{CPU utilization} = \frac{\text{Computation time}}{\text{Period}}
