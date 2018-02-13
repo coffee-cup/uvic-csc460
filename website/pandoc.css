@@ -26,6 +26,7 @@ main {
 a {
     color: #4d3ae2;
     text-decoration: none;
+    transition: opacity .250s ease-out;
 }
 
 a:visited {
