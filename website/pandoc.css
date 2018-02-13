@@ -76,6 +76,10 @@ img {
     max-width: 100%;
 }
 
+td img {
+    display: block;
+}
+
 h1,
 h2,
 h3,
@@ -423,7 +427,7 @@ table td {
         position: sticky;
         top: 0;
         height: 100vh;
-        overflow-y: scroll;
+        overflow-y: auto;
     }
 }
 
