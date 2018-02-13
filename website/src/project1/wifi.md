@@ -11,7 +11,7 @@ The WiFi modules used are the DOIT DT-06 which is based on the ESP8266 WiFi card
 
 ![DT-06 WiFi board][wifiboard]
 
-These WiFi boards have built in software controlled access points (SoftAP) and HTTP servers, allowing them to operate without the need for external networks. They also provide the same RX/TX pins that our lab's traditonal bluetooth boards posess, along with an onboard Serial decoder that translates UART data into IP packets. This means that if our tests with WiFi control are successful, the remainder of the lab can move to using WiFi instead of bluetooth.
+These WiFi boards have built in software controlled access points (SoftAP) and HTTP servers, allowing them to operate without the need for external networks. They also provide the same RX/TX pins that our lab's traditional bluetooth boards posses, along with an onboard Serial decoder that translates UART data into IP packets. This means that if our tests with WiFi control are successful, the remainder of the lab can move to using WiFi instead of bluetooth.
 
 
 ### Setup
@@ -42,7 +42,7 @@ The packet was declared using the following fields:
 | Joy1SW       | 1 Byte  | 0 or 255  | Z axis (switch) reading of Joystick 1 |
 | Joy2SW       | 1 Byte  | 0 or 255  | Z axis (switch) reading of Joystick 2 |
 
-Using a magic number at the front of the packet allows us to segment the incoming data steam into packets and detect transmission errors by waiting until the magic number appears, then reading the appropriate number of following bytes - the following 10 bytes in our case. If an inappropriate number of bytes are available to read then the packet is discarded.
+Using a magic number at the front of the packet allows us to segment the incoming data stream into packets and detect transmission errors by waiting until the magic number appears, then reading the appropriate number of following bytes - the following 10 bytes in our case. If an inappropriate number of bytes are available to read then the packet is discarded.
 
 ![Wireshark capture showing packet data][wireshark]
 

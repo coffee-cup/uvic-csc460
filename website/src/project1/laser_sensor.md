@@ -16,14 +16,16 @@
 
 
 
-We use a laser and light sensor as the basis for implementing the ability to play laser tag with the other teams. In phase one, both the laser and the light sensor are attached to the same prototyping board. We had the choice between two lasers: the Tempsa laser or the Keyes Hoya PCB mounted laser. The Tempsa laser is shipped with two loose ends that would have to be soldered to other wires before being usable. The Keyes laser is mounted on a PCB with male pin outs. Additionally the Keyes laser comes with a builtin inline resistor to help with short-circuit protection.
+We use a laser and light sensor as the basis for implementing the ability to play laser tag with the other teams. In phase one, both the laser and the light sensor are attached to the same prototyping board. We had the choice between two lasers: the Tempsa laser or the Keyes Hoya PCB mounted laser. The Tempsa laser is shipped with two loose ends that would have to be soldered to other wires before being usable. The Keyes laser is mounted on a PCB with male pinouts. Additionally the Keyes laser comes with a built-in inline resistor to help with short-circuit protection.
 
 |  ![][tempsa]   |        ![][keyes]          |
 |:--------------:|:--------------------------:|
 |  Tempsa Laser  |  Keyes Hoya Mounted Laser  |
 
 
-Although both lasers seem to use the same 6mm copper tube laser diode they have different power consumptions. This is likely due to the inline resistor found on the Keyes laser, it draws $150mW$ ($30mA$ at $5V$) power whereas the Tempsa laser only draws $50mW$ ($10mA$ at $5V$). Both lasers can conveniently be driven directly from a digital output on the ATmega2560, although it would be unwise the use the Tempsa laser without a short-circuit protection resistor in series. The Keyes laser has three pins on it's PCB, yet only the outer two (Labelled S: Signal, -: Ground) are required to drive the laser. The thrid pin seems to be a $V_{ref}$ pin as it provides the same voltage as the signal pin. For these reasons we choose to work with the Keyes laser for this project.
+Although both options use the same 6mm copper tube laser diode they have different power consumptions. This is likely due to the inline resistor found on the Keyes laser which draws $150mW$ ($30mA$ at $5V$) power whereas the Tempsa laser only draws $50mW$ ($10mA$ at $5V$). Both lasers can conveniently be driven directly from a digital output on the ATmega2560, although it would be unwise the use the Tempsa laser without a short-circuit protection resistor wired in series with the return. Also, oddly, the Keyes laser has three pins on it's PCB, yet only the outer two (Labelled S: Signal, -: Ground) are required to drive the laser. The third pin seems to be a $V_{ref}$ pin as it provides the same voltage as the signal pin.
+
+The Keyes laser seems easier to work with due to the built-in short circuit protection and factory mounted PCB. With this in mind we decided to work with the Keyes style laser for the remainder of the project.
 
 For the light sensor, we are provided access to some photoresistors. They are comparable to the PDV-P8001 as described on this [datasheet](https://cdn-learn.adafruit.com/assets/assets/000/010/127/original/PDV-P8001.pdf). Importantly, the light sensor should be wired with a series resistor on the ground side to if it is to be used as a digital input. See the schematic below.
 
@@ -41,7 +43,7 @@ Without the ground side resistor the input would be floating and thus any readin
 |:------------------------:|:-----------------:|
 |      Internal design     |      Active       |
 
-The sensor is constructed from a the center piece of 1.25cm thick plexiglass cut using a 2.5cm hole saw. The photoresistor is mounted within the center hole using some hot glue, and the clear faces of the plexiglass are covered with reflective thermal insulation tape. The cut edges of the plexiglass are partially opaque, thus when a light is shone on the sensor, a large amount of the light is reflected internally.
+The sensor is constructed from the center piece of 1.25cm thick plexiglass cut using a 2.5cm hole saw. The photoresistor is mounted within the center hole using some hot glue, and the clear faces of the plexiglass are covered with reflective thermal insulation tape. The cut edges of the plexiglass are partially opaque, thus when a light is shone on the sensor, a large amount of the light is reflected internally.
 
 
 
