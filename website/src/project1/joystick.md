@@ -6,7 +6,7 @@ The third z axis is controlled by an internal switch which grounds the signal wh
 
 ![Joystick][joystick]
 
-Since the signals coming from the joystick for x and y position are analog, they need to be converted to a digital values. We connect them to the horizontal and vertical pins to analog A1 and A2, respectively. The z axis switch is connected to digital pin 30. The connections are depicted in the following schematic.
+Since the signals coming from the joystick for x and y position are analog, they need to be converted to digital using an ADC converter. We connect them to the horizontal and vertical pins to analog A1 and A2, respectively. The z axis switch is connected to digital pin 30. The connections are depicted in the following schematic.
 
 ![Joystick Schematic][joystick_schematic]
 
