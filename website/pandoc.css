@@ -152,6 +152,7 @@ samp {
 }
 
 pre {
+    margin-left: 0;
     white-space: pre;
     white-space: pre-wrap;
     word-wrap: break-word;

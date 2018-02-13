@@ -5,7 +5,7 @@ servo.md
 laser_sensor.md
 lcd.md
 phase_2.md
-tts.md
 wifi.md
+tts.md
 timing.md
 appendix.md
