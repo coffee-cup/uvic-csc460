@@ -418,9 +418,6 @@ header {
     padding: 0 1rem;
 }
 
-#TOC {
-    margin-top: 8rem;
-}
 
 #TOC::-webkit-scrollbar {
     display: none;
@@ -447,6 +444,7 @@ header {
         top: 0;
         height: 100vh;
         overflow-y: auto;
+        margin-top: 8rem;
     }
 }
 

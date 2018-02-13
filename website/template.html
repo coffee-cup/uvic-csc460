@@ -61,6 +61,11 @@
                 </header>
                 <!-- page content begins here -->
 
+                $if(toc)$
+                <nav id="$idprefix$TOC">
+                    $toc$
+                </nav>
+                $endif$
                 <div class="markdown">
                     $for(include-before)$
                     $include-before$
@@ -115,11 +120,6 @@
 
                     <!-- page content ends here -->
                 </div>
-                $if(toc)$
-                <nav id="$idprefix$TOC">
-                    $toc$
-                </nav>
-                $endif$
                 <footer>
                     <h4>Project by</h4>
 
