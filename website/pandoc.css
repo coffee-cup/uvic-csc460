@@ -283,7 +283,7 @@ table td {
 }
 
 table thead {
-    display: block;
+    display: contents;
 }
 
 .author {
