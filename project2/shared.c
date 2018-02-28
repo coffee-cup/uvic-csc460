@@ -123,10 +123,7 @@ volatile static uint16_t Tasks;
  */
 void Kernel_Create_Task_At( PD *p, voidfuncptr f )
 {
-   uint8_t *sp;
-
-
-   sp = (uint8_t *) &(p->workSpace[WORKSPACE-1]);
+   uint8_t *sp = &(p->workSpace[WORKSPACE-1]);
 
    /*----BEGIN of NEW CODE----*/
    //Initialize the workspace (i.e., stack) and PD here!
@@ -141,16 +138,18 @@ void Kernel_Create_Task_At( PD *p, voidfuncptr f )
    //second), even though the AT90 is LITTLE ENDIAN machine.
 
    //Store terminate at the bottom of stack to protect against stack underrun.
-   *(uint8_t *)sp-- = ((uint16_t)Task_Terminate) & 0xff;
-   *(uint8_t *)sp-- = (((uint16_t)Task_Terminate) >> 8) & 0xff;
+   *sp-- = ((uint16_t)Task_Terminate) & 0xff;
+   *sp-- = (((uint16_t)Task_Terminate) >> 8) & 0xff;
+   *sp-- = 0;
 
    //Place return address of function at bottom of stack
-   *(uint8_t *)sp-- = ((uint16_t)f) & 0xff;
-   *(uint8_t *)sp-- = (((uint16_t)f) >> 8) & 0xff;
+   *sp-- = ((uint16_t)f) & 0xff;
+   *sp-- = (((uint16_t)f) >> 8) & 0xff;
+   *sp-- = 0;
 
 
    //Place stack pointer at top of stack
-   sp = sp - 33;
+   sp = sp - 34;
 
    p->sp = sp;		/* stack pointer into the "workSpace" */
 
