@@ -73,7 +73,6 @@ typedef struct ProcessDescriptor
     PROCESS_STATES state;
 } PD;
 
-
 typedef void (*fp_vv)(void); /* pointer to void f(void) */
 
 /*===========
@@ -120,6 +119,7 @@ volatile static uint16_t KernelActive;
 /** number of tasks created so far */
 volatile static uint16_t Tasks;
 
+/** number of 10ms ticks occurred so far */
 volatile static uint32_t num_ticks;
 
 /**
@@ -285,33 +285,34 @@ void Task_Terminate()
     }
 }
 
-void setupTimer() {
-  //Clear timer config.
-  TCCR4A = 0;
-  TCCR4B = 0;
-  //Set to CTC (mode 4)
-  TCCR4B |= (1<<WGM42);
+void setupTimer()
+{
+    //Clear timer config.
+    TCCR4A = 0;
+    TCCR4B = 0;
+    //Set to CTC (mode 4)
+    TCCR4B |= (1 << WGM42);
 
-  //Set prescaller to 256
-  TCCR4B |= (1<<CS42);
+    //Set prescaller to 256
+    TCCR4B |= (1 << CS42);
 
-  //Set TOP value (0.01 seconds)
-  OCR4A = 625;
+    //Set TOP value (0.01 seconds)
+    OCR4A = 625;
 
-  //Enable interupt A for timer 3.
-  TIMSK4 |= (1<<OCIE4A);
+    //Enable interupt A for timer 3.
+    TIMSK4 |= (1 << OCIE4A);
 
-  //Set timer to 0 (optional here).
-  TCNT4 = 0;
+    //Set timer to 0 (optional here).
+    TCNT4 = 0;
 
-  Enable_Interrupt();
+    Enable_Interrupt();
 }
-
 
 ISR(TIMER4_COMPA_vect)
 {
     PORTB |= 0b01000000;
-    if ((num_ticks++ % 100) == 0){
+    if ((num_ticks++ % 100) == 0)
+    {
         PORTB ^= 0b10000000;
     }
     PORTB &= ~0b01000000;
@@ -332,9 +333,9 @@ void Ping() TASK
 })
 
 /**
-  * A cooperative "Pong" task.
-  * Added testing code for LEDs.
-  */
+ * A cooperative "Pong" task.
+* Added testing code for LEDs.
+*/
 void Pong() TASK
 ({
     PORTD ^= 0b00000001;
@@ -346,9 +347,9 @@ void Pong() TASK
 })
 
 /**
-  * This function creates two cooperative tasks, "Ping" and "Pong". Both
-  * will run forever.
-  */
+ * This function creates two cooperative tasks, "Ping" and "Pong". Both
+* will run forever.
+*/
 int main(void)
 {
     // io init
