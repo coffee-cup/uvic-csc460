@@ -17,8 +17,8 @@ ISR(TIMER4_COMPA_vect)
 {
     ticks = ticks + 1;
     cs = (ticks) % 100;
-    sec = (ticks / 60) % 60;
-    min = ticks / 3600;
+    sec = (ticks / 100) % 60;
+    min = ticks / 6000;
 }
 
 void initIO() {
