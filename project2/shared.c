@@ -1,5 +1,6 @@
 #include <util/delay.h>
 #include <avr/io.h>
+#include <avr/interrupt.h>
 #include <stdint.h>
 #include <string.h> // memset
 
@@ -118,6 +119,8 @@ volatile static uint16_t KernelActive;
 
 /** number of tasks created so far */
 volatile static uint16_t Tasks;
+
+volatile static uint32_t num_ticks;
 
 /**
  * When creating a new task, it is important to initialize its stack just like
@@ -282,6 +285,38 @@ void Task_Terminate()
     }
 }
 
+void setupTimer() {
+  //Clear timer config.
+  TCCR4A = 0;
+  TCCR4B = 0;
+  //Set to CTC (mode 4)
+  TCCR4B |= (1<<WGM42);
+
+  //Set prescaller to 256
+  TCCR4B |= (1<<CS42);
+
+  //Set TOP value (0.01 seconds)
+  OCR4A = 625;
+
+  //Enable interupt A for timer 3.
+  TIMSK4 |= (1<<OCIE4A);
+
+  //Set timer to 0 (optional here).
+  TCNT4 = 0;
+
+  Enable_Interrupt();
+}
+
+
+ISR(TIMER4_COMPA_vect)
+{
+    PORTB |= 0b01000000;
+    if ((num_ticks++ % 100) == 0){
+        PORTB ^= 0b10000000;
+    }
+    PORTB &= ~0b01000000;
+}
+
 /**
   * A cooperative "Ping" task.
   * Added testing code for LEDs.
@@ -330,6 +365,9 @@ int main(void)
     _delay_ms(3000);
 
     PORTB = 0x00;
+    num_ticks = 0;
+
+    setupTimer();
 
     OS_Init();
     Task_Create(Pong);
