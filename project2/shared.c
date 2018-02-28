@@ -1,5 +1,8 @@
 #include <string.h>
 #include <avr/io.h>
+#include <stdint.h>
+#include <util/delay.h>
+
 /**
  * \file shared.c
  * \brief A Skeleton Implementation of an RTOS
@@ -60,6 +63,7 @@ extern void Exit_Kernel();
 
 #define Disable_Interrupt()         asm volatile ("cli"::)
 #define Enable_Interrupt()          asm volatile ("sei"::)
+#define JUMP(f) asm("jmp " #f::)
 
 /**
   *  This is the set of states that a task can be in at any given time.
@@ -83,8 +87,8 @@ typedef enum process_states
   */
 typedef struct ProcessDescriptor
 {
-   unsigned char *sp;
-   unsigned char workSpace[WORKSPACE];
+   uint8_t *sp;
+   uint8_t workSpace[WORKSPACE];
    PROCESS_STATES state;
 } PD;
 
@@ -102,13 +106,13 @@ static PD Process[MAXPROCESS];
 volatile PD* CurrentP;
 
 /** index to next task to run */
-volatile static unsigned int NextP;
+volatile static uint16_t NextP;
 
 /** 1 if kernel has been started; 0 otherwise. */
-volatile static unsigned int KernelActive;
+volatile static uint16_t KernelActive;
 
 /** number of tasks created so far */
-volatile static unsigned int Tasks;
+volatile static uint16_t Tasks;
 
 
 /**
@@ -119,12 +123,10 @@ volatile static unsigned int Tasks;
  */
 void Kernel_Create_Task_At( PD *p, voidfuncptr f )
 {
-   unsigned char *sp;
-#ifdef DEBUG
-   int counter = 0;
-#endif
+   uint8_t *sp;
 
-   sp = (unsigned char *) &(p->workSpace[WORKSPACE-1]);
+
+   sp = (uint8_t *) &(p->workSpace[WORKSPACE-1]);
 
    /*----BEGIN of NEW CODE----*/
    //Initialize the workspace (i.e., stack) and PD here!
@@ -139,24 +141,16 @@ void Kernel_Create_Task_At( PD *p, voidfuncptr f )
    //second), even though the AT90 is LITTLE ENDIAN machine.
 
    //Store terminate at the bottom of stack to protect against stack underrun.
-   *(unsigned char *)sp-- = ((unsigned int)Task_Terminate) & 0xff;
-   *(unsigned char *)sp-- = (((unsigned int)Task_Terminate) >> 8) & 0xff;
+   *(uint8_t *)sp-- = ((uint16_t)Task_Terminate) & 0xff;
+   *(uint8_t *)sp-- = (((uint16_t)Task_Terminate) >> 8) & 0xff;
 
    //Place return address of function at bottom of stack
-   *(unsigned char *)sp-- = ((unsigned int)f) & 0xff;
-   *(unsigned char *)sp-- = (((unsigned int)f) >> 8) & 0xff;
+   *(uint8_t *)sp-- = ((uint16_t)f) & 0xff;
+   *(uint8_t *)sp-- = (((uint16_t)f) >> 8) & 0xff;
 
-#ifdef DEBUG
-   //Fill stack with initial values for development debugging
-   //Registers 0 -> 31 and the status register
-   for (counter = 0; counter < 33; counter++)
-   {
-      *(unsigned char *)sp-- = counter;
-   }
-#else
+
    //Place stack pointer at top of stack
    sp = sp - 33;
-#endif
 
    p->sp = sp;		/* stack pointer into the "workSpace" */
 
@@ -244,7 +238,7 @@ void OS_Start()
 
       /* here we go...  */
       KernelActive = 1;
-      asm ( "jmp Exit_Kernel":: );
+      JUMP(Exit_Kernel);
    }
 }
 
@@ -285,7 +279,7 @@ void Task_Terminate()
       Disable_Interrupt();
       CurrentP -> state = DEAD;
         /* we will NEVER return here! */
-      asm ( "jmp Exit_Kernel":: );
+      JUMP(Exit_Kernel);
    }
 }
 
@@ -301,14 +295,11 @@ void Task_Terminate()
   */
 void Ping()
 {
-  int  x ;
   for(;;){
   	//Toggle B1
     PORTB ^= 0b00000010;
 
-    for( x=0; x < 32000; ++x );   /* do nothing */
-	for( x=0; x < 32000; ++x );   /* do nothing */
-	for( x=0; x < 32000; ++x );   /* do nothing */
+    _delay_ms(100);
 
     Task_Next();
   }
@@ -321,15 +312,12 @@ void Ping()
   */
 void Pong()
 {
-  int  x;
   for(;;) {
 
 	//Toggle B0
 	PORTB ^= 0b00000001;
 
-    for( x=0; x < 32000; ++x );   /* do nothing */
-	for( x=0; x < 32000; ++x );   /* do nothing */
-	for( x=0; x < 32000; ++x );   /* do nothing */
+    _delay_ms(50);
 
     Task_Next();
   }
