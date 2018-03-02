@@ -37,6 +37,7 @@
 #define Enable_Interrupt() asm volatile("sei" ::)
 #define JUMP(f) asm("jmp " #f::)
 
+#define bit(b) ((uint16_t)(1 << ((uint16_t)b)))
 #define LOW_BYTE(X) (((uint16_t)X) & 0xFF)
 #define HIGH_BYTE(X) ((((uint16_t)X) >> 8) & 0xFF)
 #define ZeroMemory(X, N) memset(&X, 0, N)
@@ -310,12 +311,12 @@ void setupTimer()
 
 ISR(TIMER4_COMPA_vect)
 {
-    PORTB |= 0b01000000;
+    PORTB |= bit(6);
     if ((num_ticks++ % 100) == 0)
     {
-        PORTB ^= 0b10000000;
+        PORTB ^= bit(7);
     }
-    PORTB &= ~0b01000000;
+    PORTB &= ~bit(6);
 }
 
 /**
@@ -324,12 +325,12 @@ ISR(TIMER4_COMPA_vect)
   */
 void Ping() TASK
 ({
-    PORTD ^= 0b00000001;
+    PORTD ^= bit(0);
     //LED on
-    PORTB = 1 << 0;
+    PORTB |= bit(0);
     _delay_ms(300);
 
-    PORTD ^= 0b00000001;
+    PORTD ^= bit(0);
 })
 
 /**
@@ -338,12 +339,12 @@ void Ping() TASK
 */
 void Pong() TASK
 ({
-    PORTD ^= 0b00000001;
+    PORTD ^= bit(0);
     //LED off
-    PORTB = 1 << 1;
+    PORTB &= ~bit(1);
     _delay_ms(300);
 
-    PORTD ^= 0b00000001;
+    PORTD ^= bit(0);
 })
 
 /**
@@ -359,7 +360,7 @@ int main(void)
     DDRD = 0xFF;
 
     PORTA = 0x00;
-    PORTB = 1 << 2;
+    PORTB = bit(2);
     PORTC = 0x00;
     PORTD = 0x00;
 
