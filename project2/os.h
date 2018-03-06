@@ -2,6 +2,10 @@
 #ifndef _OS_H_
 #define _OS_H_
 
+#include <stdint.h>
+#include <avr/io.h>
+#include <util/delay.h>
+
 #define MAXTHREAD     16
 #define WORKSPACE     256   // in bytes, per THREAD
 #define MSECPERTICK   10   // resolution of a system TICK in milliseconds
@@ -20,9 +24,22 @@ typedef unsigned int BOOL;       // TRUE or FALSE
 typedef unsigned char MTYPE;
 typedef unsigned char MASK;
 
+typedef void (*voidfuncptr) (void);      /* pointer to void f(void) */
+
 // Aborts the RTOS and enters a "non-executing" state with an error code. That is, all tasks
 // will be stopped.
 void OS_Abort(unsigned int error);
+
+/**
+ * This function initializes the RTOS and must be called before any other
+ * system calls.
+ */
+void OS_Init();
+
+/**
+ * This function starts the RTOS after creating a few tasks.
+ */
+void OS_Start();
 
 /*
  * Scheduling Policy:
@@ -45,6 +62,9 @@ void OS_Abort(unsigned int error);
  * expire their quantum, then they go back to the end of their level. Currently, a quantum
  * is defined to be 1 TICK.
  */
+
+// TODO: Replace with Priority based task creates
+void Task_Create(voidfuncptr f);
 
 PID   Task_Create_System(void (*f)(void), int arg);
 PID   Task_Create_RR(    void (*f)(void), int arg);
@@ -75,7 +95,6 @@ int  Task_GetArg(void);
 // It returns the calling task's PID.
 PID  Task_Pid(void);
 
-
 //
 // Send-Recv-Rply is similar to QNX-style message-passing
 // Rply() to a NULL process is a no-op.
@@ -97,8 +116,6 @@ void Msg_Rply( PID  id,          unsigned int r );
 // Note: PERIODIC tasks (or interrupt handlers), however, may use Msg_ASend()!!!
 //
 void Msg_ASend( PID  id, MTYPE t, unsigned int v );
-
-
 
 /**
  * Returns the number of milliseconds since OS_Init(). Note that this number
