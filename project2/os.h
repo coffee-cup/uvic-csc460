@@ -2,12 +2,13 @@
 #ifndef _OS_H_
 #define _OS_H_
 
+#include "process.h"
 #include <stdint.h>
 #include <avr/io.h>
 #include <util/delay.h>
 
 #define MAXTHREAD     16
-#define WORKSPACE     256   // in bytes, per THREAD
+/* #define WORKSPACE     256   // in bytes, per THREAD */
 #define MSECPERTICK   10   // resolution of a system TICK in milliseconds
 
 #ifndef NULL
@@ -23,8 +24,6 @@ typedef unsigned int TICK;       // 1 TICK is defined by MSECPERTICK
 typedef unsigned int BOOL;       // TRUE or FALSE
 typedef unsigned char MTYPE;
 typedef unsigned char MASK;
-
-typedef void (*voidfuncptr) (void);      /* pointer to void f(void) */
 
 // Aborts the RTOS and enters a "non-executing" state with an error code. That is, all tasks
 // will be stopped.
