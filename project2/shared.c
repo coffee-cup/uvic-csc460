@@ -37,10 +37,13 @@
 #define Enable_Interrupt() asm volatile("sei" ::)
 #define JUMP(f) asm("jmp " #f::)
 
-#define bit(b) ((uint16_t)(1 << ((uint16_t)b)))
+#define BIT_SET(PORT, PIN) PORT |= 1 << PIN
+#define BIT_CLR(PORT, PIN) PORT &= ~(1 << PIN)
+#define BIT_FLIP(PORT, PIN) PORT ^= 1 << PIN
+
 #define LOW_BYTE(X) (((uint16_t)X) & 0xFF)
 #define HIGH_BYTE(X) ((((uint16_t)X) >> 8) & 0xFF)
-#define ZeroMemory(X, N) memset(&X, 0, N)
+#define ZeroMemory(X, N) memset(&(X), 0, N)
 #define TASK(body)           \
     {                        \
         for (;; Task_Next()) \
@@ -58,6 +61,13 @@ typedef enum process_states {
     RUNNING
 } PROCESS_STATES;
 
+typedef enum process_requests {
+    NONE = 0,
+    YEILD,
+    QUANTUM,
+    TERMINATE
+} PROCESS_REQUESTS;
+
 /**
   * Each task is represented by a process descriptor, which contains all
   * relevant information about this task. For convenience, we also store
@@ -72,6 +82,7 @@ typedef struct ProcessDescriptor
     uint8_t *sp;
     uint8_t workSpace[WORKSPACE];
     PROCESS_STATES state;
+    PROCESS_REQUESTS request;
 } PD;
 
 typedef void (*fp_vv)(void); /* pointer to void f(void) */
@@ -88,7 +99,7 @@ typedef void (*fp_vv)(void); /* pointer to void f(void) */
   * context.
   * (See file "switch.S" for details.)
   */
-extern void CSwitch(void);
+extern void Enter_Kernel(void);
 
 /* Prototype */
 void Task_Terminate(void);
@@ -108,8 +119,12 @@ static PD Process[MAXPROCESS];
 /**
   * The process descriptor of the currently RUNNING task.
   */
-//??? Removed static because it was blocking external access.
-volatile PD *CurrentP;
+volatile PD* CurrentP;
+
+/**
+  * The process descriptor of the kernel.
+  */
+volatile uint8_t* KernelSP;
 
 /** index to next task to run */
 volatile static uint16_t NextP;
@@ -159,6 +174,7 @@ void Kernel_Create_Task_At(PD *p, fp_vv f)
 
     p->sp = sp; /* stack pointer into the "workSpace" */
     p->state = READY;
+    p->request = NONE;
 }
 
 /**
@@ -206,10 +222,73 @@ void Dispatch()
     NextP = (NextP + 1) % MAXPROCESS;
 }
 
+void Kernel_Event_nop(void) {
+    Dispatch();
+};
+
+void Kernel_Event_yeild(void) {
+    Dispatch();
+};
+
+void Kernel_Event_quantum(void) {
+    Dispatch();
+};
+
+void Kernel_Event_terminate(void) {
+    CurrentP->state = DEAD;
+    Tasks -= 1;
+    Dispatch();
+};
+
+
+fp_vv func_table[3][4] = {
+/*              |     NONE         |      YEILD          |       QUANTUM         |      TERMINATE */
+/* DEAD    */ {  Kernel_Event_nop,   Kernel_Event_yeild,   Kernel_Event_quantum,   Kernel_Event_terminate },
+/* READY   */ {  Kernel_Event_nop,   Kernel_Event_yeild,   Kernel_Event_quantum,   Kernel_Event_terminate },
+/* RUNNING */ {  Kernel_Event_nop,   Kernel_Event_yeild,   Kernel_Event_quantum,   Kernel_Event_terminate }
+};
+
+void Kernel_Event_Loop() {
+
+    Dispatch();
+
+    for (;;) {
+        /* Clear the task's request */
+        CurrentP->request = NONE;
+
+        BIT_CLR(PORTD, 0);
+        Exit_Kernel();
+        /* When the task makes a system request execution will return here */
+
+        func_table[CurrentP->state][CurrentP->request]();
+    }
+}
+
 /*================
   * RTOS  API  and Stubs
   *================
   */
+
+void OS_Configure_Timer() {
+    //Clear timer config.
+    TCCR4A = 0;
+    TCCR4B = 0;
+    //Set to CTC (mode 4)
+    BIT_SET(TCCR4B, WGM42);
+
+    //Set prescaller to 256
+    BIT_SET(TCCR4B, CS42);
+
+    //Set TOP value (0.01 seconds)
+    OCR4A = 625;
+
+    //Enable interupt A for timer 3.
+    BIT_SET(TIMSK4, OCIE4A);
+
+    //Set timer to 0 (optional here).
+    TCNT4 = 0;
+}
+
 
 /**
   * This function initializes the RTOS and must be called before any other
@@ -225,7 +304,7 @@ void OS_Init()
 
     for (x = 0; x < MAXPROCESS; x++)
     {
-        memset(&(Process[x]), 0, sizeof(PD));
+        ZeroMemory(Process[x], sizeof(PD));
         Process[x].state = DEAD;
     }
 }
@@ -238,10 +317,18 @@ void OS_Start()
     if ((!KernelActive) && (Tasks > 0))
     {
         Disable_Interrupt();
-
+        OS_Configure_Timer();
         /* here we go...  */
         KernelActive = 1;
-        JUMP(Exit_Kernel);
+        BIT_FLIP(PORTB, 0);
+        BIT_FLIP(PORTB, 0);
+        BIT_FLIP(PORTB, 0);
+        BIT_FLIP(PORTB, 0);
+        BIT_FLIP(PORTB, 0);
+        BIT_FLIP(PORTB, 0);
+        for (;;) {
+            Kernel_Event_Loop();
+        }
     }
 }
 
@@ -266,9 +353,12 @@ void Task_Next()
     {
         Disable_Interrupt();
         CurrentP->state = READY;
-        CSwitch();
+        CurrentP->request = YEILD;
+
+        BIT_SET(PORTD, 0);
+        Enter_Kernel();
         /* resume here when this task is rescheduled again later */
-        Enable_Interrupt();
+        /* Interrupts will be re-enabled automatically */
     }
 }
 
@@ -280,43 +370,25 @@ void Task_Terminate()
     if (KernelActive)
     {
         Disable_Interrupt();
-        CurrentP->state = DEAD;
+        CurrentP->request = TERMINATE;
         /* we will NEVER return here! */
-        JUMP(Exit_Kernel);
+        BIT_SET(PORTD, 0);
+        Enter_Kernel();
     }
-}
-
-void setupTimer()
-{
-    //Clear timer config.
-    TCCR4A = 0;
-    TCCR4B = 0;
-    //Set to CTC (mode 4)
-    TCCR4B |= (1 << WGM42);
-
-    //Set prescaller to 256
-    TCCR4B |= (1 << CS42);
-
-    //Set TOP value (0.01 seconds)
-    OCR4A = 625;
-
-    //Enable interupt A for timer 3.
-    TIMSK4 |= (1 << OCIE4A);
-
-    //Set timer to 0 (optional here).
-    TCNT4 = 0;
-
-    Enable_Interrupt();
 }
 
 ISR(TIMER4_COMPA_vect)
 {
-    PORTB |= bit(6);
-    if ((num_ticks++ % 100) == 0)
-    {
-        PORTB ^= bit(7);
+    BIT_SET(PORTB, 6);
+    if ((++num_ticks % 100) == 0){
+
+        BIT_FLIP(PORTB, 7);
+        CurrentP->request = QUANTUM;
+
+        BIT_SET(PORTD, 0);
+        Enter_Kernel();
     }
-    PORTB &= ~bit(6);
+    BIT_CLR(PORTB, 6);
 }
 
 /**
@@ -325,12 +397,9 @@ ISR(TIMER4_COMPA_vect)
   */
 void Ping() TASK
 ({
-    PORTD ^= bit(0);
     //LED on
-    PORTB |= bit(0);
-    _delay_ms(300);
-
-    PORTD ^= bit(0);
+    BIT_FLIP(PORTB, 0);
+    _delay_ms(100);
 })
 
 /**
@@ -339,12 +408,9 @@ void Ping() TASK
 */
 void Pong() TASK
 ({
-    PORTD ^= bit(0);
     //LED off
-    PORTB &= ~bit(1);
-    _delay_ms(300);
-
-    PORTD ^= bit(0);
+    BIT_FLIP(PORTB, 1);
+    _delay_ms(100);
 })
 
 /**
@@ -360,19 +426,21 @@ int main(void)
     DDRD = 0xFF;
 
     PORTA = 0x00;
-    PORTB = bit(2);
+    PORTB = 0x00;
     PORTC = 0x00;
     PORTD = 0x00;
 
-    _delay_ms(3000);
+    BIT_SET(PORTB, 2);
+    _delay_ms(37);
+    BIT_CLR(PORTB, 2);
 
-    PORTB = 0x00;
     num_ticks = 0;
 
-    setupTimer();
+    // Starting in 'kernel' mode
+    BIT_FLIP(PORTD, 0);
 
     OS_Init();
-    Task_Create(Pong);
-    Task_Create(Ping);
+    Kernel_Create_Task(Pong);
+    Kernel_Create_Task(Ping);
     OS_Start();
 }

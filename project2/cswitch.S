@@ -32,93 +32,93 @@ EIND  = 0x3C
 ; initialize its "initial" context in the same order as SAVECTX.
 ;
 .macro	SAVECTX
-	push	r0
-	push	r1
-	push	r2
-	push	r3
-	push	r4
-	push	r5
-	push	r6
-	push	r7
-	push	r8
-	push	r9
-	push	r10
-	push	r11
-	push	r12
-	push	r13
-	push	r14
-	push	r15
-	push	r16
-	push	r17
-	push	r18
-	push	r19
-	push	r20
-	push	r21
-	push	r22
-	push	r23
-	push	r24
-	push	r25
-	push	r26
-	push	r27
-	push	r28
-	push	r29
-	push	r30
-	push	r31
-  in r31, EIND
-  push r31
-  in r31, SREG
-  push r31
+	push r0
+	push r1
+	push r2
+	push r3
+	push r4
+	push r5
+	push r6
+	push r7
+	push r8
+	push r9
+	push r10
+	push r11
+	push r12
+	push r13
+	push r14
+	push r15
+	push r16
+	push r17
+	push r18
+	push r19
+	push r20
+	push r21
+	push r22
+	push r23
+	push r24
+	push r25
+	push r26
+	push r27
+	push r28
+	push r29
+	push r30
+	push r31
+	in   r31, EIND
+	push r31
+	in   r31, SREG
+	push r31
 .endm
 
 ;
 ; Pop all registers and the status registers
 ;
 .macro	RESTORECTX
-	pop	r31
-	out	SREG, r31
-  pop r31
-  out EIND, r31
-	pop	r31
-	pop	r30
-	pop	r29
-	pop	r28
-	pop	r27
-	pop	r26
-	pop	r25
-	pop	r24
-	pop	r23
-	pop	r22
-	pop	r21
-	pop	r20
-	pop	r19
-	pop	r18
-	pop	r17
-	pop	r16
-	pop	r15
-	pop	r14
-	pop	r13
-	pop	r12
-	pop	r11
-	pop	r10
-	pop	r9
-	pop	r8
-	pop	r7
-	pop	r6
-	pop	r5
-	pop	r4
-	pop	r3
-	pop	r2
-	pop	r1
-	pop	r0
+	pop	 r31
+	out	 SREG, r31
+	pop  r31
+	out  EIND, r31
+	pop  r31
+	pop  r30
+	pop  r29
+	pop  r28
+	pop  r27
+	pop  r26
+	pop  r25
+	pop  r24
+	pop  r23
+	pop  r22
+	pop  r21
+	pop  r20
+	pop  r19
+	pop  r18
+	pop  r17
+	pop  r16
+	pop  r15
+	pop  r14
+	pop  r13
+	pop  r12
+	pop  r11
+	pop  r10
+	pop  r9
+	pop  r8
+	pop  r7
+	pop  r6
+	pop  r5
+	pop  r4
+	pop  r3
+	pop  r2
+	pop  r1
+	pop  r0
 .endm
 
 
 
 .section .text
-.global CSwitch
+.global Enter_Kernel
 .global Exit_Kernel
-.extern Dispatch
 .extern CurrentP  ; CurrentP->sp is the first entry in CurrentP's descriptor
+.extern KernelSP  ; KernelSP is the stack pointer for the Kernel's process
 
 ; The actual CSwitch() code begins here.
 ;
@@ -135,35 +135,61 @@ EIND  = 0x3C
 ; with the lower-order byte first, then the higher-order byte.
 ;
 
-; void CSwitch();
-CSwitch:
-        ; Assume I = 0, i.e., all interrupts are disabled.
-        SAVECTX
+; void Enter_Kernel();
+Enter_Kernel:
+		; Assume I = 0, i.e., all interrupts are disabled.
+		SAVECTX
 
-        ; Now, we have saved the CurrentP's context.
-        ; Save the current H/W stack pointer into CurrentP->sp.
-        lds  r30, CurrentP
-        lds  r31, CurrentP+1  ; Z = (R31,R30) contains the "sp"
-        in   r28, SPL
-        in   r29, SPH
-        st   Z+, r28          ; Store (R28=SPL,R29=SPH) indirectly via Z
-        st   Z+, r29          ; Now, CurrentP->sp = the current H/W stack pointer
-        ; Now, we should select a new "CurrentP".
+		; Now, we have saved the CurrentP's context.
+		; Save the current H/W stack pointer into CurrentP->sp.
+		lds  r30, CurrentP
+		lds  r31, CurrentP+1  ; Z = (R31,R30) contains the "sp"
+		in   r28, SPL
+		in   r29, SPH
+		st   Z+, r28          ; Store (R28=SPL,R29=SPH) indirectly via Z
+		st   Z+, r29          ; Now, CurrentP->sp = the current H/W stack pointer
+
+		; We are now ready to restore KernelP's context, i.e.,
+		; switching the H/W stack pointer to KernelP->sp.
+		lds  r30, KernelSP
+		lds  r31, KernelSP+1  ; Z = (R31,R30) contains the new "sp"
+		ld   r28, Z+
+		ld   r29, Z+
+		out  SPL, r28
+		out  SPH, r29         ; Now, H/W stack pointer = KernelP->sp
+
+		; We are now executing in KernelP's stack.
+		; Note: at the bottom of the KernelP's context is its return address.
+		RESTORECTX
+		ret                   ; Don't use reti to re-enable interrupts while
+							  ; the kernel is active
 
 
 ; void Exit_Kernel();
 Exit_Kernel:
-        call Dispatch
-        ; We are now ready to restore a new CurrentP's context, i.e.,
-        ; switching the H/W stack pointer to this new CurrentP->sp.
-        lds  r30, CurrentP
-        lds  r31, CurrentP+1  ; Z = (R31,R30) contains the new "sp"
-        ld   r28, Z+
-        ld   r29, Z+
-        out  SPL, r28
-        out  SPH, r29         ; Now, H/W stack pointer = CurrentP->sp */
+		; Assume I = 0, i.e., all interrupts are disabled.
+		SAVECTX
 
-        ; We are now executing in our new CurrentP's stack.
-        ; Note: at the bottom of the CurrentP's context is its return address.
-        RESTORECTX
-        ret                   ; Don't use reti  re-enable interrupts
+		; Now, we have saved the KernelP's context.
+		; Save the current H/W stack pointer into KernelP->sp.
+		lds  r30, KernelSP
+		lds  r31, KernelSP+1   ; Z = (R31,R30) contains the "sp"
+		in   r28, SPL
+		in   r29, SPH
+		st   Z+, r28          ; Store (R28=SPL,R29=SPH) indirectly via Z
+		st   Z+, r29          ; Now, KernelP->sp = the current H/W stack pointer
+
+
+		; We are now ready to restore a new CurrentP's context, i.e.,
+		; switching the H/W stack pointer to this new CurrentP->sp.
+		lds  r30, CurrentP
+		lds  r31, CurrentP+1  ; Z = (R31,R30) contains the new "sp"
+		ld   r28, Z+
+		ld   r29, Z+
+		out  SPL, r28
+		out  SPH, r29         ; Now, H/W stack pointer = CurrentP->sp
+
+		; We are now executing in our new CurrentP's stack.
+		; Note: at the bottom of the CurrentP's context is its return address.
+		RESTORECTX
+		reti                  ; Exiting kernel, re-enable interrupts
