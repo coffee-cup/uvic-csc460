@@ -82,7 +82,7 @@
                 "_UNICODE",
                 "__AVR_ATmega2560__"
             ],
-            "intelliSenseMode": "msvc-x64",
+            "intelliSenseMode": "clang-x64",
             "browse": {
                 "path": [
                     "${env:ARDUINO_DIR}/libraries",

@@ -2,16 +2,15 @@
 #ifndef _OS_H_
 #define _OS_H_
 
+#include <stdint.h>
+#include <avr/io.h>
 #include "process.h"
 #include "common.h"
 #include "kernel.h"
-#include <stdint.h>
-#include <avr/io.h>
-#include <util/delay.h>
 
 // Aborts the RTOS and enters a "non-executing" state with an error code. That is, all tasks
 // will be stopped.
-void OS_Abort(unsigned int error);
+void OS_Abort(uint16_t error);
 
 /*
  * Scheduling Policy:
@@ -38,8 +37,8 @@ void OS_Abort(unsigned int error);
 // TODO: Replace with Priority based task creates
 void Task_Create(voidfuncptr f);
 
-PID   Task_Create_System(void (*f)(void), int arg);
-PID   Task_Create_RR(    void (*f)(void), int arg);
+PID Task_Create_System(voidfuncptr f, int16_t arg);
+PID Task_Create_RR(voidfuncptr f, int16_t arg);
 
 /**
  * f a parameterless function to be created as a process instance
@@ -49,7 +48,7 @@ PID   Task_Create_RR(    void (*f)(void), int arg);
  * offset its start time in TICKs
  * returns 0 if not successful; otherwise a non-zero PID.
  */
-PID   Task_Create_Period(void (*f)(void), int arg, TICK period, TICK wcet, TICK offset);
+PID Task_Create_Period(voidfuncptr f, int16_t arg, TICK period, TICK wcet, TICK offset);
 
 // NOTE: When a task function returns, it terminates automatically!!
 
@@ -57,15 +56,15 @@ PID   Task_Create_Period(void (*f)(void), int arg, TICK period, TICK wcet, TICK 
 // When a RR or System task calls Task_Next(), it voluntarily gives up execution and
 // re-enters the ready state. All RR and Systems tasks are first-come-first-served.
 //
-void Task_Next(void);
+void Task_Next();
 
 
 // The calling task gets its initial "argument" when it was created.
-int  Task_GetArg(void);
+int16_t Task_GetArg();
 
 
 // It returns the calling task's PID.
-PID  Task_Pid(void);
+PID Task_Pid();
 
 //
 // Send-Recv-Rply is similar to QNX-style message-passing
@@ -74,9 +73,9 @@ PID  Task_Pid(void);
 //
 // Note: PERIODIC tasks are not allowed to use Msg_Send() or Msg_Recv().
 //
-void Msg_Send( PID  id, MTYPE t, unsigned int *v );
-PID  Msg_Recv( MASK m,           unsigned int *v );
-void Msg_Rply( PID  id,          unsigned int r );
+void Msg_Send(PID  id, MTYPE t, uint16_t* v);
+PID  Msg_Recv(MASK m,           uint16_t* v);
+void Msg_Rply(PID  id,          uint16_t r);
 
 //
 // Asychronously Send a message "v" of type "t" to "id". The task "id" must be blocked on
@@ -87,11 +86,11 @@ void Msg_Rply( PID  id,          unsigned int r );
 //
 // Note: PERIODIC tasks (or interrupt handlers), however, may use Msg_ASend()!!!
 //
-void Msg_ASend( PID  id, MTYPE t, unsigned int v );
+void Msg_ASend(PID id, MTYPE t, uint16_t v);
 
 /**
  * Returns the number of milliseconds since OS_Init(). Note that this number
- * wraps around after it overflows as an unsigned integer. The arithmetic
+ * wraps around after it overflows as an uint16_teger. The arithmetic
  * of 2's complement will take care of this wrap-around behaviour if you use
  * this number correctly.
  * Let  T = Now() and we want to know when Now() reaches T+1000.
@@ -103,7 +102,7 @@ void Msg_ASend( PID  id, MTYPE t, unsigned int v );
  * Now() will wrap around every 65536 milliseconds. Therefore, for measurement
  * purposes, it should be used for durations less than 65 seconds.
  */
-unsigned int Now();  // number of milliseconds since the RTOS boots.
+uint16_t Now();  // number of milliseconds since the RTOS boots.
 
 
 /**

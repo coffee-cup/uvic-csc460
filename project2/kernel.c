@@ -1,4 +1,6 @@
+#include <stdint.h>
 #include "kernel.h"
+#include "os.h"
 
 /**
  * The process descriptor of the currently RUNNING task.
@@ -24,23 +26,23 @@ task_queue_t rr_tasks;
  *   context switching code, i.e., CSwitch(), which is written in assembly
  *   language.)
  */
-volatile unsigned char *KernelSp;
+volatile uint8_t* KernelSp;
 
 /**
  * This is a "shadow" copy of the stack pointer of "Cp", the currently
  * running task. During context switching, we need to save and restore
  * it into the appropriate process descriptor.
  */
-volatile unsigned char *CurrentSp;
+volatile uint8_t* CurrentSp;
 
 /** index to next task to run */
-volatile static unsigned int NextP;
+volatile static uint16_t NextP;
 
 /** 1 if kernel has been started; 0 otherwise. */
-volatile static unsigned int KernelActive;
+volatile static uint16_t KernelActive;
 
 /** number of tasks created so far */
-volatile static unsigned int Tasks;
+volatile static uint16_t Tasks;
 
 /**
  * This internal kernel function is the context switching mechanism.
@@ -56,8 +58,8 @@ volatile static unsigned int Tasks;
  * again, but Cp is not running any more.
  * (See file "cswitch.S" for details.)
  */
-extern void CSwitch();
-extern void Exit_Kernel();    /* this is the same as CSwitch() */
+#define CSwitch() Exit_Kernel()  /* Legacy CSwitch stub now uses Exit_Kernel */
+extern void Exit_Kernel();
 
 /**
  * This external function could be implemented in two ways:
@@ -196,7 +198,7 @@ void Kernel_Init() {
 
     //Reminder: Clear the memory for the task on creation.
     for (x = 0; x < MAXTHREAD; x++) {
-        memset(&(Process[x]),0,sizeof(PD));
+        ZeroMemory(Process[x], sizeof(PD));
         Process[x].state = DEAD;
     }
 }
