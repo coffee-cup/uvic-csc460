@@ -1,36 +1,8 @@
 #ifndef _PROCESS_H_
 #define _PROCESS_H_
 
+#include "common.h"
 #include <stdint.h>
-
-#define WORKSPACE     256   // in bytes, per THREAD
-
-typedef void (*voidfuncptr) (void);      /* pointer to void f(void) */
-
-typedef enum priority_levels {
-    SYSTEM = 0,
-    PERIODIC,
-    RR
-} PRIORITY_LEVELS;
-
-/**
- *  This is the set of states that a task can be in at any given time.
- */
-typedef enum process_states {
-     DEAD = 0,
-     READY,
-     RUNNING
-} PROCESS_STATES;
-
-/**
- * This is the set of kernel requests, i.e., a request code for each system call.
- */
-typedef enum kernel_request_type {
-     NONE = 0,
-     CREATE,
-     NEXT,
-     TERMINATE
-} KERNEL_REQUEST_TYPE;
 
 /**
  * Each task is represented by a process descriptor, which contains all

@@ -1,4 +1,5 @@
 #include "os.h"
+#include "kernel.h"
 #include <avr/io.h>
 
 /**
@@ -14,7 +15,6 @@ void Ping()
         Task_Next();
     }
 }
-
 
 /**
  * A cooperative "Pong" task.
@@ -39,8 +39,8 @@ void main() {
 
     // TODO: Shouldn't have to manually init and start os.
     // Kernel should start user code instead
-    OS_Init();
+    Kernel_Init();
     Task_Create(Pong);
     Task_Create(Ping);
-    OS_Start();
+    Kernel_Start();
 }

@@ -3,42 +3,15 @@
 #define _OS_H_
 
 #include "process.h"
+#include "common.h"
+#include "kernel.h"
 #include <stdint.h>
 #include <avr/io.h>
 #include <util/delay.h>
 
-#define MAXTHREAD     16
-/* #define WORKSPACE     256   // in bytes, per THREAD */
-#define MSECPERTICK   10   // resolution of a system TICK in milliseconds
-
-#ifndef NULL
-#define NULL          0   /* undefined */
-#endif
-#define TRUE          1
-#define FALSE         0
-
-#define ANY           0xFF       // a mask for ALL message type
-
-typedef unsigned int PID;        // always non-zero if it is valid
-typedef unsigned int TICK;       // 1 TICK is defined by MSECPERTICK
-typedef unsigned int BOOL;       // TRUE or FALSE
-typedef unsigned char MTYPE;
-typedef unsigned char MASK;
-
 // Aborts the RTOS and enters a "non-executing" state with an error code. That is, all tasks
 // will be stopped.
 void OS_Abort(unsigned int error);
-
-/**
- * This function initializes the RTOS and must be called before any other
- * system calls.
- */
-void OS_Init();
-
-/**
- * This function starts the RTOS after creating a few tasks.
- */
-void OS_Start();
 
 /*
  * Scheduling Policy:
@@ -131,19 +104,6 @@ void Msg_ASend( PID  id, MTYPE t, unsigned int v );
  * purposes, it should be used for durations less than 65 seconds.
  */
 unsigned int Now();  // number of milliseconds since the RTOS boots.
-
-
-/*==================================================================
- *        S T A N D A R D   I N L I N E    P R O C E D U R E S
- *==================================================================
- */
-
-/*
- * inline assembly code to disable/enable maskable interrupts
- * (N.B. Use with caution.)
- */
-#define OS_DI()    asm(" sei ")  /* disable all interrupts */
-#define OS_EI()    asm(" cli ")  /* enable all interrupts */
 
 
 /**
