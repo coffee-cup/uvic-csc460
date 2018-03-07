@@ -1,0 +1,101 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "/usr/include",
+                "/usr/local/include",
+                "${env:ARDUINO_DIR}/libraries",
+                "${env:ARDUINO_DIR}/hardware/tools/avr/avr/include",
+                "${env:ARDUINO_DIR}/hardware/arduino/avr/cores/arduino",
+                "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
+                "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
+                "${workspaceFolder}"
+            ],
+            "defines": [
+                "__AVR_ATmega2560__"
+            ],
+            "intelliSenseMode": "clang-x64",
+            "browse": {
+                "path": [
+                    "/usr/include",
+                    "/usr/local/include",
+                    "${env:ARDUINO_DIR}/libraries",
+                    "${env:ARDUINO_DIR}/hardware/tools/avr/avr/include",
+                    "${env:ARDUINO_DIR}/hardware/arduino/avr/cores/arduino",
+                    "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
+                    "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
+                    "${workspaceFolder}"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": ""
+            },
+            "macFrameworkPath": [
+                "/System/Library/Frameworks",
+                "/Library/Frameworks"
+            ]
+        },
+        {
+            "name": "Linux",
+            "includePath": [
+                "/usr/include",
+                "/usr/local/include",
+                "${env:ARDUINO_DIR}/libraries",
+                "${env:ARDUINO_DIR}/hardware/tools/avr/avr/include",
+                "${env:ARDUINO_DIR}/hardware/arduino/avr/cores/arduino",
+                "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
+                "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
+                "${workspaceFolder}"
+            ],
+            "defines": [
+                "__AVR_ATmega2560__"
+            ],
+            "intelliSenseMode": "clang-x64",
+            "browse": {
+                "path": [
+                    "/usr/include",
+                    "/usr/local/include",
+                    "${env:ARDUINO_DIR}/libraries",
+                    "${env:ARDUINO_DIR}/hardware/tools/avr/avr/include",
+                    "${env:ARDUINO_DIR}/hardware/arduino/avr/cores/arduino",
+                    "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
+                    "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
+                    "${workspaceFolder}"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": ""
+            }
+        },
+        {
+            "name": "Win32",
+            "includePath": [
+                "${env:ARDUINO_DIR}/libraries",
+                "${env:ARDUINO_DIR}/hardware/tools/avr/avr/include",
+                "${env:ARDUINO_DIR}/hardware/arduino/avr/cores/arduino",
+                "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
+                "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
+                "${workspaceFolder}"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE",
+                "__AVR_ATmega2560__"
+            ],
+            "intelliSenseMode": "msvc-x64",
+            "browse": {
+                "path": [
+                    "${env:ARDUINO_DIR}/libraries",
+                    "${env:ARDUINO_DIR}/hardware/tools/avr/avr/include",
+                    "${env:ARDUINO_DIR}/hardware/arduino/avr/cores/arduino",
+                    "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
+                    "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
+                    "${workspaceFolder}"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": ""
+            }
+        }
+    ],
+    "version": 3
+}

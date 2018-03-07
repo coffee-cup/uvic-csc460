@@ -1,0 +1,7 @@
+{
+    "files.eol": "\n",
+    "files.associations": {
+        "cswitch.S": "avr",
+        "*.h": "c"
+    }
+}
