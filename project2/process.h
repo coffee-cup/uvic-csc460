@@ -23,7 +23,7 @@ typedef struct task_queue_type {
     uint8_t length;
 } task_queue_t;
 
-task_queue_t* queue_init();
+void queue_init(task_queue_t* list);
 
 PD*  peek   (task_queue_t* list);
 PD*  deque  (task_queue_t* list);

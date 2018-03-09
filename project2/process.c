@@ -1,7 +1,6 @@
 #include "process.h"
 
-task_queue_t* queue_init() {
-    return NULL;
+void queue_init(task_queue_t* list) {
 }
 
 void enqueue(task_queue_t* list, PD* task) {
