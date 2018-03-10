@@ -63,22 +63,22 @@ typedef void (*voidfuncptr) (void);      /* pointer to void f(void) */
 /**
  * This is the set of possible task priority levels
  */
-typedef enum priority_levels {
+typedef enum priority_level {
     SYSTEM = 0,
     PERIODIC,
     RR,
     NUM_PRIORITY_LEVELS /* Must be last */
-} PRIORITY_LEVELS;
+} PRIORITY_LEVEL;
 
 /**
  *  This is the set of states that a task can be in at any given time.
  */
-typedef enum process_states {
+typedef enum process_state {
     DEAD = 0,
     READY,
     RUNNING,
     NUM_PROCESS_STATES /* Must be last */
-} PROCESS_STATES;
+} PROCESS_STATE;
 
 /**
  * This is the set of kernel requests, i.e., a request code for each system call.
