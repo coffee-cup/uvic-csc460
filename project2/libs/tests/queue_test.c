@@ -10,11 +10,7 @@ if (!(expr)) while (TRUE);\
 
 void Task_Queue_Test() {
 
-    DDRB = 0xFF;
-    PORTB = 0;
-
     BIT_SET(PORTB, 0);
-
     task_queue_t rr_test_queue;
     task_queue_t sy_test_queue;
     task_queue_t pr_test_queue;

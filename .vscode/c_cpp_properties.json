@@ -10,7 +10,8 @@
                 "${env:ARDUINO_DIR}/hardware/arduino/avr/cores/arduino",
                 "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
                 "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
-                "${workspaceFolder}"
+                "${workspaceRoot}/project2/libs/tests",
+                "${workspaceRoot}"
             ],
             "defines": [
                 "__AVR_ATmega2560__"
@@ -25,7 +26,8 @@
                     "${env:ARDUINO_DIR}/hardware/arduino/avr/cores/arduino",
                     "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
                     "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
-                    "${workspaceFolder}"
+                    "${workspaceRoot}/project2/libs/tests",
+                    "${workspaceRoot}"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
@@ -45,7 +47,8 @@
                 "${env:ARDUINO_DIR}/hardware/arduino/avr/cores/arduino",
                 "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
                 "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
-                "${workspaceFolder}"
+                "${workspaceRoot}/project2/libs/tests",
+                "${workspaceRoot}"
             ],
             "defines": [
                 "__AVR_ATmega2560__"
@@ -60,7 +63,8 @@
                     "${env:ARDUINO_DIR}/hardware/arduino/avr/cores/arduino",
                     "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
                     "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
-                    "${workspaceFolder}"
+                    "${workspaceRoot}/project2/libs/tests",
+                    "${workspaceRoot}"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
@@ -74,7 +78,8 @@
                 "${env:ARDUINO_DIR}/hardware/arduino/avr/cores/arduino",
                 "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
                 "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
-                "${workspaceFolder}"
+                "${workspaceRoot}/project2/libs/tests",
+                "${workspaceRoot}"
             ],
             "defines": [
                 "_DEBUG",
@@ -90,7 +95,8 @@
                     "${env:ARDUINO_DIR}/hardware/arduino/avr/cores/arduino",
                     "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
                     "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
-                    "${workspaceFolder}"
+                    "${workspaceRoot}/project2/libs/tests",
+                    "${workspaceRoot}"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
