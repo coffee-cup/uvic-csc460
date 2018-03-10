@@ -9,9 +9,11 @@ volatile static PD* Cp;
 
 /**
  * This table contains ALL process descriptors. It doesn't matter what
- * state a task is in.
+ * state a task is in. This table also serves as storage for the elements of
+ * the task_queues. A task queue keeps track of the priority it manages, and won't enqueue
+ * tasks that have the wrong priority. Doing it this way saves memory by allowing all three
+ * queues to use the same storage, with the assurance that they won't overwrite eachother.
  */
-// TODO: Replace with Priority based queues
 static PD Process[MAXTHREAD];
 
 task_queue_t system_tasks;
