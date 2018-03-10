@@ -1,4 +1,4 @@
-# USER_LIB_PATH=$(realpath ../common)
+USER_LIB_PATH=$(realpath libs)
 
 BOARD_TAG    = mega
 BOARD_SUB    = atmega2560

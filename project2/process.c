@@ -25,7 +25,7 @@ task_queue_t* queue_init(task_queue_t* list, PRIORITY_LEVEL type) {
 void enqueue(task_queue_t* list, PD* task) {
     // Have non-null list and task, and the queue type matches the task priority.
     // All conditions inside inner-most parens must be true to continue
-    if (!(list && task && list->type != task->priority)) {
+    if (!(list && task && list->type == task->priority)) {
         return;
     }
 

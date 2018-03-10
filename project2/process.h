@@ -15,7 +15,7 @@ typedef struct ProcessDescriptor {
     volatile PROCESS_STATE    state;
     voidfuncptr               code;                 /* function to be executed as a task */
     KERNEL_REQUEST_TYPE       request;
-    const PRIORITY_LEVEL      priority;
+    PRIORITY_LEVEL            priority;
     struct ProcessDescriptor* next;
 } PD;
 

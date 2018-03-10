@@ -4,6 +4,8 @@
 #include "kernel.h"
 #include "common.h"
 
+#include "tests.h"
+
 /**
  * A cooperative "Ping" task.
  * Added testing code for LEDs.
@@ -33,10 +35,12 @@ int main() {
 
     // TODO: Shouldn't have to manually init and start os.
     // Kernel should start user code instead
-    Kernel_Init();
-    Task_Create(Pong);
-    Task_Create(Ping);
-    Kernel_Start();
+    // Kernel_Init();
+    // Task_Create(Pong);
+    // Task_Create(Ping);
+    // Kernel_Start();
+
+    Task_Queue_Test();
 
     /* Never reaches this point */
     return -1;
