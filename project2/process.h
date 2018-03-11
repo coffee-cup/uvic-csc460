@@ -10,20 +10,23 @@
  * the task's stack, i.e., its workspace, in here.
  */
 typedef struct ProcessDescriptor {
-    volatile uint8_t*       sp;                   /* stack pointer into the "workSpace" */
-    uint8_t                 workSpace[WORKSPACE];
-    volatile PROCESS_STATES state;
-    voidfuncptr             code;                 /* function to be executed as a task */
-    KERNEL_REQUEST_TYPE     request;
+    volatile uint8_t*         sp;                   /* stack pointer into the "workSpace" */
+    uint8_t                   workSpace[WORKSPACE];
+    volatile PROCESS_STATE    state;
+    voidfuncptr               code;                 /* function to be executed as a task */
+    KERNEL_REQUEST_TYPE       request;
+    PRIORITY_LEVEL            priority;
+    struct ProcessDescriptor* next;
 } PD;
 
 typedef struct task_queue_type {
     PD* head;
     PD* tail;
     uint8_t length;
+    PRIORITY_LEVEL type;
 } task_queue_t;
 
-void queue_init(task_queue_t* list);
+task_queue_t* queue_init(task_queue_t* list, PRIORITY_LEVEL type);
 
 PD*  peek   (task_queue_t* list);
 PD*  deque  (task_queue_t* list);

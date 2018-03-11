@@ -24,6 +24,7 @@ void Pong() TASK
     _delay_ms(1000);
 })
 
+
 /**
  * This function creates two cooperative tasks, "Ping" and "Pong". Both
  * will run forever.
