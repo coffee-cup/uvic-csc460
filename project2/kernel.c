@@ -331,3 +331,26 @@ void Kernel_Request(KERNEL_REQUEST_PARAMS* info) {
         Enter_Kernel();
     }
 }
+
+int main(void) {
+
+    BIT_SET(DDRB, 7);
+    BIT_CLR(PORTB, 7);
+
+    BIT_SET(DDRD, 0);
+    BIT_CLR(PORTD, 0);
+
+    BIT_SET(DDRB, 0);
+    BIT_SET(DDRB, 1);
+
+
+    Kernel_Init();
+
+    /* Can't add tasks here since Kernel_Request doesn't return until KernelActive is truthy */
+    Kernel_Start();
+
+    /* Control should never reach this point */
+    OS_Abort(FAILED_START);
+
+    return -1;
+}
