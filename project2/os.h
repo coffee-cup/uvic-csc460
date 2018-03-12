@@ -6,11 +6,17 @@
 #include <avr/io.h>
 #include "process.h"
 #include "common.h"
-#include "kernel.h"
+
+typedef enum {
+    TIMING_VIOLATION = 1,
+    NO_DEAD_PROCESS = 2,
+    INVALID_REQ_INFO = 3,
+    FAILED_START = 4
+} ABORT_CODE;
 
 // Aborts the RTOS and enters a "non-executing" state with an error code. That is, all tasks
 // will be stopped.
-void OS_Abort(uint16_t error);
+void OS_Abort(ABORT_CODE error);
 
 /*
  * Scheduling Policy:
@@ -34,58 +40,63 @@ void OS_Abort(uint16_t error);
  * is defined to be 1 TICK.
  */
 
-// TODO: Replace with Priority based task creates
-void Task_Create(voidfuncptr f);
-
-PID Task_Create_System(voidfuncptr f, int16_t arg);
-PID Task_Create_RR(voidfuncptr f, int16_t arg);
+/**
+ * Task Creation Functions
+ *  - `f`:      a function to be created as a task instance
+ *  - `arg`:    an integer argument to be assigned to this task instanace
+ *  - `period`: the task's execution period in multiples of TICKs
+ *  - `wcet`:   the task's worst-case execution time in TICKs, must be less than "period"
+ *  - `offset`  the task's start time in TICKs
+ * Returns 0 if not successful; otherwise a non-zero PID.
+ * NOTE: If a /task function/ executes a return, it terminates automatically!
+ */
+PID Task_Create_System(taskfuncptr f, int16_t arg);
+PID Task_Create_RR(taskfuncptr f, int16_t arg);
+PID Task_Create_Period(taskfuncptr f, int16_t arg, TICK period, TICK wcet, TICK offset);
 
 /**
- * f a parameterless function to be created as a process instance
- * arg an integer argument to be assigned to this process instanace
- * period its execution period in multiples of TICKs
- * wcet its worst-case execution time in TICKs, must be less than "period"
- * offset its start time in TICKs
- * returns 0 if not successful; otherwise a non-zero PID.
+ * When a Periodic ask calls Task_Next(), it will resume at the beginning of its next period.
+ * When a RR or System task calls Task_Next(), it voluntarily gives up execution and
+ * re-enters the ready state. All RR and Systems tasks are first-come-first-served.
  */
-PID Task_Create_Period(voidfuncptr f, int16_t arg, TICK period, TICK wcet, TICK offset);
-
-// NOTE: When a task function returns, it terminates automatically!!
-
-// When a Periodic ask calls Task_Next(), it will resume at the beginning of its next period.
-// When a RR or System task calls Task_Next(), it voluntarily gives up execution and
-// re-enters the ready state. All RR and Systems tasks are first-come-first-served.
-//
 void Task_Next();
 
+/**
+ * The calling task terminates itself.
+ */
+void Task_Terminate(void);
 
-// The calling task gets its initial "argument" when it was created.
+
+/**
+ * The calling task gets its initial "argument" when it was created.
+ */
 int16_t Task_GetArg();
 
-
-// It returns the calling task's PID.
+/**
+ * It returns the calling task's PID.
+ */
 PID Task_Pid();
 
-//
-// Send-Recv-Rply is similar to QNX-style message-passing
-// Rply() to a NULL process is a no-op.
-// See: http://www.qnx.com/developers/docs/6.5.0/index.jsp?topic=%2Fcom.qnx.doc.neutrino_sys_arch%2Fipc.html
-//
-// Note: PERIODIC tasks are not allowed to use Msg_Send() or Msg_Recv().
-//
+/**
+ * Send-Recv-Rply is similar to QNX-style message-passing
+ * Rply() to a NULL process is a no-op.
+ * See: http://www.qnx.com/developers/docs/6.5.0/index.jsp?topic=%2Fcom.qnx.doc.neutrino_sys_arch%2Fipc.html
+ *
+ * Note: PERIODIC tasks are not allowed to use Msg_Send() or Msg_Recv().
+ */
 void Msg_Send(PID  id, MTYPE t, uint16_t* v);
 PID  Msg_Recv(MASK m,           uint16_t* v);
 void Msg_Rply(PID  id,          uint16_t r);
 
-//
-// Asychronously Send a message "v" of type "t" to "id". The task "id" must be blocked on
-// Recv() state, otherwise it is a no-op. After passing "v" to "id", the returned PID of
-// Recv() is NULL (non-existent); thus, "id" doesn't need to reply to this message.
-// Note: The message type "t" must satisfy the MASK "m" imposed by "id". If not, then it
-// is a no-op.
-//
-// Note: PERIODIC tasks (or interrupt handlers), however, may use Msg_ASend()!!!
-//
+/**
+ * Asychronously Send a message "v" of type "t" to "id". The task "id" must be blocked on
+ * Recv() state, otherwise it is a no-op. After passing "v" to "id", the returned PID of
+ * Recv() is NULL (non-existent); thus, "id" doesn't need to reply to this message.
+ * Note: The message type "t" must satisfy the MASK "m" imposed by "id". If not, then it
+ * is a no-op.
+ *
+ * Note: PERIODIC tasks (or interrupt handlers), however, may use Msg_ASend()!!!
+ */
 void Msg_ASend(PID id, MTYPE t, uint16_t v);
 
 /**
@@ -113,7 +124,7 @@ uint16_t Now();  // number of milliseconds since the RTOS boots.
  *  is implemented inside the RTOS, which initializes the RTOS and creates a first application
  *  System task "a_main()".
  *
- *  "a_main()" is a parameterless function defined by the application, which will create all other
+ *  "a_main()" is a function defined by the application, which will create all other
  *  application tasks as necessary.
  */
 #endif /* _OS_H_ */

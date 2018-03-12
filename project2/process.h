@@ -13,9 +13,14 @@ typedef struct ProcessDescriptor {
     volatile uint8_t*         sp;                   /* stack pointer into the "workSpace" */
     uint8_t                   workSpace[WORKSPACE];
     volatile PROCESS_STATE    state;
-    voidfuncptr               code;                 /* function to be executed as a task */
-    KERNEL_REQUEST_TYPE       request;
+    taskfuncptr               code;                 /* function to be executed as a task  */
+    int16_t                   arg;                  /* parameter to be passed to the task */
+    PID                       process_id;
     PRIORITY_LEVEL            priority;
+    TICK                      period;               /* The period of a PERIODIC task */
+    TICK                      wcet;                 /* The worst case execution time of a PERIODIC task */
+    TICK                      ttns;                 /* The time to next start for a PERIODIC task */
+    TICK                      ticks_remaining;      /* Until a PERIODIC or RR task is forced to yeild */
     struct ProcessDescriptor* next;
 } PD;
 
@@ -31,5 +36,6 @@ task_queue_t* queue_init(task_queue_t* list, PRIORITY_LEVEL type);
 PD*  peek   (task_queue_t* list);
 PD*  deque  (task_queue_t* list);
 void enqueue(task_queue_t* list, PD* task);
+void insert (task_queue_t* list, PD* task);
 
 #endif

@@ -19,26 +19,21 @@ task_queue_t* queue_init(task_queue_t* list, PRIORITY_LEVEL type) {
     return list;
 }
 
+
 /**
- * Enqueues a task at the end of the queue iff the task type matches the queue type.
+ * Peeks at the first task in the queue
+ * Returns the task without dequeueing it
  */
-void enqueue(task_queue_t* list, PD* task) {
-    // Have non-null list and task, and the queue type matches the task priority.
+PD* peek(task_queue_t* list) {
+    // Have a non-null list
     // All conditions inside inner-most parens must be true to continue
-    if (!(list && task && list->type == task->priority)) {
-        return;
+    if (!(list)) {
+        return NULL;
     }
 
-    if (list->length == 0) {
-        list->head = task;
-        list->tail = task;
-        list->length = 1;
-    } else {
-        list->tail->next = task;
-        list->tail = task;
-        list->length += 1;
-    }
+    return list->head;
 }
+
 
 /**
  * Dequeues the first task from the queue
@@ -65,16 +60,76 @@ PD* deque(task_queue_t* list) {
     return element;
 }
 
+
 /**
- * Peeks at the first task in the queue
- * Returns the task without dequeueing it
+ * Enqueues a task at the end of the queue iff the task type matches the queue type.
  */
-PD* peek(task_queue_t* list) {
-    // Have a non-null list
+void enqueue(task_queue_t* list, PD* task) {
+    // Have non-null list and task, and the queue type matches the task priority.
     // All conditions inside inner-most parens must be true to continue
-    if (!(list)) {
-        return NULL;
+    if (!(list && task && list->type == task->priority)) {
+        return;
     }
 
-    return list->head;
+    if (list->length == 0) {
+        list->head = task;
+        list->tail = task;
+        list->length = 1;
+    } else {
+        list->tail->next = task;
+        list->tail = task;
+        list->length += 1;
+    }
+}
+
+
+/**
+ * Inserts a task into the queue respecting time to next start
+ */
+void insert(task_queue_t* list, PD* task) {
+    // Have a non-null list, and the queue type matches the task priority.
+    // All conditions inside inner-most parens must be true to continue
+    if (!(list && task && list->type == task->priority)) {
+        return;
+    }
+
+    // No searching required, queue is empty
+    if (list->length == 0) {
+        enqueue(list, task);
+    }
+
+    // Queue has items, find the right place to insert
+    else {
+        PD* element = list->head;
+        PD* element_prev = NULL;
+
+        // Starting from the front, find the first element that
+        // this task should run before
+        while (element != NULL && element->ttns < task->ttns) {
+            element_prev = element;
+            element = element->next;
+        }
+
+        // Task should run next, inserting at front
+        if (element_prev == NULL) {
+            list->head = task;
+            task->next = element;
+        }
+
+        // Task should run last, inserting at end
+        else if (element == NULL) {
+            list->tail = task;
+            element_prev->next = task;
+            task->next = NULL;
+        }
+
+        // Task runs before some element and after other,
+        // inserting between existing elements
+        else {
+            element->next = task;
+            task->next = element;
+        }
+
+        list->length += 1;
+    }
 }

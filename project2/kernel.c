@@ -6,7 +6,7 @@
  * The process descriptor of the currently RUNNING task.
  */
 volatile static PD* Cp;
-
+volatile static KERNEL_REQUEST_PARAMS* request_info;
 /**
  * This table contains ALL process descriptors. It doesn't matter what
  * state a task is in. This table also serves as storage for the elements of
@@ -76,9 +76,10 @@ extern void Exit_Kernel();
  */
 extern void Enter_Kernel();
 
-void Task_Terminate(void);
+/* User level 'main' function */
+extern void setup(void);
 
-void Kernel_Task_Create_At(PD *p, voidfuncptr f) {
+void Kernel_Task_Create_At(PD *p, taskfuncptr f) {
     uint8_t *sp = &(p->workSpace[WORKSPACE - 1]);
 
     //Clear the contents of the workspace
@@ -99,27 +100,58 @@ void Kernel_Task_Create_At(PD *p, voidfuncptr f) {
     *sp-- = LOW_BYTE(f);
     *sp-- = HIGH_BYTE(f);
     *sp-- = LOW_BYTE(0);
-//Place stack pointer at top of stack
+
+    //Place stack pointer at top of stack
     sp = sp - 34;
 
     p->sp = sp;      /* stack pointer into the "workSpace" */
     p->code = f;     /* function to be executed as a task */
-    p->request = NONE;
     p->state = READY;
 }
 
-void Kernel_Task_Create(voidfuncptr f) {
-    int x;
-
-    if (Tasks == MAXTHREAD) return;  /* Too many task! */
-
-    /* find a DEAD PD that we can use  */
-    for (x = 0; x < MAXTHREAD; x++) {
-        if (Process[x].state == DEAD) break;
+void Kernel_Task_Create() {
+    if (Tasks >= MAXTHREAD) {
+        /* Too many tasks! */
+        return;
     }
 
-    ++Tasks;
-    Kernel_Task_Create_At( &(Process[x]), f );
+    /* find a DEAD PD that we can use  */
+    int x;
+    for (x = 0; x < MAXTHREAD; x++) {
+        if (Process[x].state == DEAD) {
+            break;
+        }
+    }
+
+    /* Create the new task at dead process x.
+     * Should have one since Tasks < MAXTHREAD */
+    if (x < MAXTHREAD) {
+        Kernel_Task_Create_At( &(Process[x]), request_info->code );
+
+        Process[x].priority = request_info->priority;
+        Process[x].arg = request_info->arg;
+
+        if (Process[x].priority == SYSTEM) {
+
+            enqueue(&system_tasks, &Process[x]);
+
+        } else if (Process[x].priority == RR) {
+
+            enqueue(&rr_tasks, &Process[x]);
+
+        } else if (Process[x].priority == PERIODIC) {
+
+            insert(&periodic_tasks, &Process[x]);
+
+        } else {
+            OS_Abort(INVALID_REQ_INFO);
+        }
+
+        Tasks += 1;
+    } else {
+        /* Couldn't find a dead task */
+        OS_Abort(NO_DEAD_PROCESS);
+    }
 }
 
 /**
@@ -130,6 +162,7 @@ static void Dispatch() {
     /* find the next READY task
      * Note: if there is no READY task, then this will loop forever!.
      */
+
     while(Process[NextP].state != READY) {
         NextP = (NextP + 1) % MAXTHREAD;
     }
@@ -139,55 +172,46 @@ static void Dispatch() {
     Cp->state = RUNNING;
 
     NextP = (NextP + 1) % MAXTHREAD;
+
 }
 
 static void Next_Kernel_Request() {
     Dispatch();  /* select a new task to run */
 
     while(1) {
-        Cp->request = NONE; /* clear its request */
+        request_info->request = NONE; /* clear its request */
 
         /* activate this newly selected task */
         CurrentSp = Cp->sp;
         Exit_Kernel();    /* or CSwitch() */
 
-        /* if this task makes a system call, it will return to here! */
+        /* if this task makes a kernel request, it will return to here! */
 
         /* save the Cp's stack pointer */
         Cp->sp = CurrentSp;
 
-        switch(Cp->request){
-        case CREATE:
-            Task_Create( Cp->code );
-            break;
-        case NEXT:
-        case NONE:
-            /* NONE could be caused by a timer interrupt */
-            Cp->state = READY;
-            Dispatch();
-            break;
-        case TERMINATE:
-            /* deallocate all resources used by this task */
-            Cp->state = DEAD;
-            Dispatch();
-            break;
-        default:
-            /* Houston! we have a problem here! */
-            break;
-        }
-    }
-}
+        switch(request_info->request){
+            case CREATE:
+                Kernel_Task_Create();
+                break;
 
-/**
- * The calling task terminates itself.
- */
-void Task_Terminate()
-{
-    if (KernelActive) {
-        OS_DI();
-        Cp->request = TERMINATE;
-        Enter_Kernel();
-        /* never returns here! */
+            case NEXT:
+            case NONE:
+                /* NONE could be caused by a timer interrupt */
+                Cp->state = READY;
+                Dispatch();
+                break;
+
+            case TERMINATE:
+                /* deallocate all resources used by this task */
+                Cp->state = DEAD;
+                Dispatch();
+                break;
+
+            default:
+                /* Houston! we have a problem here! */
+                break;
+        }
     }
 }
 
@@ -203,6 +227,21 @@ void Kernel_Init() {
         ZeroMemory(Process[x], sizeof(PD));
         Process[x].state = DEAD;
     }
+
+    queue_init(&system_tasks, SYSTEM);
+    queue_init(&rr_tasks, RR);
+    queue_init(&periodic_tasks, PERIODIC);
+
+    // Add the setup system task
+    KERNEL_REQUEST_PARAMS info = {
+        .request = CREATE,
+        .priority = SYSTEM,
+        .code = setup,
+        .arg = 0
+    };
+
+    request_info = &info;
+    Kernel_Task_Create();
 }
 
 void Kernel_Start() {
@@ -218,10 +257,12 @@ void Kernel_Start() {
 }
 
 // THIS IS RUN IN USER MODE
-void Kernel_Request(KERNEL_REQUEST_TYPE type) {
+void Kernel_Request(KERNEL_REQUEST_PARAMS* info) {
     if (KernelActive) {
         OS_DI();
-        Cp->request = type;
+
+        // No race condition here since interrupts are disabled
+        request_info = info;
         Enter_Kernel();
     }
 }
