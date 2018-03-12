@@ -37,7 +37,7 @@ PID Task_Create_System(taskfuncptr f, int16_t arg) {
     };
 
     Kernel_Request(&info);
-    return -1;
+    return info.out_pid;
 }
 
 PID Task_Create_RR(taskfuncptr f, int16_t arg) {
@@ -50,7 +50,7 @@ PID Task_Create_RR(taskfuncptr f, int16_t arg) {
     };
 
     Kernel_Request(&info);
-    return -1;
+    return info.out_pid;
 }
 
 PID Task_Create_Period(taskfuncptr f, int16_t arg, TICK period, TICK wcet, TICK offset) {
@@ -66,7 +66,7 @@ PID Task_Create_Period(taskfuncptr f, int16_t arg, TICK period, TICK wcet, TICK 
     };
 
     Kernel_Request(&info);
-    return -1;
+    return info.out_pid;
 }
 
 void Task_Next() {
@@ -78,11 +78,22 @@ void Task_Next() {
 }
 
 int16_t Task_GetArg() {
-    return -1;
+    KERNEL_REQUEST_PARAMS info = {
+        .request = GET_ARG
+    };
+
+    Kernel_Request(&info);
+
+    return info.arg;
 }
 
 PID Task_Pid() {
-    return -1;
+    KERNEL_REQUEST_PARAMS info = {
+        .request = GET_PID
+    };
+
+    Kernel_Request(&info);
+    return info.out_pid;
 }
 
 /**
@@ -115,7 +126,12 @@ void Msg_ASend(PID id, MTYPE t, uint16_t v) {
 }
 
 uint16_t Now() {
-    return -1;
+    KERNEL_REQUEST_PARAMS info = {
+        .request = GET_NOW
+    };
+
+    Kernel_Request(&info);
+    return info.out_now;
 }
 
 int main(void) {
@@ -123,8 +139,12 @@ int main(void) {
     BIT_SET(DDRB, 7);
     BIT_CLR(PORTB, 7);
 
+    BIT_SET(DDRD, 0);
+    BIT_CLR(PORTD, 0);
+
     BIT_SET(DDRB, 0);
     BIT_SET(DDRB, 1);
+
 
     Kernel_Init();
 

@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <avr/interrupt.h>
 #include "kernel.h"
 #include "os.h"
 
@@ -46,6 +47,9 @@ volatile static uint16_t KernelActive;
 /** number of tasks created so far */
 volatile static uint16_t Tasks;
 
+/** number of ticks elapsed since boot */
+volatile static TICK sys_clock;
+
 /**
  * This internal kernel function is the context switching mechanism.
  * It is done in a "funny" way in that it consists two halves: the top half
@@ -78,6 +82,23 @@ extern void Enter_Kernel();
 
 /* User level 'main' function */
 extern void setup(void);
+
+
+ISR(TIMER4_COMPA_vect)
+{
+    if (KernelActive) {
+        sys_clock += 1;
+        KERNEL_REQUEST_PARAMS info = {
+            .request = TIMER
+        };
+
+        request_info = &info;
+
+        // This timer interrupts user mode programs
+        // Need to make sure to switch modes
+        Enter_Kernel();
+    }
+}
 
 void Kernel_Task_Create_At(PD *p, taskfuncptr f) {
     uint8_t *sp = &(p->workSpace[WORKSPACE - 1]);
@@ -147,6 +168,7 @@ void Kernel_Task_Create() {
             OS_Abort(INVALID_REQ_INFO);
         }
 
+        request_info->out_pid = Process[x].process_id = x;
         Tasks += 1;
     } else {
         /* Couldn't find a dead task */
@@ -196,8 +218,6 @@ static void Next_Kernel_Request() {
                 break;
 
             case NEXT:
-            case NONE:
-                /* NONE could be caused by a timer interrupt */
                 Cp->state = READY;
                 Dispatch();
                 break;
@@ -208,11 +228,53 @@ static void Next_Kernel_Request() {
                 Dispatch();
                 break;
 
+            case TIMER:
+                sys_clock += 1;
+                Cp->state = READY;
+                Dispatch();
+                break;
+
+            case GET_ARG:
+                request_info->arg = Cp->arg;
+                break;
+
+            case GET_PID:
+                request_info->out_pid = Cp->process_id;
+                break;
+
+            case GET_NOW:
+                request_info->out_now = sys_clock;
+                break;
+
+            case NONE:
             default:
                 /* Houston! we have a problem here! */
                 break;
         }
     }
+}
+
+void Kernel_Init_Clock() {
+
+    // Clear timer config.
+    TCCR4A = 0;
+    TCCR4B = 0;
+
+    // Set to CTC (mode 4)
+    BIT_SET(TCCR4B, WGM42);
+
+    // Set prescaller to 256
+    BIT_SET(TCCR4B, CS42);
+
+    // Set TOP value (0.01 seconds)
+    // TODO: Adjust this based on MSECPERTICK definition
+    OCR4A = 625;
+
+    // Enable interupt A for timer 4.
+    BIT_SET(TIMSK4, OCIE4A);
+
+    // Set timer to 0 (optional here).
+    TCNT4 = 0;
 }
 
 void Kernel_Init() {
@@ -221,6 +283,9 @@ void Kernel_Init() {
     Tasks = 0;
     KernelActive = 0;
     NextP = 0;
+    sys_clock = 0;
+
+    Kernel_Init_Clock();
 
     //Reminder: Clear the memory for the task on creation.
     for (x = 0; x < MAXTHREAD; x++) {

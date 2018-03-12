@@ -85,8 +85,12 @@ typedef enum process_state {
  */
 typedef enum kernel_request_type {
     NONE = 0,
+    TIMER,
     CREATE,
     NEXT,
+    GET_ARG,
+    GET_PID,
+    GET_NOW,
     TERMINATE,
     NUM_KERNEL_REQUEST_TYPES /* Must be last */
 } KERNEL_REQUEST_TYPE;
@@ -95,6 +99,8 @@ typedef enum kernel_request_type {
  * This struct is used to indirectly pass information within a kernel request
  */
 typedef struct kernel_request_params_type {
+    PID                       out_pid;              /* Set by the kernel, used to return PID */
+    TICK                      out_now;              /* Set by the kernel, used to return elapsed ticks */
     taskfuncptr               code;                 /* function to be executed as a task  */
     int16_t                   arg;                  /* parameter to be passed to the task */
     KERNEL_REQUEST_TYPE       request;
