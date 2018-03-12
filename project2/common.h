@@ -58,7 +58,7 @@ typedef bool         BOOL;               /* Boolean type: C99 introduced _Bool *
 typedef uint8_t      MTYPE;              /* Message type: used to classify messages */
 typedef uint8_t      MASK;               /* Message Mask type: used to filter messages by type */
 
-typedef void (*voidfuncptr) (void);      /* pointer to void f(void) */
+typedef void (*taskfuncptr) (void);      /* pointer to void f(void) */
 
 /**
  * This is the set of possible task priority levels
@@ -85,10 +85,29 @@ typedef enum process_state {
  */
 typedef enum kernel_request_type {
     NONE = 0,
+    TIMER,
     CREATE,
     NEXT,
+    GET_ARG,
+    GET_PID,
+    GET_NOW,
     TERMINATE,
     NUM_KERNEL_REQUEST_TYPES /* Must be last */
 } KERNEL_REQUEST_TYPE;
+
+/**
+ * This struct is used to indirectly pass information within a kernel request
+ */
+typedef struct kernel_request_params_type {
+    PID                       out_pid;              /* Set by the kernel, used to return PID */
+    TICK                      out_now;              /* Set by the kernel, used to return elapsed ticks */
+    taskfuncptr               code;                 /* function to be executed as a task  */
+    int16_t                   arg;                  /* parameter to be passed to the task */
+    KERNEL_REQUEST_TYPE       request;
+    PRIORITY_LEVEL            priority;
+    TICK                      period;               /* The period of a PERIODIC task */
+    TICK                      wcet;                 /* The worst case execution time of a PERIODIC task */
+    TICK                      offset;               /* The initial delay to start for a PERIODIC task */
+} KERNEL_REQUEST_PARAMS;
 
 #endif
