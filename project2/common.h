@@ -77,6 +77,9 @@ typedef enum process_state {
     DEAD = 0,
     READY,
     RUNNING,
+    SEND_BLOCK,
+    REPLY_BLOCK,
+    RECV_BLOCK,
     NUM_PROCESS_STATES /* Must be last */
 } PROCESS_STATE;
 
@@ -91,9 +94,18 @@ typedef enum kernel_request_type {
     GET_ARG,
     GET_PID,
     GET_NOW,
+    MSG_SEND,
+    MSG_RECV,
+    MSG_RPLY,
+    MSG_ASEND,
     TERMINATE,
     NUM_KERNEL_REQUEST_TYPES /* Must be last */
 } KERNEL_REQUEST_TYPE;
+
+void Msg_Send(PID  id, MTYPE t, uint16_t* v);
+PID  Msg_Recv(MASK m,           uint16_t* v);
+void Msg_Rply(PID  id,          uint16_t r);
+void Msg_ASend(PID id, MTYPE t, uint16_t v);
 
 /**
  * This struct is used to indirectly pass information within a kernel request
@@ -108,6 +120,10 @@ typedef struct kernel_request_params_type {
     TICK                      period;               /* The period of a PERIODIC task */
     TICK                      wcet;                 /* The worst case execution time of a PERIODIC task */
     TICK                      offset;               /* The initial delay to start for a PERIODIC task */
+    uint16_t                  *msg_ptr_data;
+    uint16_t                  msg_data;
+    MTYPE                     msg_mask;
+    PID                       msg_to;
 } KERNEL_REQUEST_PARAMS;
 
 #endif

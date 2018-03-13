@@ -3,11 +3,14 @@
 #include "kernel.h"
 #include "os.h"
 
+#define CMP_MASK(X, Y) ((X & Y) == X)
+
 /**
  * The process descriptor of the currently RUNNING task.
  */
 volatile static PD* Cp;
 volatile static KERNEL_REQUEST_PARAMS* request_info;
+
 /**
  * This table contains ALL process descriptors. It doesn't matter what
  * state a task is in. This table also serves as storage for the elements of
@@ -20,6 +23,14 @@ static PD Process[MAXTHREAD];
 task_queue_t system_tasks;
 task_queue_t periodic_tasks;
 task_queue_t rr_tasks;
+
+typedef struct msg_type {
+    uint16_t* data;             /* The data being sent in a message */
+    MASK      mask;             /* The mask for the specific message being sent */
+    PID       receiver;         /* The receiver of the message */
+} MSG;
+
+static MSG Messages[MAXTHREAD];
 
 /**
  * Since this is a "full-served" model, the kernel is executing using its own
@@ -83,7 +94,6 @@ extern void Enter_Kernel();
 /* User level 'main' function */
 extern void setup(void);
 
-
 ISR(TIMER4_COMPA_vect)
 {
     if (KernelActive) {
@@ -128,6 +138,8 @@ void Kernel_Task_Create_At(PD *p, taskfuncptr f) {
     p->sp = sp;      /* stack pointer into the "workSpace" */
     p->code = f;     /* function to be executed as a task */
     p->state = READY;
+
+    p->req_params = NULL;
 }
 
 void Kernel_Task_Create() {
@@ -185,22 +197,99 @@ static void Dispatch() {
      * Note: if there is no READY task, then this will loop forever!.
      */
 
+    BIT_SET(PORTB, 6);
     while(Process[NextP].state != READY) {
         NextP = (NextP + 1) % MAXTHREAD;
     }
+    BIT_CLR(PORTB, 6);
 
     Cp = &(Process[NextP]);
     CurrentSp = Cp->sp;
     Cp->state = RUNNING;
 
     NextP = (NextP + 1) % MAXTHREAD;
+}
+
+void Kernel_Msg_Send() {
+    // Periodic tasks cannot send
+    if (Cp->priority == PERIODIC) {
+        OS_Abort(PERIODIC_MSG);
+        return;
+    }
+
+    // Check if process id is valid
+    if (request_info->msg_to < 0 || request_info->msg_to >= MAXTHREAD) {
+        OS_Abort(INVALID_REQ_INFO);
+        return; // maybe os abort
+    }
+
+    PD *p_recv = &Process[request_info->msg_to];
+    MTYPE recv_mask = p_recv->req_params->msg_mask;
+
+    // Check if info.msg_to is waiting for a message of same type
+    if (p_recv->state == RECV_BLOCK && CMP_MASK(recv_mask, request_info->msg_mask)) {
+        // If yes, change state of waiting process to ready
+        p_recv->state = READY;
+        Cp->state = REPLY_BLOCK;
+
+        // Add the message data and pid of sender to the receiving processes request info
+        p_recv->req_params->msg_data = request_info->msg_data;
+        p_recv->req_params->out_pid = Cp->process_id;
+    } else {
+        // If not, sender process goes to send block state
+        MSG *msg = &Messages[request_info->msg_to];
+        msg->data = request_info->msg_ptr_data;
+        msg->mask = request_info->msg_mask;
+        msg->receiver = request_info->msg_to;
+
+        Cp->state = SEND_BLOCK;
+    }
+}
+
+void Kernel_Msg_Recv() {
+    // Periodic tasks cannot receive
+    if (Cp->priority == PERIODIC) {
+        OS_Abort(PERIODIC_MSG);
+        return;
+    }
+
+    // Check if there is a message waiting for us
+    PID sender_pid;
+    MSG *msg = NULL;
+    for (sender_pid = 0; sender_pid < MAXTHREAD; sender_pid += 1) {
+        if (Messages[sender_pid].receiver == Cp->process_id) {
+            msg = &Messages[sender_pid];
+            break;
+        }
+    }
+
+    if (msg != NULL && CMP_MASK(request_info->msg_mask, msg->mask)) {
+        // If yes, change state to ready and set msg data on Cp's request info
+        Cp->req_params->msg_ptr_data = msg->data;
+        Cp->req_params->out_pid = sender_pid;
+        Cp->state = READY;
+
+        // Remove data from Messages
+        msg->data = NULL;
+        msg->receiver = MAXTHREAD;
+    } else {
+        // If not, set process to receive block state
+        Cp->state = RECV_BLOCK;
+    }
+}
+
+void Kernel_Msg_Repl() {
+
+}
+
+void Kernel_Msg_ASend() {
 
 }
 
 static void Next_Kernel_Request() {
     Dispatch();  /* select a new task to run */
 
-    while(1) {
+    for(;;) {
         request_info->request = NONE; /* clear its request */
 
         /* activate this newly selected task */
@@ -244,6 +333,25 @@ static void Next_Kernel_Request() {
 
             case GET_NOW:
                 request_info->out_now = sys_clock;
+                break;
+
+            case MSG_SEND:
+                Kernel_Msg_Send();
+                Dispatch();
+                break;
+
+            case MSG_RECV:
+                Kernel_Msg_Recv();
+                Dispatch();
+                break;
+
+            case MSG_RPLY:
+                Kernel_Msg_Repl();
+                Dispatch();
+                break;
+
+            case MSG_ASEND:
+                Kernel_Msg_ASend();
                 break;
 
             case NONE:
@@ -291,6 +399,9 @@ void Kernel_Init() {
     for (x = 0; x < MAXTHREAD; x++) {
         ZeroMemory(Process[x], sizeof(PD));
         Process[x].state = DEAD;
+
+        ZeroMemory(Messages[x], sizeof(MSG));
+        Messages[x].data = NULL;
     }
 
     queue_init(&system_tasks, SYSTEM);
@@ -328,6 +439,32 @@ void Kernel_Request(KERNEL_REQUEST_PARAMS* info) {
 
         // No race condition here since interrupts are disabled
         request_info = info;
+
+        // Save pointer to current processes request info so we can
+        // return data to process after it has been cswitched out
+        Cp->req_params = info;
         Enter_Kernel();
     }
+}
+
+int main(void) {
+    BIT_SET(DDRB, 7);
+    BIT_CLR(PORTB, 7);
+
+    BIT_SET(DDRD, 0);
+    BIT_CLR(PORTD, 0);
+
+    BIT_SET(DDRB, 0);
+    BIT_SET(DDRB, 1);
+
+
+    Kernel_Init();
+
+    /* Can't add tasks here since Kernel_Request doesn't return until KernelActive is truthy */
+    Kernel_Start();
+
+    /* Control should never reach this point */
+    OS_Abort(FAILED_START);
+
+    return -1;
 }

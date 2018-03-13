@@ -16,15 +16,15 @@ void OS_Abort(ABORT_CODE error) {
     BIT_SET(DDRB, 7); // Set PB7 as output
     BIT_CLR(PORTB, 7);
     uint8_t ctr;
-	for(;;) {
-		for (ctr = 0; ctr < error; ctr += 1) {
+    for(;;) {
+        for (ctr = 0; ctr < error; ctr += 1) {
             BIT_SET(PORTB, 7);
             _delay_ms(200);
             BIT_CLR(PORTB, 7);
             _delay_ms(200);
         }
-		_delay_ms(1000);
-	}
+        _delay_ms(1000);
+    }
 }
 
 PID Task_Create_System(taskfuncptr f, int16_t arg) {
@@ -108,21 +108,41 @@ void Task_Terminate()
     Kernel_Request(&info);
 }
 
-
 void Msg_Send(PID id, MTYPE t, uint16_t* v) {
+    KERNEL_REQUEST_PARAMS info = {
+        .request = MSG_SEND,
+        .msg_ptr_data = v,
+        .msg_mask = t,
+        .msg_to = id
+    };
 
+    Kernel_Request(&info);
 }
 
 PID Msg_Recv(MASK m, uint16_t* v) {
-    return -1;
+    KERNEL_REQUEST_PARAMS info = {
+        .request = MSG_RECV
+    };
+
+    Kernel_Request(&info);
+    v = info.msg_ptr_data;
+    return info.out_pid;
 }
 
 void Msg_Rply(PID id, uint16_t r) {
+    KERNEL_REQUEST_PARAMS info = {
+        .request = MSG_RPLY
+    };
 
+    Kernel_Request(&info);
 }
 
 void Msg_ASend(PID id, MTYPE t, uint16_t v) {
+    KERNEL_REQUEST_PARAMS info = {
+        .request = MSG_ASEND
+    };
 
+    Kernel_Request(&info);
 }
 
 uint16_t Now() {
@@ -132,27 +152,4 @@ uint16_t Now() {
 
     Kernel_Request(&info);
     return info.out_now;
-}
-
-int main(void) {
-
-    BIT_SET(DDRB, 7);
-    BIT_CLR(PORTB, 7);
-
-    BIT_SET(DDRD, 0);
-    BIT_CLR(PORTD, 0);
-
-    BIT_SET(DDRB, 0);
-    BIT_SET(DDRB, 1);
-
-
-    Kernel_Init();
-
-    /* Can't add tasks here since Kernel_Request doesn't return until KernelActive is truthy */
-    Kernel_Start();
-
-    /* Control should never reach this point */
-    OS_Abort(FAILED_START);
-
-    return -1;
 }
