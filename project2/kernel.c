@@ -3,7 +3,9 @@
 #include "kernel.h"
 #include "os.h"
 
-#define CMP_MASK(X, Y) ((X & Y) == X)
+/* #define CMP_MASK(X, Y) ((X & Y) == X) */
+#define CMP_MASK(X, Y) (true)
+#define VALID_ID(id) (id > 0 && id < MAXTHREAD)
 
 /**
  * The process descriptor of the currently RUNNING task.
@@ -197,11 +199,9 @@ static void Dispatch() {
      * Note: if there is no READY task, then this will loop forever!.
      */
 
-    BIT_SET(PORTB, 6);
     while(Process[NextP].state != READY) {
         NextP = (NextP + 1) % MAXTHREAD;
     }
-    BIT_CLR(PORTB, 6);
 
     Cp = &(Process[NextP]);
     CurrentSp = Cp->sp;
@@ -218,7 +218,7 @@ void Kernel_Msg_Send() {
     }
 
     // Check if process id is valid
-    if (request_info->msg_to < 0 || request_info->msg_to >= MAXTHREAD) {
+    if (!VALID_ID(request_info->msg_to)) {
         OS_Abort(INVALID_REQ_INFO);
         return; // maybe os abort
     }
@@ -228,16 +228,18 @@ void Kernel_Msg_Send() {
 
     // Check if info.msg_to is waiting for a message of same type
     if (p_recv->state == RECV_BLOCK && CMP_MASK(recv_mask, request_info->msg_mask)) {
-        // If yes, change state of waiting process to ready
+        // If yes, change state of waiting process to ready and sender to reply block
         p_recv->state = READY;
         Cp->state = REPLY_BLOCK;
 
         // Add the message data and pid of sender to the receiving processes request info
-        p_recv->req_params->msg_data = request_info->msg_data;
+        p_recv->req_params->msg_ptr_data = request_info->msg_ptr_data;
         p_recv->req_params->out_pid = Cp->process_id;
     } else {
         // If not, sender process goes to send block state
         MSG *msg = &Messages[request_info->msg_to];
+
+        // Save message
         msg->data = request_info->msg_ptr_data;
         msg->mask = request_info->msg_mask;
         msg->receiver = request_info->msg_to;
@@ -269,6 +271,9 @@ void Kernel_Msg_Recv() {
         Cp->req_params->out_pid = sender_pid;
         Cp->state = READY;
 
+        // Sender process now waiting for reply
+        Process[sender_pid].state = REPLY_BLOCK;
+
         // Remove data from Messages
         msg->data = NULL;
         msg->receiver = MAXTHREAD;
@@ -279,7 +284,30 @@ void Kernel_Msg_Recv() {
 }
 
 void Kernel_Msg_Repl() {
+    // Periodic tasks cannot reply
+    if (Cp->priority == PERIODIC) {
+        OS_Abort(PERIODIC_MSG);
+        return;
+    }
 
+    // Check if info.msg_to is in reply block
+    if (!VALID_ID(request_info->msg_to)) {
+        OS_Abort(INVALID_REQ_INFO);
+        return;
+    }
+    OS_Abort(INVALID_REQ_INFO);
+
+    PD *p_recv = &Process[request_info->msg_to];
+
+    // Check if process replying to is in reply block state
+    if (p_recv->state == REPLY_BLOCK) {
+        p_recv->state = READY;
+
+        // I don't think this will work
+        p_recv->req_params->msg_data = request_info->msg_data;
+    } else {
+        // If not, noop
+    }
 }
 
 void Kernel_Msg_ASend() {
