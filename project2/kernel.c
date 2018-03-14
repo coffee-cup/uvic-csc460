@@ -382,7 +382,9 @@ void Kernel_Msg_Rply() {
     Cp->state = READY;
 }
 
-void Kernel_Msg_ASend() {}
+void Kernel_Msg_ASend() {
+    ;
+}
 
 void Kernel_Request_Timer() {
     sys_clock += 1;
@@ -402,11 +404,12 @@ void Kernel_Request_GetNow() {
     request_info->out_now = sys_clock;
 }
 
-void Kernel_Request_None() {}
+void Kernel_Request_None() {
+    ;
+}
 
 
 static void Next_Kernel_Request() {
-
     request_handler_func request_handlers[NUM_KERNEL_REQUEST_TYPES] = {
         // Must be in order of KERNEL_REQUEST_TYPE
         Kernel_Request_None,
@@ -416,6 +419,10 @@ static void Next_Kernel_Request() {
         Kernel_Request_GetArg,
         Kernel_Request_GetPid,
         Kernel_Request_GetNow,
+        Kernel_Msg_Send,
+        Kernel_Msg_Recv,
+        Kernel_Msg_Rply,
+        Kernel_Msg_ASend,
         Kernel_Request_Terminate
     };
 
@@ -426,7 +433,7 @@ static void Next_Kernel_Request() {
             // Clear it's request
             request_info->request = NONE;
             // Clear our reference to request_info
-            request_info = NULL;
+            /* request_info = NULL; */
         } else {
             if (KernelActive) {
                 OS_Abort(NO_REQUEST_INFO);
@@ -450,64 +457,9 @@ static void Next_Kernel_Request() {
         /* Switch current process state from RUNNING to READY */
         Cp->state = READY;
 
-        switch(request_info->request){
-            case CREATE:
-                Kernel_Task_Create();
-                break;
-
-            case NEXT:
-                Dispatch();
-                break;
-
-            case TERMINATE:
-                /* deallocate all resources used by this task */
-                Cp->state = DEAD;
-                Dispatch();
-                break;
-
-            case TIMER:
-                /* sys_clock += 1; */
-                Dispatch();
-                break;
-
-            case GET_ARG:
-                request_info->arg = Cp->arg;
-                break;
-
-            case GET_PID:
-                request_info->out_pid = Cp->process_id;
-                break;
-
-            case GET_NOW:
-                request_info->out_now = sys_clock;
-                break;
-
-            case MSG_SEND:
-                Kernel_Msg_Send();
-                Dispatch();
-                break;
-
-            case MSG_RECV:
-                Kernel_Msg_Recv();
-                Dispatch();
-                break;
-
-            case MSG_RPLY:
-                Kernel_Msg_Rply();
-                Dispatch();
-                break;
-
-            case MSG_ASEND:
-                Kernel_Msg_ASend();
-                break;
-
-            case NONE:
-            default:
-                /* Houston! we have a problem here! */
-                break;
 
         /* Run the approrpriate handler */
-        if (request_info->request >= NONE && request_info->request < NUM_KERNEL_REQUEST_TYPES) {
+        if (request_info->request >= NONE && request_info->request < NUM_KERNEL_REQUEST_TYPES - 1) {
             request_handlers[request_info->request]();
         } else {
             OS_Abort(INVALID_REQ_INFO);
@@ -516,7 +468,6 @@ static void Next_Kernel_Request() {
 }
 
 void Kernel_Init_Clock() {
-
     // Clear timer config.
     TCCR4A = 0;
     TCCR4B = 0;

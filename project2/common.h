@@ -84,7 +84,7 @@ typedef enum process_state {
  * This is the set of kernel requests, i.e., a request code for each system call.
  */
 typedef enum kernel_request_type {
-    NONE = 0,
+    NONE = 0, /* Must be first */
     TIMER,
     CREATE,
     NEXT,
