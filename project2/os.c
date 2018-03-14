@@ -122,7 +122,8 @@ void Msg_Send(PID id, MTYPE t, uint16_t* v) {
 
 PID Msg_Recv(MASK m, uint16_t* v) {
     KERNEL_REQUEST_PARAMS info = {
-        .request = MSG_RECV
+        .request = MSG_RECV,
+        .msg_mask = m
     };
 
     Kernel_Request(&info);
@@ -134,7 +135,7 @@ void Msg_Rply(PID id, uint16_t r) {
     KERNEL_REQUEST_PARAMS info = {
         .request = MSG_RPLY,
         .msg_to = id,
-        .msg_data = r
+        /* .msg_data = r */
     };
 
     Kernel_Request(&info);

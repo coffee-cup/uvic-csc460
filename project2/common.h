@@ -26,6 +26,11 @@
 #define HIGH_BYTE(X) ((((uint16_t)X) >> 8) & 0xFF)
 #define ZeroMemory(X, N) memset(&(X), 0, N)
 
+#define SERVER 0
+#define PARENT 1
+#define DISPATCH 5
+#define CLOCK 6
+
 /**
  * Macro to simulate a decorator for automatically calling Task_Next()
  */
@@ -41,9 +46,9 @@
  *        S T A N D A R D    T Y P E    D E F I N I T I O N S
  *==================================================================
  */
-#ifndef NULL
-#define NULL         0                   /* c-style 0 as undefined */
-#endif
+/* #ifndef NULL */
+/* #define NULL         0                   /\* c-style 0 as undefined *\/ */
+/* #endif */
 #define TRUE         true                /* stdbool types */
 #define FALSE        false               /* stdbool is a very light-weight header */
 #define ANY          0xFF                /* A mask for ALL message types */

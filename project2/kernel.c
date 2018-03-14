@@ -1,10 +1,10 @@
 #include <stdint.h>
 #include <avr/interrupt.h>
+#include <util/delay.h>
 #include "kernel.h"
 #include "os.h"
 
-/* #define CMP_MASK(X, Y) ((X & Y) == X) */
-#define CMP_MASK(X, Y) (true)
+#define CMP_MASK(X, Y) ((X & Y) == X)
 #define VALID_ID(id) (id > 0 && id < MAXTHREAD)
 
 /**
@@ -98,8 +98,9 @@ extern void setup(void);
 
 ISR(TIMER4_COMPA_vect)
 {
+    BIT_FLIP(PORTB, CLOCK);
     if (KernelActive) {
-        sys_clock += 1;
+        /* sys_clock += 1; */
         KERNEL_REQUEST_PARAMS info = {
             .request = TIMER
         };
@@ -200,6 +201,7 @@ static void Dispatch() {
      */
 
     while(Process[NextP].state != READY) {
+        BIT_FLIP(PORTB, DISPATCH);
         NextP = (NextP + 1) % MAXTHREAD;
     }
 
@@ -220,7 +222,7 @@ void Kernel_Msg_Send() {
     // Check if process id is valid
     if (!VALID_ID(request_info->msg_to)) {
         OS_Abort(INVALID_REQ_INFO);
-        return; // maybe os abort
+        return;
     }
 
     PD *p_recv = &Process[request_info->msg_to];
@@ -237,7 +239,7 @@ void Kernel_Msg_Send() {
         p_recv->req_params->out_pid = Cp->process_id;
     } else {
         // If not, sender process goes to send block state
-        MSG *msg = &Messages[request_info->msg_to];
+        MSG *msg = &Messages[Cp->process_id];
 
         // Save message
         msg->data = request_info->msg_ptr_data;
@@ -265,14 +267,17 @@ void Kernel_Msg_Recv() {
         }
     }
 
+    // Check if there is a message waiting for this process
     if (msg != NULL && CMP_MASK(request_info->msg_mask, msg->mask)) {
         // If yes, change state to ready and set msg data on Cp's request info
-        Cp->req_params->msg_ptr_data = msg->data;
-        Cp->req_params->out_pid = sender_pid;
+        request_info->msg_ptr_data = msg->data;
+        request_info->out_pid = sender_pid;
+
         Cp->state = READY;
 
         // Sender process now waiting for reply
-        Process[sender_pid].state = REPLY_BLOCK;
+        PD *sender = &Process[sender_pid];
+        sender->state = REPLY_BLOCK;
 
         // Remove data from Messages
         msg->data = NULL;
@@ -283,31 +288,32 @@ void Kernel_Msg_Recv() {
     }
 }
 
-void Kernel_Msg_Repl() {
+void Kernel_Msg_Rply() {
     // Periodic tasks cannot reply
-    if (Cp->priority == PERIODIC) {
-        OS_Abort(PERIODIC_MSG);
-        return;
-    }
+    OS_Abort(PERIODIC_MSG);
+    return;
+    /* if (Cp->priority == PERIODIC) { */
+    /*     OS_Abort(PERIODIC_MSG); */
+    /*     return; */
+    /* } */
 
-    // Check if info.msg_to is in reply block
-    if (!VALID_ID(request_info->msg_to)) {
-        OS_Abort(INVALID_REQ_INFO);
-        return;
-    }
-    OS_Abort(INVALID_REQ_INFO);
+    /* // Check if process id is valid */
+    /* if (!VALID_ID(request_info->msg_to)) { */
+    /*     OS_Abort(INVALID_REQ_INFO); */
+    /*     return; */
+    /* } */
 
-    PD *p_recv = &Process[request_info->msg_to];
+    /* PD *p_recv = &Process[request_info->msg_to]; */
 
-    // Check if process replying to is in reply block state
-    if (p_recv->state == REPLY_BLOCK) {
-        p_recv->state = READY;
+    /* // Check if process replying to is in reply block state */
+    /* if (p_recv->state == REPLY_BLOCK) { */
+    /*     p_recv->state = READY; */
 
-        // I don't think this will work
-        p_recv->req_params->msg_data = request_info->msg_data;
-    } else {
-        // If not, noop
-    }
+    /*     // I don't think this will work */
+    /*     p_recv->req_params->msg_data = request_info->msg_data; */
+    /* } else { */
+    /*     // If not, noop */
+    /* } */
 }
 
 void Kernel_Msg_ASend() {
@@ -329,13 +335,14 @@ static void Next_Kernel_Request() {
         /* save the Cp's stack pointer */
         Cp->sp = CurrentSp;
 
+        Cp->state = READY;
+
         switch(request_info->request){
             case CREATE:
                 Kernel_Task_Create();
                 break;
 
             case NEXT:
-                Cp->state = READY;
                 Dispatch();
                 break;
 
@@ -346,8 +353,7 @@ static void Next_Kernel_Request() {
                 break;
 
             case TIMER:
-                sys_clock += 1;
-                Cp->state = READY;
+                /* sys_clock += 1; */
                 Dispatch();
                 break;
 
@@ -374,7 +380,7 @@ static void Next_Kernel_Request() {
                 break;
 
             case MSG_RPLY:
-                Kernel_Msg_Repl();
+                Kernel_Msg_Rply();
                 Dispatch();
                 break;
 
@@ -484,7 +490,6 @@ int main(void) {
 
     BIT_SET(DDRB, 0);
     BIT_SET(DDRB, 1);
-
 
     Kernel_Init();
 
