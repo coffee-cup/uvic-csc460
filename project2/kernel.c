@@ -100,7 +100,6 @@ extern void Enter_Kernel();
 extern void setup(void);
 
 ISR(TIMER4_COMPA_vect) {
-    BIT_FLIP(PORTB, CLOCK);
     if (KernelActive) {
         KERNEL_REQUEST_PARAMS info = {
             .request = TIMER
