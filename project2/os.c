@@ -135,7 +135,7 @@ void Msg_Rply(PID id, uint16_t r) {
     KERNEL_REQUEST_PARAMS info = {
         .request = MSG_RPLY,
         .msg_to = id,
-        /* .msg_data = r */
+        .msg_data = r
     };
 
     Kernel_Request(&info);

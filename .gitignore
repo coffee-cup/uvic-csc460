@@ -217,6 +217,7 @@ node_modules/
 
 # Emacs stuff
 auto/
+TAGS
 
 .env
 build-mega-atmega2560
