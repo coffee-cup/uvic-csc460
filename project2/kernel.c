@@ -87,11 +87,9 @@ extern void Enter_Kernel();
 /* User level 'main' function */
 extern void setup(void);
 
-
 ISR(TIMER4_COMPA_vect)
 {
     if (KernelActive) {
-        BIT_FLIP(PORTD, 0);
         KERNEL_REQUEST_PARAMS info = {
             .request = TIMER
         };
@@ -189,16 +187,6 @@ static void Dispatch() {
      * Note: if there is no READY task, then this will loop forever!.
      */
 
-    // while(Process[NextP].state != READY) {
-    //     NextP = (NextP + 1) % MAXTHREAD;
-    // }
-
-    // Cp = &(Process[NextP]);
-    // CurrentSp = Cp->sp;
-    // Cp->state = RUNNING;
-
-    // NextP = (NextP + 1) % MAXTHREAD;
-
     /* Only change the current task if it's not running */
     if (Cp->state != RUNNING ) {
 
@@ -238,10 +226,8 @@ static void Dispatch() {
         }
     }
 
-
     CurrentSp = Cp->sp;
     Cp->state = RUNNING;
-
 }
 
 void Kernel_Request_Create() {
