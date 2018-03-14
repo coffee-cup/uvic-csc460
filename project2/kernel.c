@@ -351,7 +351,7 @@ void Kernel_Msg_Recv() {
 
         // Remove data from Messages
         msg->data = NULL;
-        msg->receiver = MAXTHREAD;
+        msg->receiver = -1;
     } else {
         // If not, set process to receive block state
         Cp->state = RECV_BLOCK;
@@ -437,7 +437,7 @@ static void Next_Kernel_Request() {
             // Clear it's request
             request_info->request = NONE;
             // Clear our reference to request_info
-            /* request_info = NULL; */
+            request_info = NULL;
         } else {
             if (KernelActive) {
                 OS_Abort(NO_REQUEST_INFO);
