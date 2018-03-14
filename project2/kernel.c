@@ -196,6 +196,12 @@ void Kernel_Task_Create() {
     }
 }
 
+/**
+ * Finds and returns the first READY task in `queue`.
+ * If no task is found, returns NULL and queue order is unchanged
+ * If a task is found, `queue` will be rotated so that the READY task is
+ * at the front.
+ */
 PD* Queue_Rotate_Ready(task_queue_t* queue) {
     // Get candidate task and first task in queue
     PD* iter_task;
