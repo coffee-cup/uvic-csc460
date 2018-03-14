@@ -5,5 +5,6 @@
 #include "process.h"
 
 void Kernel_Request(KERNEL_REQUEST_PARAMS* info);
+void Kernel_Abort(); // TODO remove this
 
 #endif

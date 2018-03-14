@@ -15,7 +15,8 @@ typedef enum {
     NO_REQUEST_INFO = 5,
     WRONG_TASK_ORDER = 6,
     INVALID_PRIORITY = 7,
-    PERIODIC_MSG = 8
+    PERIODIC_MSG = 8,
+    FAILED_ASSERTION = 9
 } ABORT_CODE;
 
 // Aborts the RTOS and enters a "non-executing" state with an error code. That is, all tasks
