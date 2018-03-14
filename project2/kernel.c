@@ -210,8 +210,10 @@ static void Dispatch() {
         if (system_tasks.length > 0) {
             new_p = peek(&system_tasks);
 
-            // TODO: Specify that the task has to be non-blocked
-            // while ((new_p = new_p->next) != NULL && new_p->state != `blocked`);
+            // Specify that the task has to be non-blocked
+            while (new_p != NULL && new_p->state != READY) {
+                new_p = new_p->next;
+            }
         }
 
         /* Haven't found a new task */
@@ -221,14 +223,20 @@ static void Dispatch() {
                based on increasing time to next start, only need to check first task */
             if (periodic_tasks.length > 0 && sys_clock >= peek(&periodic_tasks)->ttns) {
                 new_p = peek(&periodic_tasks);
+
+                // TODO: Maybe check that the periodic task is READY
             }
+
             /* No periodic tasks should be started, check round robin tasks now */
             else if (rr_tasks.length > 0) {
                 /* Check all the round robin tasks */
                 new_p = deque(&rr_tasks);
                 enqueue(&rr_tasks, new_p);
-                // TODO: Specify that the task has to be non-blocked
-                // while ((new_p = new_p->next) != NULL && new_p->state != `blocked`);
+
+                // Specify that the task has to be non-blocked
+                while (new_p != NULL && new_p->state != READY) {
+                    new_p = new_p->next;
+                }
             }
         }
 
@@ -318,6 +326,8 @@ void Kernel_Msg_Send() {
 
         Cp->state = SEND_BLOCK;
     }
+
+    Dispatch();
 }
 
 void Kernel_Msg_Recv() {
@@ -356,6 +366,8 @@ void Kernel_Msg_Recv() {
         // If not, set process to receive block state
         Cp->state = RECV_BLOCK;
     }
+
+    Dispatch();
 }
 
 void Kernel_Msg_Rply() {
@@ -384,6 +396,8 @@ void Kernel_Msg_Rply() {
     }
 
     Cp->state = READY;
+
+    Dispatch();
 }
 
 void Kernel_Msg_ASend() {
