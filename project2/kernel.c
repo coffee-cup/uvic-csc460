@@ -221,9 +221,10 @@ static void Dispatch() {
         /* Nothing is ready to run! Use our lower-than-low priority task */
         if (new_p == NULL) {
             new_p = &IdleProcess;
-        } else {
-            Cp = new_p;
         }
+
+        /* Finally set the new task */
+        Cp = new_p;
     }
 
     CurrentSp = Cp->sp;
