@@ -99,11 +99,6 @@ typedef enum kernel_request_type {
     NUM_KERNEL_REQUEST_TYPES /* Must be last */
 } KERNEL_REQUEST_TYPE;
 
-void Msg_Send(PID  id, MTYPE t, uint16_t* v);
-PID  Msg_Recv(MASK m,           uint16_t* v);
-void Msg_Rply(PID  id,          uint16_t r);
-void Msg_ASend(PID id, MTYPE t, uint16_t v);
-
 /**
  * This struct is used to indirectly pass information within a kernel request
  */
