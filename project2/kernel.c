@@ -35,6 +35,11 @@ typedef struct msg_type {
     PID       receiver;         /* The receiver of the message */
 } MSG;
 
+/**
+ * This array represents an outgoing mailbox.
+ * If Process[i] is in the SEND_BLOCK state then Messages[i] will be the message
+ * it is trying to send.
+ */
 static MSG Messages[MAXTHREAD];
 
 /**
