@@ -41,9 +41,6 @@
  *        S T A N D A R D    T Y P E    D E F I N I T I O N S
  *==================================================================
  */
-#ifndef NULL
-#define NULL         0                   /* c-style 0 as undefined */
-#endif
 #define TRUE         true                /* stdbool types */
 #define FALSE        false               /* stdbool is a very light-weight header */
 #define ANY          0xFF                /* A mask for ALL message types */
@@ -77,6 +74,9 @@ typedef enum process_state {
     DEAD = 0,
     READY,
     RUNNING,
+    SEND_BLOCK,
+    REPLY_BLOCK,
+    RECV_BLOCK,
     NUM_PROCESS_STATES /* Must be last */
 } PROCESS_STATE;
 
@@ -84,13 +84,17 @@ typedef enum process_state {
  * This is the set of kernel requests, i.e., a request code for each system call.
  */
 typedef enum kernel_request_type {
-    NONE = 0,
+    NONE = 0, /* Must be first */
     TIMER,
     CREATE,
     NEXT,
     GET_ARG,
     GET_PID,
     GET_NOW,
+    MSG_SEND,
+    MSG_RECV,
+    MSG_RPLY,
+    MSG_ASEND,
     TERMINATE,
     NUM_KERNEL_REQUEST_TYPES /* Must be last */
 } KERNEL_REQUEST_TYPE;
@@ -108,6 +112,10 @@ typedef struct kernel_request_params_type {
     TICK                      period;               /* The period of a PERIODIC task */
     TICK                      wcet;                 /* The worst case execution time of a PERIODIC task */
     TICK                      offset;               /* The initial delay to start for a PERIODIC task */
+    uint16_t                  *msg_ptr_data;
+    uint16_t                  msg_data;
+    MTYPE                     msg_mask;
+    PID                       msg_to;
 } KERNEL_REQUEST_PARAMS;
 
 #endif
