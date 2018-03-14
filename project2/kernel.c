@@ -1,11 +1,10 @@
 #include <stdint.h>
 #include <avr/interrupt.h>
-#include <util/delay.h>
 #include "kernel.h"
 #include "os.h"
 
 #define CMP_MASK(X, Y) ((X & Y) == X)
-#define VALID_ID(id) (id > 0 && id < MAXTHREAD)
+#define VALID_ID(id) (id >= 0 && id < MAXTHREAD)
 
 /**
  * The process descriptor of the currently RUNNING task.
@@ -290,30 +289,27 @@ void Kernel_Msg_Recv() {
 
 void Kernel_Msg_Rply() {
     // Periodic tasks cannot reply
-    OS_Abort(PERIODIC_MSG);
-    return;
-    /* if (Cp->priority == PERIODIC) { */
-    /*     OS_Abort(PERIODIC_MSG); */
-    /*     return; */
-    /* } */
+    if (Cp->priority == PERIODIC) {
+        OS_Abort(PERIODIC_MSG);
+        return;
+    }
+    // Check if process id is valid
+    if (!VALID_ID(request_info->msg_to)) {
+        OS_Abort(INVALID_REQ_INFO);
+        return;
+    }
 
-    /* // Check if process id is valid */
-    /* if (!VALID_ID(request_info->msg_to)) { */
-    /*     OS_Abort(INVALID_REQ_INFO); */
-    /*     return; */
-    /* } */
+    PD *p_recv = &Process[request_info->msg_to];
 
-    /* PD *p_recv = &Process[request_info->msg_to]; */
+    // Check if process replying to is in reply block state
+    if (p_recv->state == REPLY_BLOCK) {
+        p_recv->state = READY;
 
-    /* // Check if process replying to is in reply block state */
-    /* if (p_recv->state == REPLY_BLOCK) { */
-    /*     p_recv->state = READY; */
-
-    /*     // I don't think this will work */
-    /*     p_recv->req_params->msg_data = request_info->msg_data; */
-    /* } else { */
-    /*     // If not, noop */
-    /* } */
+        // I don't think this will work
+        p_recv->req_params->msg_data = request_info->msg_data;
+    } else {
+        // If not, noop
+    }
 }
 
 void Kernel_Msg_ASend() {
