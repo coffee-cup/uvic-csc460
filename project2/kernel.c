@@ -1,10 +1,13 @@
 #include <stdint.h>
 #include <avr/interrupt.h>
+#include <util/delay.h>
 #include "kernel.h"
 #include "os.h"
 
 #define CMP_MASK(X, Y) ((X & Y) == X)
 #define VALID_ID(id) (id >= 0 && id < MAXTHREAD)
+
+typedef void (*request_handler_func) (void);
 
 /**
  * The process descriptor of the currently RUNNING task.
@@ -20,6 +23,7 @@ volatile static KERNEL_REQUEST_PARAMS* request_info;
  * queues to use the same storage, with the assurance that they won't overwrite eachother.
  */
 static PD Process[MAXTHREAD];
+static PD IdleProcess;
 
 task_queue_t system_tasks;
 task_queue_t periodic_tasks;
@@ -95,17 +99,14 @@ extern void Enter_Kernel();
 /* User level 'main' function */
 extern void setup(void);
 
-ISR(TIMER4_COMPA_vect)
-{
+ISR(TIMER4_COMPA_vect) {
     BIT_FLIP(PORTB, CLOCK);
     if (KernelActive) {
-        /* sys_clock += 1; */
         KERNEL_REQUEST_PARAMS info = {
             .request = TIMER
         };
 
         request_info = &info;
-
         // This timer interrupts user mode programs
         // Need to make sure to switch modes
         Enter_Kernel();
@@ -154,6 +155,7 @@ void Kernel_Task_Create() {
     int x;
     for (x = 0; x < MAXTHREAD; x++) {
         if (Process[x].state == DEAD) {
+            ZeroMemory(Process[x], sizeof(PD));
             break;
         }
     }
@@ -195,20 +197,85 @@ void Kernel_Task_Create() {
  * next task to run, i.e., Cp.
  */
 static void Dispatch() {
-    /* find the next READY task
-     * Note: if there is no READY task, then this will loop forever!.
-     */
+    /* Only change the current task if it's not running */
+    if (Cp->state != RUNNING ) {
 
-    while(Process[NextP].state != READY) {
-        BIT_FLIP(PORTB, DISPATCH);
-        NextP = (NextP + 1) % MAXTHREAD;
+        PD* new_p = NULL;
+
+        /* Check the system tasks */
+        if (system_tasks.length > 0) {
+            new_p = peek(&system_tasks);
+
+            // TODO: Specify that the task has to be non-blocked
+            // while ((new_p = new_p->next) != NULL && new_p->state != `blocked`);
+        }
+
+        /* Haven't found a new task */
+        if (new_p == NULL) {
+
+            /* Check for periodic tasks which are ready to run, assuming sorted order
+               based on increasing time to next start, only need to check first task */
+            if (periodic_tasks.length > 0 && sys_clock >= peek(&periodic_tasks)->ttns) {
+                new_p = peek(&periodic_tasks);
+            }
+            /* No periodic tasks should be started, check round robin tasks now */
+            else if (rr_tasks.length > 0) {
+                /* Check all the round robin tasks */
+                new_p = deque(&rr_tasks);
+                enqueue(&rr_tasks, new_p);
+                // TODO: Specify that the task has to be non-blocked
+                // while ((new_p = new_p->next) != NULL && new_p->state != `blocked`);
+            }
+        }
+
+        /* Nothing is ready to run! Use our lower-than-low priority task */
+        if (new_p == NULL) {
+            new_p = &IdleProcess;
+        }
+
+        /* Finally set the new task */
+        Cp = new_p;
     }
 
-    Cp = &(Process[NextP]);
     CurrentSp = Cp->sp;
     Cp->state = RUNNING;
+}
 
-    NextP = (NextP + 1) % MAXTHREAD;
+void Kernel_Request_Create() {
+    Kernel_Task_Create();
+}
+
+void Kernel_Request_Next() {
+    Cp->state = READY;
+    Dispatch();
+}
+
+void Kernel_Request_Terminate() {
+    /* deallocate all resources used by this task */
+    /* Assume it will be at the front of it's queue? */
+    PD* killed_task = NULL;
+    switch (Cp->priority) {
+        case SYSTEM:
+            killed_task = deque(&system_tasks);
+            break;
+        case PERIODIC:
+            killed_task = deque(&periodic_tasks);
+            break;
+        case RR:
+            killed_task = deque(&rr_tasks);
+            break;
+        default:
+            OS_Abort(INVALID_PRIORITY);
+            break;
+    }
+
+    if (killed_task != Cp) {
+        OS_Abort(WRONG_TASK_ORDER);
+    }
+
+    Cp->state = DEAD;
+    Tasks -= 1;
+    Dispatch();
 }
 
 void Kernel_Msg_Send() {
@@ -315,25 +382,72 @@ void Kernel_Msg_Rply() {
     Cp->state = READY;
 }
 
-void Kernel_Msg_ASend() {
+void Kernel_Msg_ASend() {}
 
+void Kernel_Request_Timer() {
+    sys_clock += 1;
+    Cp->state = READY;
+    Dispatch();
 }
 
+void Kernel_Request_GetArg() {
+    request_info->arg = Cp->arg;
+}
+
+void Kernel_Request_GetPid() {
+    request_info->out_pid = Cp->process_id;
+}
+
+void Kernel_Request_GetNow() {
+    request_info->out_now = sys_clock;
+}
+
+void Kernel_Request_None() {}
+
+
 static void Next_Kernel_Request() {
+
+    request_handler_func request_handlers[NUM_KERNEL_REQUEST_TYPES] = {
+        // Must be in order of KERNEL_REQUEST_TYPE
+        Kernel_Request_None,
+        Kernel_Request_Timer,
+        Kernel_Request_Create,
+        Kernel_Request_Next,
+        Kernel_Request_GetArg,
+        Kernel_Request_GetPid,
+        Kernel_Request_GetNow,
+        Kernel_Request_Terminate
+    };
+
     Dispatch();  /* select a new task to run */
 
     for(;;) {
-        request_info->request = NONE; /* clear its request */
+        if (request_info) {
+            // Clear it's request
+            request_info->request = NONE;
+            // Clear our reference to request_info
+            request_info = NULL;
+        } else {
+            if (KernelActive) {
+                OS_Abort(NO_REQUEST_INFO);
+            }
+        }
 
         /* activate this newly selected task */
         CurrentSp = Cp->sp;
+        KernelActive = 1;
         Exit_Kernel();    /* or CSwitch() */
 
         /* if this task makes a kernel request, it will return to here! */
+        /* request_info should be valid again! */
+        if (!request_info) {
+            OS_Abort(NO_REQUEST_INFO);
+        }
 
         /* save the Cp's stack pointer */
         Cp->sp = CurrentSp;
 
+        /* Switch current process state from RUNNING to READY */
         Cp->state = READY;
 
         switch(request_info->request){
@@ -391,6 +505,12 @@ static void Next_Kernel_Request() {
             default:
                 /* Houston! we have a problem here! */
                 break;
+
+        /* Run the approrpriate handler */
+        if (request_info->request >= NONE && request_info->request < NUM_KERNEL_REQUEST_TYPES) {
+            request_handlers[request_info->request]();
+        } else {
+            OS_Abort(INVALID_REQ_INFO);
         }
     }
 }
@@ -418,6 +538,15 @@ void Kernel_Init_Clock() {
     TCNT4 = 0;
 }
 
+void Kernel_idle() {
+    for(;;) {
+        BIT_SET(PORTB, 6);
+        _delay_ms(200);
+        BIT_CLR(PORTB, 6);
+        _delay_ms(200);
+    }
+}
+
 void Kernel_Init() {
     int x;
 
@@ -428,7 +557,11 @@ void Kernel_Init() {
 
     Kernel_Init_Clock();
 
-    //Reminder: Clear the memory for the task on creation.
+    // Clear the memory for the IdleProcess
+    ZeroMemory(IdleProcess, sizeof(PD));
+    Kernel_Task_Create_At(&IdleProcess, Kernel_idle);
+
+    // Reminder: Clear the memory for the task on creation.
     for (x = 0; x < MAXTHREAD; x++) {
         ZeroMemory(Process[x], sizeof(PD));
         Process[x].state = DEAD;
@@ -451,6 +584,7 @@ void Kernel_Init() {
 
     request_info = &info;
     Kernel_Task_Create();
+    request_info = NULL;
 }
 
 void Kernel_Start() {
@@ -459,7 +593,6 @@ void Kernel_Start() {
         /* we may have to initialize the interrupt vector for Enter_Kernel() here. */
 
         /* here we go...  */
-        KernelActive = 1;
         Next_Kernel_Request();
         /* NEVER RETURNS!!! */
     }
@@ -481,17 +614,7 @@ void Kernel_Request(KERNEL_REQUEST_PARAMS* info) {
 }
 
 int main(void) {
-    BIT_SET(DDRB, 7);
-    BIT_CLR(PORTB, 7);
-
-    BIT_SET(DDRD, 0);
-    BIT_CLR(PORTD, 0);
-
-    BIT_SET(DDRB, 0);
-    BIT_SET(DDRB, 1);
-
     Kernel_Init();
-
     /* Can't add tasks here since Kernel_Request doesn't return until KernelActive is truthy */
     Kernel_Start();
 
