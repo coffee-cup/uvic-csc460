@@ -458,7 +458,7 @@ static void Next_Kernel_Request() {
 
 
         /* Run the approrpriate handler */
-        if (request_info->request >= NONE && request_info->request < NUM_KERNEL_REQUEST_TYPES - 1) {
+        if (request_info->request >= NONE && request_info->request < NUM_KERNEL_REQUEST_TYPES) {
             request_handlers[request_info->request]();
         } else {
             OS_Abort(INVALID_REQ_INFO);
