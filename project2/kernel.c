@@ -293,6 +293,7 @@ void Kernel_Msg_Rply() {
         OS_Abort(PERIODIC_MSG);
         return;
     }
+
     // Check if process id is valid
     if (!VALID_ID(request_info->msg_to)) {
         OS_Abort(INVALID_REQ_INFO);
@@ -310,6 +311,8 @@ void Kernel_Msg_Rply() {
     } else {
         // If not, noop
     }
+
+    Cp->state = READY;
 }
 
 void Kernel_Msg_ASend() {
