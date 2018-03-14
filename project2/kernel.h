@@ -6,8 +6,4 @@
 
 void Kernel_Request(KERNEL_REQUEST_PARAMS* info);
 
-// TODO: These should not be public
-void Kernel_Init();
-void Kernel_Start();
-
 #endif

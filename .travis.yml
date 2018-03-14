@@ -23,5 +23,6 @@ deploy:
   skip_cleanup: true
   script:
     - ./deploy.sh
-  on:
-    branch: website
+branches:
+  only:
+    website

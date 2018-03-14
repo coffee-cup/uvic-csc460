@@ -20,8 +20,9 @@ typedef struct ProcessDescriptor {
     TICK                      period;               /* The period of a PERIODIC task */
     TICK                      wcet;                 /* The worst case execution time of a PERIODIC task */
     TICK                      ttns;                 /* The time to next start for a PERIODIC task */
-    TICK                      ticks_remaining;      /* Until a PERIODIC or RR task is forced to yeild */
+    TICK                      ticks_remaining;      /* Until a PERIODIC or RR task is forced to yield */
     struct ProcessDescriptor* next;
+    KERNEL_REQUEST_PARAMS *req_params;
 } PD;
 
 typedef struct task_queue_type {

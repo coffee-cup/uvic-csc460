@@ -10,8 +10,13 @@
  */
 void Ping(void) TASK
 ({
-    BIT_FLIP(PORTB, 1);
-    _delay_ms(250);
+    uint16_t x = 6;
+    _delay_ms(1000);
+    Msg_Send(1, ANY, &x);
+
+    /* BIT_FLIP(PORTB, 6); */
+    _delay_ms(1);
+    /* BIT_FLIP(PORTB, 6); */
 })
 
 /**
@@ -20,8 +25,12 @@ void Ping(void) TASK
  */
 void Pong(void) TASK
 ({
+    uint16_t x;
+    Msg_Recv(ANY, &x);
+
     BIT_FLIP(PORTB, 0);
-    _delay_ms(250);
+
+    _delay_ms(100);
 })
 
 
@@ -35,8 +44,8 @@ void setup(void) {
     BIT_SET(DDRB, 0);
     BIT_SET(DDRB, 1);
 
-    Task_Create_RR(Pong, 0);
     Task_Create_RR(Ping, 0);
+    Task_Create_RR(Pong, 0);
 
     // This function was called by the OS as a System task.
     // If a task executes a return statement it is terminated.
