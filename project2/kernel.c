@@ -196,6 +196,33 @@ void Kernel_Task_Create() {
     }
 }
 
+PD* Queue_Rotate_Ready(task_queue_t* queue) {
+    // Get candidate task and first task in queue
+    PD* iter_task;
+    PD* first;
+    first = iter_task = peek(queue);
+
+    // do-while so that the first loop doesn't break since first == new_p
+    do {
+        // Specify that the task has to be ready
+        if (iter_task->state != READY) {
+            // Move non-ready tasks to the end of the queue
+            enqueue(&system_tasks, deque(&system_tasks));
+
+            // Get the new head task
+            iter_task = peek(&system_tasks);
+        }
+    } // Loop until the first task comes up again, or a task is ready
+    while (iter_task != first && iter_task->state != READY);
+
+    if (iter_task->state != READY) {
+        // Didn't find anything that was ready
+        iter_task = NULL;
+    }
+
+    return iter_task;
+}
+
 /**
  * This internal kernel function is a part of the "scheduler". It chooses the
  * next task to run, i.e., Cp.
@@ -208,12 +235,7 @@ static void Dispatch() {
 
         /* Check the system tasks */
         if (system_tasks.length > 0) {
-            new_p = peek(&system_tasks);
-
-            // Specify that the task has to be non-blocked
-            while (new_p != NULL && new_p->state != READY) {
-                new_p = new_p->next;
-            }
+            new_p = Queue_Rotate_Ready(&system_tasks);
         }
 
         /* Haven't found a new task */
@@ -230,13 +252,7 @@ static void Dispatch() {
             /* No periodic tasks should be started, check round robin tasks now */
             else if (rr_tasks.length > 0) {
                 /* Check all the round robin tasks */
-                new_p = deque(&rr_tasks);
-                enqueue(&rr_tasks, new_p);
-
-                // Specify that the task has to be non-blocked
-                while (new_p != NULL && new_p->state != READY) {
-                    new_p = new_p->next;
-                }
+                new_p = Queue_Rotate_Ready(&rr_tasks);
             }
         }
 
