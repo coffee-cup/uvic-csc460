@@ -5,7 +5,14 @@
 #include "../../os.h"
 #include "Uart.h"
 
+bool uart0_initialized = FALSE;
+bool uart1_initialized = FALSE;
+
 void UART_Init0(uint32_t baud_rate) {
+    if (uart0_initialized) {
+        return;
+    }
+
 	// Set baud rate
 	UBRR0 = MYBRR(baud_rate);
 	// Enable receiver and transmitter
@@ -14,6 +21,10 @@ void UART_Init0(uint32_t baud_rate) {
 }
 
 void UART_Init1(uint32_t baud_rate) {
+    if (uart1_initialized) {
+        return;
+    }
+
 	// Set baud rate
 	UBRR2 = MYBRR(baud_rate);
 	// Enable receiver and transmitter

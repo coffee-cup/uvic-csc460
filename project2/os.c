@@ -2,7 +2,6 @@
 #include <util/delay.h>
 #include "kernel.h"
 #include "os.h"
-#include "uart.h"
 
 /**
  * Aborts the RTOS and enters a "non-executing" state with an error code.
@@ -24,7 +23,7 @@ void OS_Abort(ABORT_CODE error) {
     sprintf(buffer, "OS Abort. Error code: %d\n", error);
 
     for(;;) {
-        UART_print(buffer);
+        LOG(buffer);
         for (ctr = 0; ctr < error; ctr += 1) {
             BIT_SET(PORTB, 7);
             _delay_ms(200);
