@@ -1,6 +1,5 @@
 #include "trace.h"
 
-/** array that holds all the elements of the trace */
 // Array to hold the elements in the trace
 unsigned char trace_array[TRACE_ARRAY_SIZE];
 

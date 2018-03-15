@@ -54,6 +54,9 @@ static MSG Messages[MAXTHREAD];
  */
 volatile uint8_t* KernelSp;
 
+volatile static uint8_t timer;
+volatile uint8_t* timer_ptr;
+
 /**
  * This is a "shadow" copy of the stack pointer of "Cp", the currently
  * running task. During context switching, we need to save and restore
@@ -192,14 +195,18 @@ volatile static TICK sys_clock;
 /* User level 'main' function */
 extern void setup(void);
 
-#define Assert(expr) \
-{\
-if (!(expr)) { BIT_SET(PORTD, 1); OS_Abort(FAILED_ASSERTION); }\
+#define Assert(expr)                                                   \
+    {                                                                   \
+        if (!(expr)) { BIT_SET(PORTD, 1); OS_Abort(FAILED_ASSERTION); } \
 }
 
 static void Exit_Kernel(void) __attribute((naked));
 static void Enter_Kernel(void) __attribute((naked));
 void TIMER4_COMPA_vect(void) __attribute__ ((signal, naked));
+
+static KERNEL_REQUEST_PARAMS timer_request = {
+    .request = TIMER
+};
 
 static void Exit_Kernel(void) {
     SAVE_CTX();
@@ -226,24 +233,24 @@ static void Enter_Kernel(void) {
 }
 
 void TIMER4_COMPA_vect(void) {
-    SAVE_CTX_TOP();
+    if (KernelActive) {
+        SAVE_CTX_TOP();
 
-    STACK_SREG_SET_I_BIT();
+        STACK_SREG_SET_I_BIT();
 
-    SAVE_CTX_BOTTOM();
+        SAVE_CTX_BOTTOM();
 
-    Cp->sp = CurrentSp;
+        Cp->sp = CurrentSp;
 
-    timer = 0xFF;
-    /* KERNEL_REQUEST_PARAMS info = { */
-    /*     .request = TIMER */
-    /* }; */
+        timer_request.request = TIMER;
+        request_info = &timer_request;
 
-    /* request_info = &info; */
+        RESTORE_CTX();
 
-    RESTORE_CTX();
-
-    asm volatile ("ret\n"::);
+        asm volatile ("ret\n"::);
+    } else {
+        asm volatile ("reti\n"::);
+    }
 
     /* if (KernelActive) { */
 
@@ -724,7 +731,7 @@ static void Next_Kernel_Request() {
     Dispatch();  /* select a new task to run */
 
     for(;;) {
-        if (request_info || timer) {
+        if (request_info) {
             // Clear the caller's request type
             request_info->request = NONE;
             // Clear our reference to request_info
@@ -739,16 +746,7 @@ static void Next_Kernel_Request() {
         CurrentSp = Cp->sp;
         KernelActive = 1;
 
-        timer = 0x00;
         Exit_Kernel();    /* or CSwitch() */
-
-        if (timer) {
-            KERNEL_REQUEST_PARAMS info = {
-                .request = TIMER
-            };
-            request_info = &info;
-            timer = 0x00;
-        }
 
         /* if this task makes a kernel request, it will return to here! */
         /* request_info should be valid again! */
@@ -808,6 +806,8 @@ void Kernel_Init() {
     KernelActive = 0;
     NextP = 0;
     sys_clock = 0;
+    timer = 0;
+    timer_ptr = &timer;
 
     Kernel_Init_Clock();
 
