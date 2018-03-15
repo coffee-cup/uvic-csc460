@@ -11,6 +11,7 @@ void OS_Abort(ABORT_CODE error) {
 
     // Disable interrupts
     OS_DI();
+    Kernel_Abort();
 
     // Blink the built-in LED in accordance with the error code
     BIT_SET(DDRB, 7); // Set PB7 as output
