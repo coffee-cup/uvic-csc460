@@ -1,12 +1,8 @@
 #include "../../common.h"
 #include "../../process.h"
+#include "test_utils.h"
 #include <avr/io.h>
 #include <util/delay.h>
-
-#define Assert(expr) \
-{\
-if (!(expr)) while (TRUE);\
-}
 
 void Task_Queue_Test() {
 
