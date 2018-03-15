@@ -503,7 +503,6 @@ void Kernel_Request_MsgASend() {
         // Add the message data and pid of sender to the receiving processes request info
         p_recv->req_params->msg_ptr_data = request_info->msg_ptr_data;
         p_recv->req_params->out_pid = Cp->process_id;
-
         // Dispatch because awaiting process might be higher priority
         Dispatch();
     } else {
