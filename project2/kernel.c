@@ -687,6 +687,8 @@ void Kernel_Init() {
 
         ZeroMemory(Messages[x], sizeof(MSG));
         Messages[x].data = NULL;
+        Messages[x].receiver = -1;
+        Messages[x].mask = 0x00;
     }
 
     queue_init(&system_tasks, SYSTEM);
