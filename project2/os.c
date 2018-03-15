@@ -122,7 +122,7 @@ void Msg_Send(PID id, MTYPE t, uint16_t* v) {
     };
 
     Kernel_Request(&info);
-    v = &info.msg_data;
+    *v = info.msg_data;
 }
 
 PID Msg_Recv(MASK m, uint16_t* v) {
@@ -132,7 +132,7 @@ PID Msg_Recv(MASK m, uint16_t* v) {
     };
 
     Kernel_Request(&info);
-    v = info.msg_ptr_data;
+    *v = *info.msg_ptr_data;
     return info.out_pid;
 }
 
