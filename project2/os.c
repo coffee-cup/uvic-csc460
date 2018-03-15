@@ -2,6 +2,7 @@
 #include <util/delay.h>
 #include "kernel.h"
 #include "os.h"
+#include "uart.h"
 
 /**
  * Aborts the RTOS and enters a "non-executing" state with an error code.
