@@ -19,7 +19,7 @@ void OS_Abort(ABORT_CODE error) {
     BIT_CLR(PORTB, 7);
     uint8_t ctr;
 
-    char buffer[20];
+    char buffer[25];
     sprintf(buffer, "OS Abort. Error code: %d\n", error);
 
     for(;;) {
