@@ -6,8 +6,8 @@
 #include <stdio.h>
 #include <util/delay.h>
 
-#include "Uart.h"
-#include "os.h"
+#include "uart.h"
+#include "../../os.h"
 
 #define TRACE_ARRAY_SIZE         256
 
