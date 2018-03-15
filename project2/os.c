@@ -12,7 +12,7 @@ void OS_Abort(ABORT_CODE error) {
     // Disable interrupts
     OS_DI();
     Kernel_Abort();
-    UART_Init0(38400);
+    UART_Init0(LOGBAUD);
 
     // Blink the built-in LED in accordance with the error code
     BIT_SET(DDRB, 7); // Set PB7 as output
