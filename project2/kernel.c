@@ -4,7 +4,7 @@
 #include "kernel.h"
 #include "os.h"
 
-#define CMP_MASK(X, Y) ((X & Y) == X)
+#define CMP_MASK(X, Y) (X & Y)
 #define VALID_ID(id) (id >= 0 && id < MAXTHREAD)
 
 typedef void (*request_handler_func) (void);
@@ -14,6 +14,8 @@ typedef void (*request_handler_func) (void);
  */
 volatile static PD* Cp;
 volatile static KERNEL_REQUEST_PARAMS* request_info;
+
+volatile static uint8_t timer;
 
 /**
  * This table contains ALL process descriptors. It doesn't matter what
@@ -71,6 +73,92 @@ volatile static uint16_t Tasks;
 /** number of ticks elapsed since boot */
 volatile static TICK sys_clock;
 
+#define SAVE_CTX_TOP() asm volatile (                           \
+    "push r31 \n\t"            \
+    "in   r31, 0x3F \n\t"           \
+    "push r31 \n\t"            \
+    "in   r31, 0x3C \n\t"      \
+    "cli \n\t"::)
+
+#define STACK_SREG_SET_I_BIT()    asm volatile (                        \
+    "ori    r31, 0x80        \n\t"::);
+
+#define    SAVE_CTX_BOTTOM()       asm volatile (\
+    "push   r31             \n\t"\
+    "push   r30             \n\t"\
+    "push   r29             \n\t"\
+    "push   r28             \n\t"\
+    "push   r27             \n\t"\
+    "push   r26             \n\t"\
+    "push   r25             \n\t"\
+    "push   r24             \n\t"\
+    "push   r23             \n\t"\
+    "push   r22             \n\t"\
+    "push   r21             \n\t"\
+    "push   r20             \n\t"\
+    "push   r19             \n\t"\
+    "push   r18             \n\t"\
+    "push   r17             \n\t"\
+    "push   r16             \n\t"\
+    "push   r15             \n\t"\
+    "push   r14             \n\t"\
+    "push   r13             \n\t"\
+    "push   r12             \n\t"\
+    "push   r11             \n\t"\
+    "push   r10             \n\t"\
+    "push   r9              \n\t"\
+    "push   r8              \n\t"\
+    "push   r7              \n\t"\
+    "push   r6              \n\t"\
+    "push   r5              \n\t"\
+    "push   r4              \n\t"\
+    "push   r3              \n\t"\
+    "push   r2              \n\t"\
+    "push   r1              \n\t"\
+    "push   r0              \n\t"::);
+
+#define    SAVE_CTX()    SAVE_CTX_TOP();SAVE_CTX_BOTTOM();
+
+#define    RESTORE_CTX()    asm volatile (\
+    "pop    r0                \n\t"\
+    "pop    r1                \n\t"\
+    "pop    r2                \n\t"\
+    "pop    r3                \n\t"\
+    "pop    r4                \n\t"\
+    "pop    r5                \n\t"\
+    "pop    r6                \n\t"\
+    "pop    r7                \n\t"\
+    "pop    r8                \n\t"\
+    "pop    r9                \n\t"\
+    "pop    r10             \n\t"\
+    "pop    r11             \n\t"\
+    "pop    r12             \n\t"\
+    "pop    r13             \n\t"\
+    "pop    r14             \n\t"\
+    "pop    r15             \n\t"\
+    "pop    r16             \n\t"\
+    "pop    r17             \n\t"\
+    "pop    r18             \n\t"\
+    "pop    r19             \n\t"\
+    "pop    r20             \n\t"\
+    "pop    r21             \n\t"\
+    "pop    r22             \n\t"\
+    "pop    r23             \n\t"\
+    "pop    r24             \n\t"\
+    "pop    r25             \n\t"\
+    "pop    r26             \n\t"\
+    "pop    r27             \n\t"\
+    "pop    r28             \n\t"\
+    "pop    r29             \n\t"\
+    "pop    r30             \n\t"\
+    "pop    r31             \n\t"\
+    "out    0x3C, r31       \n\t"\
+    "pop    r31             \n\t"\
+	"out    0x3F, r31       \n\t"\
+    "pop    r31             \n\t"::);
+
+
+
 /**
  * This internal kernel function is the context switching mechanism.
  * It is done in a "funny" way in that it consists two halves: the top half
@@ -85,8 +173,8 @@ volatile static TICK sys_clock;
  * again, but Cp is not running any more.
  * (See file "cswitch.S" for details.)
  */
-#define CSwitch() Exit_Kernel()  /* Legacy CSwitch stub now uses Exit_Kernel */
-extern void Exit_Kernel();
+/* #define CSwitch() Exit_Kernel()  /\* Legacy CSwitch stub now uses Exit_Kernel *\/ */
+/* extern void Exit_Kernel(); */
 
 /**
  * This external function could be implemented in two ways:
@@ -99,7 +187,7 @@ extern void Exit_Kernel();
  *     as an external function call, it must be done explicitly. When Enter_Kernel()
  *     returns, then interrupts will be re-enabled by Enter_Kernel().
  */
-extern void Enter_Kernel();
+/* extern void Enter_Kernel(); */
 
 /* User level 'main' function */
 extern void setup(void);
@@ -109,23 +197,70 @@ extern void setup(void);
 if (!(expr)) { BIT_SET(PORTD, 1); OS_Abort(FAILED_ASSERTION); }\
 }
 
-ISR(TIMER4_COMPA_vect) {
-    if (KernelActive) {
+static void Exit_Kernel(void) __attribute((naked));
+static void Enter_Kernel(void) __attribute((naked));
+void TIMER4_COMPA_vect(void) __attribute__ ((signal, naked));
 
-        // Timer pin
-        BIT_FLIP(PORTB, 6);
+static void Exit_Kernel(void) {
+    SAVE_CTX();
 
-        Assert(request_info == NULL);
+    KernelSp = CurrentSp;
 
-        KERNEL_REQUEST_PARAMS info = {
-            .request = TIMER
-        };
+    CurrentSp = Cp->sp;
 
-        request_info = &info;
-        // This timer interrupts user mode programs
-        // Need to make sure to switch modes
-        Enter_Kernel();
-    }
+    RESTORE_CTX();
+
+    asm volatile ("ret\n"::);
+}
+
+static void Enter_Kernel(void) {
+    SAVE_CTX();
+
+    Cp->sp = CurrentSp;
+
+    CurrentSp = KernelSp;
+
+    RESTORE_CTX();
+
+    asm volatile ("ret\n"::);
+}
+
+void TIMER4_COMPA_vect(void) {
+    SAVE_CTX_TOP();
+
+    STACK_SREG_SET_I_BIT();
+
+    SAVE_CTX_BOTTOM();
+
+    Cp->sp = CurrentSp;
+
+    timer = 0xFF;
+    /* KERNEL_REQUEST_PARAMS info = { */
+    /*     .request = TIMER */
+    /* }; */
+
+    /* request_info = &info; */
+
+    RESTORE_CTX();
+
+    asm volatile ("ret\n"::);
+
+    /* if (KernelActive) { */
+
+    /*     // Timer pin */
+    /*     BIT_FLIP(PORTB, 6); */
+
+    /*     Assert(request_info == NULL); */
+
+    /*     KERNEL_REQUEST_PARAMS info = { */
+    /*                                   .request = TIMER */
+    /*     }; */
+
+    /*     request_info = &info; */
+    /*     // This timer interrupts user mode programs */
+    /*     // Need to make sure to switch modes */
+    /*     Enter_Kernel(); */
+    /* } */
 }
 
 void Kernel_Task_Create_At(PD *p, taskfuncptr f) {
@@ -269,6 +404,7 @@ static void Dispatch() {
         break;
     }
 
+    /* BIT_FLIP(PORTB, 0); */
 
     /* Only change the current task if it's not running */
     if (Cp->state != RUNNING ) {
@@ -568,7 +704,6 @@ void Kernel_Request_None() {
     ;
 }
 
-
 static void Next_Kernel_Request() {
     request_handler_func request_handlers[NUM_KERNEL_REQUEST_TYPES] = {
         // Must be in order of KERNEL_REQUEST_TYPE
@@ -589,7 +724,7 @@ static void Next_Kernel_Request() {
     Dispatch();  /* select a new task to run */
 
     for(;;) {
-        if (request_info) {
+        if (request_info || timer) {
             // Clear the caller's request type
             request_info->request = NONE;
             // Clear our reference to request_info
@@ -603,7 +738,17 @@ static void Next_Kernel_Request() {
         /* activate this newly selected task */
         CurrentSp = Cp->sp;
         KernelActive = 1;
+
+        timer = 0x00;
         Exit_Kernel();    /* or CSwitch() */
+
+        if (timer) {
+            KERNEL_REQUEST_PARAMS info = {
+                .request = TIMER
+            };
+            request_info = &info;
+            timer = 0x00;
+        }
 
         /* if this task makes a kernel request, it will return to here! */
         /* request_info should be valid again! */
@@ -617,8 +762,7 @@ static void Next_Kernel_Request() {
         /* Switch current process state from RUNNING to READY */
         Cp->state = READY;
 
-
-        /* Run the approrpriate handler */
+        /* Run the appropriate handler */
         if (request_info->request >= NONE && request_info->request < NUM_KERNEL_REQUEST_TYPES) {
             /* It's up to the handler to decide if it should dispatch */
             request_handlers[request_info->request]();
@@ -709,8 +853,8 @@ void Kernel_Init() {
 }
 
 void Kernel_Start() {
+    OS_DI();
     if ( (! KernelActive) && (Tasks > 0)) {
-        OS_DI();
         /* we may have to initialize the interrupt vector for Enter_Kernel() here. */
 
         /* here we go...  */
