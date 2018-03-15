@@ -486,7 +486,29 @@ void Kernel_Request_MsgRply() {
 }
 
 void Kernel_Request_MsgASend() {
-    ;
+    // Check if process id is valid
+    if (!VALID_ID(request_info->msg_to)) {
+        OS_Abort(INVALID_REQ_INFO);
+        return;
+    }
+
+    PD *p_recv = &Process[request_info->msg_to];
+    MTYPE recv_mask = p_recv->req_params->msg_mask;
+
+    // Check if info.msg_to is waiting for a message of same type
+    if (p_recv->state == RECV_BLOCK && CMP_MASK(recv_mask, request_info->msg_mask)) {
+        // If yes, change state of waiting process to ready and sender to reply block
+        p_recv->state = READY;
+
+        // Add the message data and pid of sender to the receiving processes request info
+        p_recv->req_params->msg_ptr_data = request_info->msg_ptr_data;
+        p_recv->req_params->out_pid = Cp->process_id;
+    } else {
+        // If not, noop
+    }
+
+    // Dispatch because awaiting process might be higher priority
+    Dispatch();
 }
 
 void Kernel_Request_Timer() {
