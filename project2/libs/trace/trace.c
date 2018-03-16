@@ -26,7 +26,7 @@ void clear_trace(void) {
 
 // Prints all the elements of the trace to UART
 void print_trace(void) {
-    UART_Init0(38400);
+    UART_Init0(LOGBAUD);
 
     int i;
     for (i = 0; i < trace_counter; i += 1) {

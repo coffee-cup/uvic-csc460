@@ -94,7 +94,7 @@ PID  Msg_Recv(MASK m,           uint16_t* v);
 void Msg_Rply(PID  id,          uint16_t r);
 
 /**
- * Asychronously Send a message "v" of type "t" to "id". The task "id" must be blocked on
+ * Asynchronously Send a message "v" of type "t" to "id". The task "id" must be blocked on
  * Recv() state, otherwise it is a no-op. After passing "v" to "id", the returned PID of
  * Recv() is NULL (non-existent); thus, "id" doesn't need to reply to this message.
  * Note: The message type "t" must satisfy the MASK "m" imposed by "id". If not, then it

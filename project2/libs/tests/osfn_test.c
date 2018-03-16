@@ -26,8 +26,8 @@ void Pid_Test() {
 }
 
 void OSFN_Test() {
-    /* Task_Create_RR(Arg_Test, arg_val); */
-    /* Now_Test(); */
+    Task_Create_RR(Arg_Test, arg_val);
+    Now_Test();
     Pid_Test();
 
     // Wait for tasks to be run
