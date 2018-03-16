@@ -59,6 +59,14 @@ void Test_Suite(TEST_MASKS mask) {
 
     UART_print("Test complete!\n");
 
+    // If Port E is not 0x00 then a test has failed
+    if (PORTE != 0x00) {
+        UART_print("PORTE not 0x00\n");
+        for (;;) {}
+    }
+
+    UART_print("Test complete!\n");
+
     // All tests passed, since if an asset fails the board hangs there
     // Set PD0 back to low
     BIT_CLR(PORTD, 0);

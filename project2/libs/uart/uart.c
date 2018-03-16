@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "../../common.h"
 #include "../../os.h"
-#include "Uart.h"
+#include "uart.h"
 
 bool uart0_initialized = FALSE;
 bool uart1_initialized = FALSE;

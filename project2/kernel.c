@@ -104,24 +104,22 @@ extern void Enter_Kernel();
 /* User level 'main' function */
 extern void setup(void);
 
-#define Assert(expr) \
-{\
-if (!(expr)) { BIT_SET(PORTD, 1); OS_Abort(FAILED_ASSERTION); }\
-}
-
 ISR(TIMER4_COMPA_vect) {
     if (KernelActive) {
 
         // Timer pin
         BIT_FLIP(PORTB, 6);
 
-        Assert(request_info == NULL);
+        if (request_info != NULL) {
+            OS_Abort(INVALID_REQ_INFO);
+        }
 
         KERNEL_REQUEST_PARAMS info = {
             .request = TIMER
         };
 
         request_info = &info;
+
         // This timer interrupts user mode programs
         // Need to make sure to switch modes
         Enter_Kernel();
@@ -503,6 +501,7 @@ void Kernel_Request_MsgASend() {
         // Add the message data and pid of sender to the receiving processes request info
         p_recv->req_params->msg_ptr_data = request_info->msg_ptr_data;
         p_recv->req_params->out_pid = Cp->process_id;
+
         // Dispatch because awaiting process might be higher priority
         Dispatch();
     } else {
