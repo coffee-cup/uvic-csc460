@@ -11,8 +11,15 @@
 void OS_Abort(ABORT_CODE error) {
 
     #ifdef RUN_TESTS
-        LOG("OS Abort. Error code: %d\n", error);
-        PORTE = 0xFF;
+        // Is there an out standing abort request?
+        if ((PORTE & 0x0F) == 0x00) {
+            // We might have been expecting an abort,
+            // don't quit just yet.
+            PORTE |= 0x0F;
+        } else {
+            LOG("Unhandled OS Abort while testing. Error code: %d\n", error);
+            for (;;);
+        }
     #else
 
     // Disable interrupts
