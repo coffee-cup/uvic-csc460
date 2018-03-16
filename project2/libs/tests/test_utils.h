@@ -3,19 +3,33 @@
 
 #include "uart.h"
 
-#define Assert(expr)                         \
-    {                                        \
-        if ((!(expr)) || PORTE != 0) {       \
-            UART_print(                      \
-                "Assert Failed! %s : %d\n",  \
-                __FILE__, __LINE__);         \
-            for (;;) {}                      \
-        }                                    \
-    }
+#define Assert(expr)                     \
+{                                        \
+    if (!(expr)) {                       \
+        UART_print(                      \
+            "Assert Failed! "            \
+            "%s : %d\n",                 \
+            __FILE__, __LINE__);         \
+        for (;;) {}                      \
+    }                                    \
+}
 
-#define AssertNeverCalled()                     \
-    {                                           \
-        PORTE = 0xFF;                           \
-    }
+#define AssertAborted()                  \
+{                                        \
+    if (PORTE == 0x00) {                 \
+        UART_print(                      \
+            "Abort assertion failed "    \
+            "at %s : %d\n",              \
+            __FILE__, __LINE__);         \
+        for (;;) {}                      \
+    } else {                             \
+        PORTE = 0x00;                    \
+    }                                    \
+}
+
+#define AssertNeverCalled()              \
+{                                        \
+    PORTE = 0xFF;                        \
+}
 
 #endif

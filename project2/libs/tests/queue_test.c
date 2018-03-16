@@ -21,6 +21,7 @@ PD pr_test_task;
 void Task_Queue_Init_Test()
 {
     Assert(queue_init(&test_queue, NUM_PRIORITY_LEVELS) == NULL); // Doesn't initialize with bad priority
+    AssertAborted();
     Assert(queue_init(&sy_test_queue, SYSTEM) != NULL); // Initialized result is returned
     Assert(sy_test_queue.length == 0);                  // Queue is empty upon initialization
     Assert(sy_test_queue.head == NULL);                 // Queue head is null upon initialization
@@ -51,7 +52,8 @@ void Task_Queue_add_task_test()
     Assert(sy_test_queue.head == sy_test_queue.tail); // One task is accessed by head and tail
     Assert(sy_test_queue.length == 1);                // Have added one task, length reflects that
 
-    enqueue(&sy_test_queue, &pr_test_task);           // Adding the wrong type of task is ignored
+    enqueue(&sy_test_queue, &pr_test_task);
+    AssertAborted();                                  // Adding the wrong type of task causes abort
     Assert(sy_test_queue.head == sy_test_queue.tail); // Queue remains unchanged
     Assert(sy_test_queue.length == 1);                // Queue remains unchanged
 }
@@ -126,6 +128,7 @@ void Task_Queue_remove_peek_test()
 
     Assert(peek(&rr_test_queue) == NULL);  // Didn't get anything from peeking empty queue
     Assert(deque(&rr_test_queue) == NULL); // Didn't get anything from dequeueing empty queue
+    AssertAborted();
 }
 
 void Task_Queue_Test()

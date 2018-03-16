@@ -11,7 +11,7 @@
  * Runs the tests
  */
 void run_tests(void) {
-    Test_Suite(TEST_QUEUE);
+    Test_Suite(TEST_ALL);
 
     // Do not go to idle
     for (;;) {}
