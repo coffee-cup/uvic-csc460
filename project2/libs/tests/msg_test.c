@@ -120,6 +120,34 @@ void Msg_Async_Send() {
     Msg_ASend(pid, 0x08, Task_GetArg() + 4);
 }
 
+/*
+ * Stress test
+ */
+void Msg_Stress_Recv() {
+    uint16_t x;
+
+    int i;
+    for (i = 0; i < 20000; i += 1) {
+        PID from = Msg_Recv(0x10, &x);
+        x += 1;
+        Msg_Rply(from, x);
+    }
+}
+
+void Msg_Stress_Send() {
+    PID pid = Task_Create_RR(Msg_Stress_Recv, 0);
+
+    uint16_t x, y = 0;
+    int i;
+    for (i = 0; i < 20000; i += 1) {
+        y = x;
+        Msg_Send(pid, 0x10, &x);
+        Assert(x == y + 1);
+    }
+
+    Msg_Send(Task_GetArg(), MSG_END, &x);
+}
+
 void Msg_Test() {
     Task_Create_RR(Msg_Send_Never, 0);
     Task_Create_RR(Msg_Recv_Never, 0);
@@ -132,10 +160,12 @@ void Msg_Test() {
     Task_Create_RR(Msg_Recv_Before_Send_Send, my_pid);
     Task_Create_RR(Msg_Send_Before_Recv_Send, my_pid);
     Task_Create_RR(Msg_Async_Send, my_pid);
+    Task_Create_RR(Msg_Stress_Send, my_pid);
 
     uint16_t x;
 
     // Wait on all the tasks that need to run to completion
+    Msg_Recv(MSG_END, &x);
     Msg_Recv(MSG_END, &x);
     Msg_Recv(MSG_END, &x);
     Msg_Recv(MSG_END, &x);
