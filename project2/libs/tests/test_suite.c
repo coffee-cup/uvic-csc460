@@ -50,6 +50,7 @@ void Test_Suite(TEST_MASKS mask) {
     Test_Case(mask, TEST_QUEUE, "Queue", Task_Queue_Test);
     Test_Case(mask, TEST_MSG, "Msg", Msg_Test);
     Test_Case(mask, TEST_OSFN, "OSFN", OSFN_Test);
+    Test_Case(mask, TEST_MSG_TRACE, "Msg Trace", Msg_Trace_Test);
 
     // If Port E is not 0x00 then a test has failed
     if (PORTE != 0x00) {

@@ -14,5 +14,6 @@
 void add_to_trace(char c);
 void clear_trace(void);
 void print_trace(void);
+int compare_trace(uint8_t arr[TRACE_ARRAY_SIZE]);
 
 #endif

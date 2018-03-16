@@ -1,8 +1,7 @@
 #include "trace.h"
 
-/** array that holds all the elements of the trace */
 // Array to hold the elements in the trace
-unsigned char trace_array[TRACE_ARRAY_SIZE];
+uint8_t trace_array[TRACE_ARRAY_SIZE];
 
 // Current element in the trace
 uint16_t volatile trace_counter = 0;
@@ -32,4 +31,20 @@ void print_trace(void) {
     for (i = 0; i < trace_counter; i += 1) {
         UART_Transmit0(trace_array[i]);
     }
+    UART_Transmit0('\n');
+}
+
+// Compares an array with the trace
+// Returns 0 if it does not match
+int compare_trace(uint8_t arr[]) {
+    int length = sizeof(arr);
+    int i;
+    for (i = 0; i < trace_counter && i < length; i += 1) {
+        // 0 represents empty spot in array, do not compare
+        UART_Transmit0(arr[i]);
+        if (arr[i] != trace_array[i]) {
+            return 0;
+        }
+    }
+    return 1;
 }
