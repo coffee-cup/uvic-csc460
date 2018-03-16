@@ -4,7 +4,7 @@
 #include "kernel.h"
 #include "os.h"
 
-#define CMP_MASK(X, Y) ((X & Y) == X)
+#define CMP_MASK(X, Y) ((X & Y) != 0)
 #define VALID_ID(id) (id >= 0 && id < MAXTHREAD)
 
 typedef void (*request_handler_func) (void);
@@ -517,7 +517,11 @@ void Kernel_Request_MsgASend() {
         p_recv->state = READY;
 
         // Add the message data and pid of sender to the receiving processes request info
-        p_recv->req_params->msg_ptr_data = request_info->msg_ptr_data;
+        p_recv->req_params->msg_data = request_info->msg_data;
+
+        // Since the sender passes data by value, we need to set the data ptr to NULL
+        // so the receiver knows to look at the msg_data instead
+        p_recv->req_params->msg_ptr_data = NULL;
         p_recv->req_params->out_pid = Cp->process_id;
 
         // Dispatch because awaiting process might be higher priority
