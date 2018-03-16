@@ -16,20 +16,20 @@
 
 #define AssertAborted()                  \
 {                                        \
-    if (PORTE == 0x00) {                 \
+    if ((PORTE & 0x0F) == 0x00) {        \
         UART_print(                      \
             "Abort assertion failed "    \
             "at %s : %d\n",              \
             __FILE__, __LINE__);         \
         for (;;) {}                      \
     } else {                             \
-        PORTE = 0x00;                    \
+        PORTE &= ~0x0F;                  \
     }                                    \
 }
 
 #define AssertNeverCalled()              \
 {                                        \
-    PORTE = 0xFF;                        \
+    PORTE |= 0xF0;                       \
 }
 
 #endif
