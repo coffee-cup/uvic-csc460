@@ -41,7 +41,7 @@ void Test_Suite(TEST_MASKS mask) {
     DDRE  = 0xFF;
     PORTE = 0;
 
-    UART_Init0(38400);
+    UART_Init0(LOGBAUD);
 
     // Raise PD0 while any tests are active
     BIT_SET(PORTD, 0);
