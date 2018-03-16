@@ -201,6 +201,7 @@ void Kernel_Task_Create() {
 
         } else {
             OS_Abort(INVALID_REQ_INFO);
+            return;
         }
 
         request_info->out_pid = Process[x].process_id = x;
@@ -208,6 +209,7 @@ void Kernel_Task_Create() {
     } else {
         /* Couldn't find a dead task */
         OS_Abort(NO_DEAD_PROCESS);
+        return;
     }
 }
 
@@ -284,6 +286,7 @@ static void Dispatch() {
             // Only abort if the CP isn't the idle process
             if (Cp != &IdleProcess) {
                 OS_Abort(INVALID_PRIORITY);
+                return;
             }
         break;
     }
@@ -351,6 +354,7 @@ void Kernel_Request_Next() {
         default:
             // Always abort, Idle Process doesn't yield
             OS_Abort(INVALID_PRIORITY);
+            return;
             break;
     }
 
@@ -379,11 +383,13 @@ void Kernel_Request_Terminate() {
             break;
         default:
             OS_Abort(INVALID_PRIORITY);
+            return;
             break;
     }
 
     if (killed_task != Cp) {
         OS_Abort(WRONG_TASK_ORDER);
+        return;
     }
 
     Cp->state = DEAD;
@@ -544,6 +550,7 @@ void Kernel_Request_Timer() {
             if (Cp->ticks_remaining <= 0) {
                 // Task ran over it's worst case execution time
                 OS_Abort(TIMING_VIOLATION);
+                return;
             }
         break;
 
@@ -560,6 +567,7 @@ void Kernel_Request_Timer() {
             // Timer can interrupt the idle process
             if (Cp != &IdleProcess) {
                 OS_Abort(INVALID_PRIORITY);
+                return;
             }
         break;
     }
@@ -618,6 +626,7 @@ static void Next_Kernel_Request() {
         } else {
             if (KernelActive) {
                 OS_Abort(NO_REQUEST_INFO);
+                return;
             }
         }
 
@@ -630,6 +639,7 @@ static void Next_Kernel_Request() {
         /* request_info should be valid again! */
         if (!request_info) {
             OS_Abort(NO_REQUEST_INFO);
+            return;
         }
 
         /* save the Cp's stack pointer */
@@ -645,6 +655,7 @@ static void Next_Kernel_Request() {
             request_handlers[request_info->request]();
         } else {
             OS_Abort(INVALID_REQ_INFO);
+            return;
         }
     }
 }

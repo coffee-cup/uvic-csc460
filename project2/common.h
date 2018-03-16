@@ -15,10 +15,6 @@
  * inline assembly code to disable/enable maskable interrupts
  * (N.B. Use with caution.)
  */
-#define OS_DI()    asm volatile("cli"::)  /* disable all interrupts */
-#define OS_EI()    asm volatile("sei"::)  /* enable all interrupts */
-#define OS_JUMP(f) asm("jmp " #f::)       /* direct jump to assembly label */
-
 #define BIT_SET(PORT, PIN)  PORT |= 1 << PIN
 #define BIT_CLR(PORT, PIN)  PORT &= ~(1 << PIN)
 #define BIT_FLIP(PORT, PIN) PORT ^= 1 << PIN
