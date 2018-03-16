@@ -3,6 +3,7 @@
 #define _OS_H_
 
 #include <stdint.h>
+#include <stdio.h>
 #include <avr/io.h>
 #include "process.h"
 #include "common.h"

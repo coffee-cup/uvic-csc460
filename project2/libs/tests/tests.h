@@ -11,8 +11,8 @@
 
 typedef enum {
     TEST_QUEUE          = 0x01,
-    // TEST_THING       = 0x02,
-    // TEST_OTHER_THING = 0x04,
+    TEST_MSG            = 0x02,
+    TEST_OSFN           = 0x04,
     // TEST_NEXT_THING  = 0x08,
     TEST_ALL            = 0xFF // ie: TEST_QUEUE | TEST_THING | TEST_OTHER_THING | TEST_NEXT_THING ...
 } TEST_MASKS;

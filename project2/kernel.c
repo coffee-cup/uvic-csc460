@@ -104,13 +104,23 @@ extern void Enter_Kernel();
 /* User level 'main' function */
 extern void setup(void);
 
+
 ISR(TIMER4_COMPA_vect) {
     if (KernelActive) {
+
+        // Timer pin
+        BIT_FLIP(PORTB, 6);
+
+        if (request_info != NULL) {
+            OS_Abort(INVALID_REQ_INFO);
+        }
+
         KERNEL_REQUEST_PARAMS info = {
             .request = TIMER
         };
 
         request_info = &info;
+
         // This timer interrupts user mode programs
         // Need to make sure to switch modes
         Enter_Kernel();
@@ -197,10 +207,68 @@ void Kernel_Task_Create() {
 }
 
 /**
+ * Finds and returns the first READY task in `queue`.
+ * If no task is found, returns NULL and queue order is unchanged
+ * If a task is found, `queue` will be rotated so that the READY task is
+ * at the front.
+ */
+PD* Queue_Rotate_Ready(task_queue_t* queue) {
+    // Get candidate task and first task in queue
+    PD* iter_task;
+    PD* first;
+    first = iter_task = peek(queue);
+
+    // do-while so that the first loop doesn't break since first == new_p
+    do {
+        // Specify that the task has to be ready
+        if (iter_task->state != READY) {
+            // Move non-ready tasks to the end of the queue
+            enqueue(&system_tasks, deque(&system_tasks));
+
+            // Get the new head task
+            iter_task = peek(&system_tasks);
+        }
+    } // Loop until the first task comes up again, or a task is ready
+    while (iter_task != first && iter_task->state != READY);
+
+    if (iter_task->state != READY) {
+        // Didn't find anything that was ready
+        iter_task = NULL;
+    }
+
+    return iter_task;
+}
+
+/**
  * This internal kernel function is a part of the "scheduler". It chooses the
  * next task to run, i.e., Cp.
  */
 static void Dispatch() {
+    /* Move the current task to the end of it's queue */
+    /* We use the invatiant that the running task is at the front of it's queue */
+    switch (Cp->priority) {
+        case SYSTEM:
+            enqueue(&system_tasks, deque(&system_tasks));
+            break;
+
+        case PERIODIC:
+            insert(&periodic_tasks, deque(&periodic_tasks));
+            break;
+
+        case RR:
+            enqueue(&rr_tasks, deque(&rr_tasks));
+            break;
+
+        default:
+            // Could have Cp == IdleProcess, in which case the priority isn't a normal value
+            // Only abort if the CP isn't the idle process
+            if (Cp != &IdleProcess) {
+                OS_Abort(INVALID_PRIORITY);
+            }
+        break;
+    }
+
+
     /* Only change the current task if it's not running */
     if (Cp->state != RUNNING ) {
 
@@ -208,12 +276,7 @@ static void Dispatch() {
 
         /* Check the system tasks */
         if (system_tasks.length > 0) {
-            new_p = peek(&system_tasks);
-
-            // Specify that the task has to be non-blocked
-            while (new_p != NULL && new_p->state != READY) {
-                new_p = new_p->next;
-            }
+            new_p = Queue_Rotate_Ready(&system_tasks);
         }
 
         /* Haven't found a new task */
@@ -230,13 +293,7 @@ static void Dispatch() {
             /* No periodic tasks should be started, check round robin tasks now */
             else if (rr_tasks.length > 0) {
                 /* Check all the round robin tasks */
-                new_p = deque(&rr_tasks);
-                enqueue(&rr_tasks, new_p);
-
-                // Specify that the task has to be non-blocked
-                while (new_p != NULL && new_p->state != READY) {
-                    new_p = new_p->next;
-                }
+                new_p = Queue_Rotate_Ready(&rr_tasks);
             }
         }
 
@@ -258,7 +315,34 @@ void Kernel_Request_Create() {
 }
 
 void Kernel_Request_Next() {
-    Cp->state = READY;
+    switch (Cp->priority) {
+        case SYSTEM:
+            // System task yielded, nothing to do
+        break;
+
+        case PERIODIC:
+            // The task yieleded, make it ready for next time
+    		Cp->ttns += Cp->period;
+	        Cp->ticks_remaining = Cp->wcet;
+        break;
+
+        case RR:
+            // Round robin task yielded, give it another shot at execution
+            Cp->ticks_remaining = 1;
+        break;
+
+        default:
+            // Always abort, Idle Process doesn't yield
+            OS_Abort(INVALID_PRIORITY);
+            break;
+    }
+
+    // If the task wasn't blocked, make it ready
+    if (Cp->state != SEND_BLOCK && Cp->state != REPLY_BLOCK && Cp->state != RECV_BLOCK) {
+        Cp->state = READY;
+    }
+
+    // Dispatch to another task
     Dispatch();
 }
 
@@ -290,7 +374,7 @@ void Kernel_Request_Terminate() {
     Dispatch();
 }
 
-void Kernel_Msg_Send() {
+void Kernel_Request_MsgSend() {
     // Periodic tasks cannot send
     if (Cp->priority == PERIODIC) {
         OS_Abort(PERIODIC_MSG);
@@ -330,7 +414,7 @@ void Kernel_Msg_Send() {
     Dispatch();
 }
 
-void Kernel_Msg_Recv() {
+void Kernel_Request_MsgRecv() {
     // Periodic tasks cannot receive
     if (Cp->priority == PERIODIC) {
         OS_Abort(PERIODIC_MSG);
@@ -370,7 +454,7 @@ void Kernel_Msg_Recv() {
     Dispatch();
 }
 
-void Kernel_Msg_Rply() {
+void Kernel_Request_MsgRply() {
     // Periodic tasks cannot reply
     if (Cp->priority == PERIODIC) {
         OS_Abort(PERIODIC_MSG);
@@ -400,13 +484,71 @@ void Kernel_Msg_Rply() {
     Dispatch();
 }
 
-void Kernel_Msg_ASend() {
-    ;
+void Kernel_Request_MsgASend() {
+    // Check if process id is valid
+    if (!VALID_ID(request_info->msg_to)) {
+        OS_Abort(INVALID_REQ_INFO);
+        return;
+    }
+
+    PD *p_recv = &Process[request_info->msg_to];
+    MTYPE recv_mask = p_recv->req_params->msg_mask;
+
+    // Check if info.msg_to is waiting for a message of same type
+    if (p_recv->state == RECV_BLOCK && CMP_MASK(recv_mask, request_info->msg_mask)) {
+        // If yes, change state of waiting process to ready and sender to reply block
+        p_recv->state = READY;
+
+        // Add the message data and pid of sender to the receiving processes request info
+        p_recv->req_params->msg_ptr_data = request_info->msg_ptr_data;
+        p_recv->req_params->out_pid = Cp->process_id;
+    } else {
+        // If not, noop
+    }
+
+    // Dispatch because awaiting process might be higher priority
+    Dispatch();
 }
 
 void Kernel_Request_Timer() {
+    switch (Cp->priority) {
+        case SYSTEM:
+            // Tick ended during system task
+
+        break;
+
+        case PERIODIC:
+            // Tick ended during periodic task
+    		Cp->ticks_remaining -= 1;
+            if (Cp->ticks_remaining <= 0) {
+                // Task ran over it's worst case execution time
+                OS_Abort(TIMING_VIOLATION);
+            }
+        break;
+
+        case RR:
+            // Tick ended during round robin task
+            Cp->ticks_remaining -= 1;
+            if (Cp->ticks_remaining <= 0) {
+                // Let it go again
+                Cp->ticks_remaining = 1;
+            }
+        break;
+
+        default:
+            // Timer can interrupt the idle process
+            if (Cp != &IdleProcess) {
+                OS_Abort(INVALID_PRIORITY);
+            }
+        break;
+    }
+
+    // Clock ticked, increment the value
     sys_clock += 1;
+
+    // You were running before the tick, so you're ready now
     Cp->state = READY;
+
     Dispatch();
 }
 
@@ -437,10 +579,10 @@ static void Next_Kernel_Request() {
         Kernel_Request_GetArg,
         Kernel_Request_GetPid,
         Kernel_Request_GetNow,
-        Kernel_Msg_Send,
-        Kernel_Msg_Recv,
-        Kernel_Msg_Rply,
-        Kernel_Msg_ASend,
+        Kernel_Request_MsgSend,
+        Kernel_Request_MsgRecv,
+        Kernel_Request_MsgRply,
+        Kernel_Request_MsgASend,
         Kernel_Request_Terminate
     };
 
@@ -448,7 +590,7 @@ static void Next_Kernel_Request() {
 
     for(;;) {
         if (request_info) {
-            // Clear it's request
+            // Clear the caller's request type
             request_info->request = NONE;
             // Clear our reference to request_info
             request_info = NULL;
@@ -478,6 +620,7 @@ static void Next_Kernel_Request() {
 
         /* Run the approrpriate handler */
         if (request_info->request >= NONE && request_info->request < NUM_KERNEL_REQUEST_TYPES) {
+            /* It's up to the handler to decide if it should dispatch */
             request_handlers[request_info->request]();
         } else {
             OS_Abort(INVALID_REQ_INFO);
@@ -509,10 +652,8 @@ void Kernel_Init_Clock() {
 
 void Kernel_idle() {
     for(;;) {
-        BIT_SET(PORTB, 6);
-        _delay_ms(200);
-        BIT_CLR(PORTB, 6);
-        _delay_ms(200);
+        // Kernel idle pin
+        BIT_FLIP(PORTD, 0);
     }
 }
 
@@ -526,9 +667,18 @@ void Kernel_Init() {
 
     Kernel_Init_Clock();
 
+    // The onboard LED is reserved for OS_Abort
+    BIT_SET(DDRB, 7);
+    BIT_CLR(PORTB, 7);
+
     // Clear the memory for the IdleProcess
     ZeroMemory(IdleProcess, sizeof(PD));
     Kernel_Task_Create_At(&IdleProcess, Kernel_idle);
+
+    // This process is not of normal priority
+    // No outsiders can see or modify this task
+    // So we should be okay to set this to a non PRIORITY_LEVEL enum
+    IdleProcess.priority = -1;
 
     // Reminder: Clear the memory for the task on creation.
     for (x = 0; x < MAXTHREAD; x++) {
@@ -582,7 +732,22 @@ void Kernel_Request(KERNEL_REQUEST_PARAMS* info) {
     }
 }
 
+void Kernel_Abort() {
+    // Debug func to pause kernel activity
+    KernelActive = 0;
+}
+
 int main(void) {
+    // Clock pin
+    BIT_SET(DDRB, 6);
+    BIT_SET(PORTB, 6);
+
+    // Debug pins
+    BIT_SET(DDRD, 0);
+    BIT_SET(DDRD, 1);
+    BIT_CLR(PORTD, 0);
+    BIT_CLR(PORTD, 1);
+
     Kernel_Init();
     /* Can't add tasks here since Kernel_Request doesn't return until KernelActive is truthy */
     Kernel_Start();

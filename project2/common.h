@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include "uart.h"
 
 /*==================================================================
  *        S T A N D A R D   I N L I N E    P R O C E D U R E S
@@ -14,8 +15,8 @@
  * inline assembly code to disable/enable maskable interrupts
  * (N.B. Use with caution.)
  */
-#define OS_DI()    asm volatile("sei"::)  /* disable all interrupts */
-#define OS_EI()    asm volatile("cli"::)  /* enable all interrupts */
+#define OS_DI()    asm volatile("cli"::)  /* disable all interrupts */
+#define OS_EI()    asm volatile("sei"::)  /* enable all interrupts */
 #define OS_JUMP(f) asm("jmp " #f::)       /* direct jump to assembly label */
 
 #define BIT_SET(PORT, PIN)  PORT |= 1 << PIN
@@ -25,6 +26,20 @@
 #define LOW_BYTE(X) (((uint16_t)X) & 0xFF)
 #define HIGH_BYTE(X) ((((uint16_t)X) >> 8) & 0xFF)
 #define ZeroMemory(X, N) memset(&(X), 0, N)
+
+#define DEBUG 1
+
+// Baud rate for log messages
+#define LOGBAUD (38400)
+
+// Print a string over uart 0
+#define LOG(msg)                 \
+    {                            \
+        if (DEBUG) {             \
+            UART_Init0(LOGBAUD); \
+            UART_print(msg);     \
+        }                        \
+    }
 
 /**
  * Macro to simulate a decorator for automatically calling Task_Next()

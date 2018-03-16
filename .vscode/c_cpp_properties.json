@@ -11,10 +11,13 @@
                 "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
                 "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
                 "${workspaceRoot}/project2/libs/tests",
+                "${workspaceRoot}/project2/libs/uart",
+                "${workspaceRoot}/project2/libs/trace",
                 "${workspaceRoot}"
             ],
             "defines": [
-                "__AVR_ATmega2560__"
+                "__AVR_ATmega2560__",
+                "F_CPU=16000000L"
             ],
             "intelliSenseMode": "clang-x64",
             "browse": {
@@ -27,6 +30,8 @@
                     "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
                     "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
                     "${workspaceRoot}/project2/libs/tests",
+                    "${workspaceRoot}/project2/libs/uart",
+                    "${workspaceRoot}/project2/libs/trace",
                     "${workspaceRoot}"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
@@ -48,10 +53,13 @@
                 "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
                 "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
                 "${workspaceRoot}/project2/libs/tests",
+                "${workspaceRoot}/project2/libs/uart",
+                "${workspaceRoot}/project2/libs/trace",
                 "${workspaceRoot}"
             ],
             "defines": [
-                "__AVR_ATmega2560__"
+                "__AVR_ATmega2560__",
+                "F_CPU=16000000L"
             ],
             "intelliSenseMode": "clang-x64",
             "browse": {
@@ -64,6 +72,8 @@
                     "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
                     "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
                     "${workspaceRoot}/project2/libs/tests",
+                    "${workspaceRoot}/project2/libs/uart",
+                    "${workspaceRoot}/project2/libs/trace",
                     "${workspaceRoot}"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
@@ -79,13 +89,16 @@
                 "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
                 "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
                 "${workspaceRoot}/project2/libs/tests",
+                "${workspaceRoot}/project2/libs/uart",
+                "${workspaceRoot}/project2/libs/trace",
                 "${workspaceRoot}"
             ],
             "defines": [
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE",
-                "__AVR_ATmega2560__"
+                "__AVR_ATmega2560__",
+                "F_CPU=16000000L"
             ],
             "intelliSenseMode": "clang-x64",
             "browse": {
@@ -96,6 +109,8 @@
                     "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
                     "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
                     "${workspaceRoot}/project2/libs/tests",
+                    "${workspaceRoot}/project2/libs/uart",
+                    "${workspaceRoot}/project2/libs/trace",
                     "${workspaceRoot}"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
