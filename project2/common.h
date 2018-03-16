@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+
 #include "uart.h"
 
 /*==================================================================
@@ -11,17 +12,20 @@
  *==================================================================
  */
 
-/*
- * inline assembly code to disable/enable maskable interrupts
- * (N.B. Use with caution.)
- */
-#define BIT_SET(PORT, PIN)  PORT |= 1 << PIN
-#define BIT_CLR(PORT, PIN)  PORT &= ~(1 << PIN)
-#define BIT_FLIP(PORT, PIN) PORT ^= 1 << PIN
+#define BIT_SET(PORT, PIN)  PORT |= 1 << PIN              // Sets  the single ith bit of PORT to HIGH where i == PIN
+#define BIT_CLR(PORT, PIN)  PORT &= ~(1 << PIN)           // Sets  the single ith bit of PORT to LOW  where i == PIN
+#define BIT_FLIP(PORT, PIN) PORT ^= 1 << PIN              // Flips the single ith bit of PORT         where i == PIN
+#define BIT_TEST(PORT, PIN) ((PORT & (1 << PIN)) != 0)    // Returns TRUE if  ith bit of PORT is set to HIGH
 
-#define LOW_BYTE(X) (((uint16_t)X) & 0xFF)
-#define HIGH_BYTE(X) ((((uint16_t)X) >> 8) & 0xFF)
-#define ZeroMemory(X, N) memset(&(X), 0, N)
+#define MASK_SET(PORT, MASK) PORT |= MASK                 // Sets  ith bits of PORT to HIGH when the ith bit in MASK is 1
+#define MASK_CLR(PORT, MASK) PORT &= ~(MASK)              // Sets  ith bits of PORT to LOW  when the ith bit in MASK is 1
+#define MASK_FLIP(PORT, MASK) PORT ^= MASK                // Flips ith bits of PORT         when the ith bit in MASK is 1
+#define MASK_TEST_ALL(PORT, MASK) ((PORT & MASK) == MASK) // Returns TRUE if ALL bits in MASK are also set in PORT
+#define MASK_TEST_ANY(PORT, MASK) ((PORT & MASK) != 0)    // Returns TRUE if ANY bits in MASK are also set in PORT
+
+#define LOW_BYTE(X)   (((uint16_t)X)       & 0xFF)        // Returns the 8 LSB bits of X
+#define HIGH_BYTE(X) ((((uint16_t)X) >> 8) & 0xFF)        // Returns the 8 MSB bits of X
+#define ZeroMemory(X, N) memset(&(X), 0, N)               // Sets N bytes of memory to 0 starting at X
 
 #define DEBUG 1
 

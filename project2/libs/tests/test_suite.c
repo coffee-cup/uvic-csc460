@@ -18,7 +18,7 @@
 
 void Check_PortE() {
     // If Port E is not 0x00 then a test has failed
-    if ((PORTE & 0xF0) != 0x00) {
+    if (MASK_TEST_ANY(PORTE, 0xF0)) {
         UART_print("PORTE not 0x00\n");
         UART_print("TESTS FAILED!\n");
         for (;;) {}

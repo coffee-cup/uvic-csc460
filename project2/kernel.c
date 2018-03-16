@@ -4,7 +4,6 @@
 #include "kernel.h"
 #include "os.h"
 
-#define CMP_MASK(X, Y) ((X & Y) != 0)
 #define VALID_ID(id) (id >= 0 && id < MAXTHREAD)
 
 typedef void (*request_handler_func) (void);
@@ -414,7 +413,7 @@ void Kernel_Request_MsgSend() {
     MTYPE recv_mask = p_recv->req_params->msg_mask;
 
     // Check if info.msg_to is waiting for a message of same type
-    if (p_recv->state == RECV_BLOCK && CMP_MASK(recv_mask, request_info->msg_mask)) {
+    if (p_recv->state == RECV_BLOCK && MASK_TEST_ANY(recv_mask, request_info->msg_mask)) {
         // If yes, change state of waiting process to ready and sender to reply block
         p_recv->state = READY;
         Cp->state = REPLY_BLOCK;
@@ -455,7 +454,7 @@ void Kernel_Request_MsgRecv() {
     }
 
     // Check if there is a message waiting for this process
-    if (msg != NULL && CMP_MASK(request_info->msg_mask, msg->mask)) {
+    if (msg != NULL && MASK_TEST_ANY(request_info->msg_mask, msg->mask)) {
         // If yes, change state to ready and set msg data on Cp's request info
         request_info->msg_ptr_data = msg->data;
         request_info->out_pid = sender_pid;
@@ -518,7 +517,7 @@ void Kernel_Request_MsgASend() {
     MTYPE recv_mask = p_recv->req_params->msg_mask;
 
     // Check if info.msg_to is waiting for a message of same type
-    if (p_recv->state == RECV_BLOCK && CMP_MASK(recv_mask, request_info->msg_mask)) {
+    if (p_recv->state == RECV_BLOCK && MASK_TEST_ANY(recv_mask, request_info->msg_mask)) {
         // If yes, change state of waiting process to ready and sender to reply block
         p_recv->state = READY;
 
