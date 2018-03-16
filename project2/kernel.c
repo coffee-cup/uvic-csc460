@@ -162,6 +162,7 @@ void Kernel_Task_Create_At(PD *p, taskfuncptr f) {
 void Kernel_Task_Create() {
     if (Tasks >= MAXTHREAD) {
         /* Too many tasks! */
+        OS_Abort(NO_DEAD_PROCESS);
         return;
     }
 
