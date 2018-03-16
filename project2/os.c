@@ -10,6 +10,11 @@
  */
 void OS_Abort(ABORT_CODE error) {
 
+    #ifdef RUN_TESTS
+        LOG("OS Abort. Error code: %d\n", error);
+        PORTE = 0xFF;
+    #else
+
     // Disable interrupts
     OS_DI();
     Kernel_Abort();
@@ -20,11 +25,8 @@ void OS_Abort(ABORT_CODE error) {
     BIT_CLR(PORTB, 7);
     uint8_t ctr;
 
-    char buffer[25];
-    sprintf(buffer, "OS Abort. Error code: %d\n", error);
-
     for(;;) {
-        LOG(buffer);
+        LOG("OS Abort. Error code: %d\n", error);
         for (ctr = 0; ctr < error; ctr += 1) {
             BIT_SET(PORTB, 7);
             _delay_ms(200);
@@ -33,6 +35,8 @@ void OS_Abort(ABORT_CODE error) {
         }
         _delay_ms(1000);
     }
+
+    #endif
 }
 
 PID Task_Create_System(taskfuncptr f, int16_t arg) {

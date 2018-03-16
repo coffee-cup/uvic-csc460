@@ -5,8 +5,10 @@
 
 #define Assert(expr)                         \
     {                                        \
-        if (!(expr)) {                       \
-            UART_print("Assert Failed!\n");  \
+        if ((!(expr)) || PORTE != 0) {       \
+            UART_print(                      \
+                "Assert Failed! %s : %d\n",  \
+                __FILE__, __LINE__);         \
             for (;;) {}                      \
         }                                    \
     }

@@ -3,9 +3,21 @@
 #include "os.h"
 #include "kernel.h"
 #include "common.h"
+
+#ifdef RUN_TESTS
 #include "libs/tests/test_suite.c"
 
-#define RUN_TESTS 0
+/*
+ * Runs the tests
+ */
+void run_tests(void) {
+    Test_Suite(TEST_QUEUE);
+
+    // Do not go to idle
+    for (;;) {}
+}
+
+#endif
 
 /**
  * A cooperative "Ping" task.
@@ -25,16 +37,6 @@ void Pong(void) TASK
     BIT_FLIP(PORTB, 1);
 })
 
-/*
- * Runs the tests
- */
-void run_tests(void) {
-    Test_Suite(TEST_OSFN);
-
-    // Do not go to idle
-    for (;;) {}
-}
-
 /**
  * This function creates two cooperative tasks, "Ping" and "Pong". Both
  * will run forever.
@@ -47,13 +49,12 @@ void setup(void) {
     BIT_CLR(PORTB, 0);
     BIT_CLR(PORTB, 1);
 
-    if (RUN_TESTS) {
+    #ifdef RUN_TESTS
         Task_Create_RR(run_tests, 0);
-        return;
-    }
-
-    Task_Create_Period(Ping, 0, 2, 1, 0);
-    Task_Create_Period(Pong, 0, 2, 1, 1);
+    #else
+        Task_Create_Period(Ping, 0, 2, 1, 0);
+        Task_Create_Period(Pong, 0, 2, 1, 1);
+    #endif
 
     // This function was called by the OS as a System task.
     // If a task executes a return statement it is terminated.
