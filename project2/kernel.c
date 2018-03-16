@@ -100,7 +100,6 @@ extern void Exit_Kernel();
  *     returns, then interrupts will be re-enabled by Enter_Kernel().
  */
 extern void Enter_Kernel();
-extern void ISR_Enter_Kernel();
 
 /* User level 'main' function */
 extern void setup(void);
@@ -110,147 +109,22 @@ extern void setup(void);
 if (!(expr)) { BIT_SET(PORTD, 1); OS_Abort(FAILED_ASSERTION); }\
 }
 
-static KERNEL_REQUEST_PARAMS timer_request = {
-    .request = TIMER
-};
-
-/*
-Enter_Kernel:
-    ; This is the "bottom" half of Context Switching. We are still executing in
-    ; Cp's context.
-    SAVECTX_TOP
-    SAVECTX_BOTTOM
-
-    ; Now, we have saved the Cp's context.
-    ; Save the current H/W stack pointer into CurrentSp.
-    in   r30, SPL
-    in   r31, SPH
-    sts  CurrentSp, r30
-    sts  CurrentSp+1, r31
-
-    ; We are now ready to restore kernel's context, i.e.,
-    ; switching the H/W stack pointer back to KernelSp.
-    lds  r30, KernelSp
-    lds  r31, KernelSp+1
-    out  SPL, r30
-    out  SPH, r31
-
-    ; We are now executing in kernel's stack.
-    RESTORECTX
-
-    ; We are ready to return to the caller of Exit_Kernel().
-    ; Note: We should NOT re-enable interrupts while kernel is running.
-    ;       Therefore, we use "ret", and not "reti".
-    ret
-*/
-extern void ISR_Enter_Kernel_TOP();
-extern void ISR_Enter_Kernel_BOTTOM();
-
-ISR(TIMER4_COMPA_vect, ISR_NAKED) {
+ISR(TIMER4_COMPA_vect) {
     if (KernelActive) {
-        asm volatile("push r31"::);
-        asm volatile("in   r31, 0x3F"::);
-        asm volatile("cli"::);
-        asm volatile("ori  r31, 0x80"::);
-        asm volatile("push r31"::);
-        asm volatile("in   r31, 0x3C"::);
-        asm volatile("push r31"::);
-        asm volatile("push r30"::);
-        asm volatile("push r29"::);
-        asm volatile("push r28"::);
-        asm volatile("push r27"::);
-        asm volatile("push r26"::);
-        asm volatile("push r25"::);
-        asm volatile("push r24"::);
-        asm volatile("push r23"::);
-        asm volatile("push r22"::);
-        asm volatile("push r21"::);
-        asm volatile("push r20"::);
-        asm volatile("push r19"::);
-        asm volatile("push r18"::);
-        asm volatile("push r17"::);
-        asm volatile("push r16"::);
-        asm volatile("push r15"::);
-        asm volatile("push r14"::);
-        asm volatile("push r13"::);
-        asm volatile("push r12"::);
-        asm volatile("push r11"::);
-        asm volatile("push r10"::);
-        asm volatile("push  r9"::);
-        asm volatile("push  r8"::);
-        asm volatile("push  r7"::);
-        asm volatile("push  r6"::);
-        asm volatile("push  r5"::);
-        asm volatile("push  r4"::);
-        asm volatile("push  r3"::);
-        asm volatile("push  r2"::);
-        asm volatile("push  r1"::);
-        asm volatile("push  r0"::);
-
-        /* ; Now, we have saved the Cp's context.
-        ; Save the current H/W stack pointer into CurrentSp. */
-        asm volatile("in   r30, 0x3D"::);
-        asm volatile("in   r31, 0x3E"::);
-        asm volatile("sts  CurrentSp, r30"::);
-        asm volatile("sts  CurrentSp+1, r31"::);
-
-        /* ; We are now ready to restore kernel's context, i.e.,
-        ; switching the H/W stack pointer back to KernelSp. */
-        asm volatile("lds  r30, KernelSp"::);
-        asm volatile("lds  r31, KernelSp+1"::);
-        asm volatile("out  0x3D, r30"::);
-        asm volatile("out  0x3E, r31"::);
 
         // Timer pin
         BIT_FLIP(PORTB, 6);
 
         Assert(request_info == NULL);
 
-        timer_request.request = TIMER;
-        request_info = &timer_request;
+        KERNEL_REQUEST_PARAMS info = {
+            .request = TIMER
+        };
 
+        request_info = &info;
         // This timer interrupts user mode programs
         // Need to make sure to switch modes
-
-        asm volatile("pop  r0"::);
-        asm volatile("pop  r1"::);
-        asm volatile("pop  r2"::);
-        asm volatile("pop  r3"::);
-        asm volatile("pop  r4"::);
-        asm volatile("pop  r5"::);
-        asm volatile("pop  r6"::);
-        asm volatile("pop  r7"::);
-        asm volatile("pop  r8"::);
-        asm volatile("pop  r9"::);
-        asm volatile("pop r10"::);
-        asm volatile("pop r11"::);
-        asm volatile("pop r12"::);
-        asm volatile("pop r13"::);
-        asm volatile("pop r14"::);
-        asm volatile("pop r15"::);
-        asm volatile("pop r16"::);
-        asm volatile("pop r17"::);
-        asm volatile("pop r18"::);
-        asm volatile("pop r19"::);
-        asm volatile("pop r20"::);
-        asm volatile("pop r21"::);
-        asm volatile("pop r22"::);
-        asm volatile("pop r23"::);
-        asm volatile("pop r24"::);
-        asm volatile("pop r25"::);
-        asm volatile("pop r26"::);
-        asm volatile("pop r27"::);
-        asm volatile("pop r28"::);
-        asm volatile("pop r29"::);
-        asm volatile("pop r30"::);
-        asm volatile("pop r31"::);
-        asm volatile("out 0x3C, r31"::);
-        asm volatile("pop r31"::);
-        asm volatile("out 0x3F, r31"::);
-        asm volatile("pop r31"::);
-        asm volatile("ret"::);
-    } else {
-        asm volatile("reti"::);
+        Enter_Kernel();
     }
 }
 
@@ -717,6 +591,8 @@ static void Next_Kernel_Request() {
 
     for(;;) {
         if (request_info) {
+            // Clear the caller's request type
+            request_info->request = NONE;
             // Clear our reference to request_info
             request_info = NULL;
         } else {
