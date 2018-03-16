@@ -3,6 +3,9 @@
 #include "os.h"
 #include "kernel.h"
 #include "common.h"
+#include "libs/tests/test_suite.c"
+
+#define RUN_TESTS 0
 
 /**
  * A cooperative "Ping" task.
@@ -10,10 +13,7 @@
  */
 void Ping(void) TASK
 ({
-    //uint16_t x = 6;
     BIT_FLIP(PORTB, 0);
-    //Msg_Send(1, ANY, &x);
-    _delay_ms(20);
 })
 
 /**
@@ -22,12 +22,18 @@ void Ping(void) TASK
  */
 void Pong(void) TASK
 ({
-    //uint16_t x;
-    //Msg_Recv(ANY, &x);
     BIT_FLIP(PORTB, 1);
-    _delay_ms(20);
 })
 
+/*
+ * Runs the tests
+ */
+void run_tests(void) {
+    Test_Suite(TEST_OSFN);
+
+    // Do not go to idle
+    for (;;) {}
+}
 
 /**
  * This function creates two cooperative tasks, "Ping" and "Pong". Both
@@ -40,6 +46,11 @@ void setup(void) {
     BIT_SET(DDRB, 1);
     BIT_CLR(PORTB, 0);
     BIT_CLR(PORTB, 1);
+
+    if (RUN_TESTS) {
+        Task_Create_RR(run_tests, 0);
+        return;
+    }
 
     Task_Create_System(Ping, 0);
     Task_Create_System(Pong, 0);

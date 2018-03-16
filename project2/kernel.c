@@ -104,7 +104,10 @@ extern void Enter_Kernel();
 /* User level 'main' function */
 extern void setup(void);
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> jake/project2
 ISR(TIMER4_COMPA_vect) {
     if (KernelActive) {
 
