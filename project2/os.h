@@ -65,7 +65,7 @@ PID Task_Create_Period(taskfuncptr f, int16_t arg, TICK period, TICK wcet, TICK 
  * When a RR or System task calls Task_Next(), it voluntarily gives up execution and
  * re-enters the ready state. All RR and Systems tasks are first-come-first-served.
  */
-void Task_Next();
+void Task_Next(void);
 
 /**
  * The calling task terminates itself.
@@ -76,12 +76,12 @@ void Task_Terminate(void);
 /**
  * The calling task gets its initial "argument" when it was created.
  */
-int16_t Task_GetArg();
+int16_t Task_GetArg(void);
 
 /**
  * It returns the calling task's PID.
  */
-PID Task_Pid();
+PID Task_Pid(void);
 
 /**
  * Send-Recv-Rply is similar to QNX-style message-passing
@@ -119,7 +119,7 @@ void Msg_ASend(PID id, MTYPE t, uint16_t v);
  * Now() will wrap around every 65536 milliseconds. Therefore, for measurement
  * purposes, it should be used for durations less than 65 seconds.
  */
-uint16_t Now();  // number of milliseconds since the RTOS boots.
+TICK Now();  // number of milliseconds since the RTOS boots.
 
 
 /**
