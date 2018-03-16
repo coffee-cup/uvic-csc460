@@ -767,7 +767,6 @@ int main(void) {
     BIT_CLR(PORTD, 0);
     BIT_CLR(PORTD, 1);
 
-    clear_trace();
     Kernel_Init();
     /* Can't add tasks here since Kernel_Request doesn't return until KernelActive is truthy */
     Kernel_Start();
