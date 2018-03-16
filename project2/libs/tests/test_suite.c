@@ -61,5 +61,5 @@ void Test_Suite(TEST_MASKS mask) {
     // Set PD0 back to low
     BIT_CLR(PORTD, 0);
 
-    UART_print("All Tests complete!\n");
+    UART_print("All Tests passed!\n");
 }
