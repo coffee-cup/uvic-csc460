@@ -148,6 +148,47 @@ void Msg_Stress_Send() {
     Msg_Send(Task_GetArg(), MSG_END, &x);
 }
 
+/*
+ * Out of order messages
+ */
+void Msg_Out_Order_Recv() {
+    uint16_t x;
+    PID from;
+
+    from = Msg_Recv(0x01, &x);
+    x += 30;
+    Msg_Rply(from, x);
+
+    from = Msg_Recv(0x02, &x);
+    x *= 2;
+    Msg_Rply(from, x);
+}
+
+void Msg_Out_Order_Send_2() {
+    PID pid = Task_GetArg();
+
+    uint16_t x = 0;
+
+    _delay_ms(100);
+
+    x = 10;
+    Msg_Send(pid, 0x01, &x);
+    Assert(x == 10 + 30);
+}
+
+void Msg_Out_Order_Send_1() {
+    PID pid = Task_Create_RR(Msg_Out_Order_Recv, 0);
+    Task_Create_RR(Msg_Out_Order_Send_2, pid);
+
+    uint16_t x = 0;
+
+    x = 60;
+    Msg_Send(pid, 0x02, &x);
+    Assert(x == 60 * 2);
+
+    Msg_Send(Task_GetArg(), MSG_END, &x);
+}
+
 void Msg_Test() {
     Task_Create_RR(Msg_Send_Never, 0);
     Task_Create_RR(Msg_Recv_Never, 0);
@@ -161,10 +202,12 @@ void Msg_Test() {
     Task_Create_RR(Msg_Send_Before_Recv_Send, my_pid);
     Task_Create_RR(Msg_Async_Send, my_pid);
     Task_Create_RR(Msg_Stress_Send, my_pid);
+    Task_Create_RR(Msg_Out_Order_Send_1, my_pid);
 
     uint16_t x;
 
     // Wait on all the tasks that need to run to completion
+    Msg_Recv(MSG_END, &x);
     Msg_Recv(MSG_END, &x);
     Msg_Recv(MSG_END, &x);
     Msg_Recv(MSG_END, &x);
