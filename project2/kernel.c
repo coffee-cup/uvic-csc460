@@ -161,6 +161,7 @@ void Kernel_Task_Create_At(PD *p, taskfuncptr f) {
 void Kernel_Task_Create() {
     if (Tasks >= MAXTHREAD) {
         /* Too many tasks! */
+        OS_Abort(NO_DEAD_PROCESS);
         return;
     }
 
@@ -187,16 +188,22 @@ void Kernel_Task_Create() {
 
         } else if (Process[x].priority == RR) {
 
+            Process[x].ticks_remaining = 1;
+
             enqueue(&rr_tasks, &Process[x]);
 
         } else if (Process[x].priority == PERIODIC) {
 
-            Process[x].period = request_info->period;
-            Process[x].wcet = request_info->wcet;
-            Process[x].ttns = sys_clock + request_info->offset;
-            Process[x].ticks_remaining = Process[x].wcet;
+            if (request_info->wcet > 0 && request_info->period > 0) {
+                Process[x].period = request_info->period;
+                Process[x].wcet = request_info->wcet;
+                Process[x].ttns = sys_clock + request_info->offset;
+                Process[x].ticks_remaining = Process[x].wcet;
 
-            insert(&periodic_tasks, &Process[x]);
+                insert(&periodic_tasks, &Process[x]);
+            } else {
+                OS_Abort(INVALID_REQ_INFO);
+            }
 
         } else {
             OS_Abort(INVALID_REQ_INFO);

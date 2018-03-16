@@ -5,18 +5,18 @@
 #include "common.h"
 
 #ifdef RUN_TESTS
-#include "trace.h"
-#include "tests.h"
+    #include "trace.h"
+    #include "tests.h"
 
-/*
- * Runs the tests
- */
-void run_tests(void) {
-    Test_Suite(TEST_ALL);
+    /*
+    * Runs the tests
+    */
+    void run_tests(void) {
+        Test_Suite(TEST_ALL);
 
-    // Do not go to idle
-    for (;;) {}
-}
+        // Do not go to idle
+        for (;;) {}
+    }
 
 #endif
 
