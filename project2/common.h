@@ -33,12 +33,12 @@
 #define LOGBAUD (38400)
 
 // Print a string over uart 0
-#define LOG(msg)                 \
-    {                            \
-        if (DEBUG) {             \
-            UART_Init0(LOGBAUD); \
-            UART_print(msg);     \
-        }                        \
+#define LOG(...)                         \
+    {                                    \
+        if (DEBUG) {                     \
+            UART_Init0(LOGBAUD);         \
+            UART_print(__VA_ARGS__);     \
+        }                                \
     }
 
 /**
