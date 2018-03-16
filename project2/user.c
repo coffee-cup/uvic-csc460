@@ -52,8 +52,8 @@ void setup(void) {
         return;
     }
 
-    Task_Create_System(Ping, 0);
-    Task_Create_System(Pong, 0);
+    Task_Create_Period(Ping, 0, 2, 1, 0);
+    Task_Create_Period(Pong, 0, 2, 1, 1);
 
     // This function was called by the OS as a System task.
     // If a task executes a return statement it is terminated.

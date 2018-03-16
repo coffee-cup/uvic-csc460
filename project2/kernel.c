@@ -104,10 +104,6 @@ extern void Enter_Kernel();
 /* User level 'main' function */
 extern void setup(void);
 
-<<<<<<< HEAD
-
-=======
->>>>>>> jake/project2
 ISR(TIMER4_COMPA_vect) {
     if (KernelActive) {
 
@@ -159,6 +155,7 @@ void Kernel_Task_Create_At(PD *p, taskfuncptr f) {
     p->code = f;     /* function to be executed as a task */
     p->state = READY;
 
+    p->next = NULL;
     p->req_params = NULL;
 }
 
@@ -195,6 +192,11 @@ void Kernel_Task_Create() {
 
         } else if (Process[x].priority == PERIODIC) {
 
+            Process[x].period = request_info->period;
+            Process[x].wcet = request_info->wcet;
+            Process[x].ttns = sys_clock + request_info->offset;
+            Process[x].ticks_remaining = Process[x].wcet;
+
             insert(&periodic_tasks, &Process[x]);
 
         } else {
@@ -221,18 +223,27 @@ PD* Queue_Rotate_Ready(task_queue_t* queue) {
     PD* first;
     first = iter_task = peek(queue);
 
+
     // do-while so that the first loop doesn't break since first == new_p
     do {
         // Specify that the task has to be ready
         if (iter_task->state != READY) {
             // Move non-ready tasks to the end of the queue
-            enqueue(&system_tasks, deque(&system_tasks));
+            // If this is a periodic queue, use insert
+            if (queue->type == PERIODIC) {
+                insert(queue, deque(queue));
+            } else {
+                enqueue(queue, deque(queue));
+            }
 
             // Get the new head task
-            iter_task = peek(&system_tasks);
+            iter_task = peek(queue);
+        } else {
+            // task state is ready!
+            break;
         }
-    } // Loop until the first task comes up again, or a task is ready
-    while (iter_task != first && iter_task->state != READY);
+    } // Loop until the first task comes up again
+    while (iter_task != first);
 
     if (iter_task->state != READY) {
         // Didn't find anything that was ready
@@ -251,15 +262,21 @@ static void Dispatch() {
     /* We use the invatiant that the running task is at the front of it's queue */
     switch (Cp->priority) {
         case SYSTEM:
-            enqueue(&system_tasks, deque(&system_tasks));
+            if (system_tasks.length > 1){
+                enqueue(&system_tasks, deque(&system_tasks));
+            }
             break;
 
         case PERIODIC:
-            insert(&periodic_tasks, deque(&periodic_tasks));
+            if (periodic_tasks.length > 1) {
+                insert(&periodic_tasks, deque(&periodic_tasks));
+            }
             break;
 
         case RR:
-            enqueue(&rr_tasks, deque(&rr_tasks));
+            if (rr_tasks.length > 1) {
+                enqueue(&rr_tasks, deque(&rr_tasks));
+            }
             break;
 
         default:
@@ -274,7 +291,6 @@ static void Dispatch() {
 
     /* Only change the current task if it's not running */
     if (Cp->state != RUNNING ) {
-
         PD* new_p = NULL;
 
         /* Check the system tasks */
@@ -288,9 +304,7 @@ static void Dispatch() {
             /* Check for periodic tasks which are ready to run, assuming sorted order
                based on increasing time to next start, only need to check first task */
             if (periodic_tasks.length > 0 && sys_clock >= peek(&periodic_tasks)->ttns) {
-                new_p = peek(&periodic_tasks);
-
-                // TODO: Maybe check that the periodic task is READY
+                new_p = Queue_Rotate_Ready(&periodic_tasks);
             }
 
             /* No periodic tasks should be started, check round robin tasks now */
@@ -753,6 +767,7 @@ int main(void) {
     BIT_CLR(PORTD, 0);
     BIT_CLR(PORTD, 1);
 
+    clear_trace();
     Kernel_Init();
     /* Can't add tasks here since Kernel_Request doesn't return until KernelActive is truthy */
     Kernel_Start();
