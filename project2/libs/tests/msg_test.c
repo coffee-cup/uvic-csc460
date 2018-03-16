@@ -78,6 +78,7 @@ void Msg_Recv_Before_Send_Send() {
 /*
  * Send Before Recv Test
  */
+
 void Msg_Send_Before_Recv_Recv() {
     uint16_t x = 0;
 
@@ -207,9 +208,20 @@ void Msg_Test() {
     uint16_t x;
 
     // Wait on all the tasks that need to run to completion
-    Msg_Recv(MSG_END, &x);
-    Msg_Recv(MSG_END, &x);
-    Msg_Recv(MSG_END, &x);
-    Msg_Recv(MSG_END, &x);
-    Msg_Recv(MSG_END, &x);
+    // Reply to release the processes
+    PID from;
+    from = Msg_Recv(MSG_END, &x);
+    Msg_Rply(from, 0);
+
+    from = Msg_Recv(MSG_END, &x);
+    Msg_Rply(from, 0);
+
+    from = Msg_Recv(MSG_END, &x);
+    Msg_Rply(from, 0);
+
+    from = Msg_Recv(MSG_END, &x);
+    Msg_Rply(from, 0);
+
+    from = Msg_Recv(MSG_END, &x);
+    Msg_Rply(from, 0);
 }
