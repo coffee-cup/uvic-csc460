@@ -56,42 +56,87 @@ void Msg_Send_Bad_Mask() {
 
 void Msg_Recv_Before_Send_Recv() {
     uint16_t x = 0;
-    /* PID from = Msg_Recv(0x01, &x); */
-    UART_print("Value is %d\n", x);
+    PID from = Msg_Recv(0x01, &x);
 
     x += 1;
-    /* Msg_Rply(from, x); */
+    Msg_Rply(from, x);
 }
 
 void Msg_Recv_Before_Send_Send() {
-    /* PID pid = Task_Create_RR(Msg_Recv_Before_Send_Recv, 0); */
+    PID pid = Task_Create_RR(Msg_Recv_Before_Send_Recv, 0);
 
-    PID pid = 3;
     _delay_ms(100);
     uint16_t x = 34;
-    Msg_Send(pid, ANY, &x);
+    Msg_Send(pid, 0x01, &x);
 
-    UART_print("In send Value is %d\n", x);
     Assert(x == 35);
 
-    MASK arg_pid = Task_GetArg();
+    PID arg_pid = Task_GetArg();
     Msg_Send(arg_pid, MSG_END, &x);
 }
 
+/*
+ * Send Before Recv Test
+ */
+void Msg_Send_Before_Recv_Recv() {
+    uint16_t x = 0;
+
+    _delay_ms(100);
+    PID from = Msg_Recv(0x04, &x);
+
+    x -= Task_GetArg();
+    Msg_Rply(from, x);
+}
+
+void Msg_Send_Before_Recv_Send() {
+    uint16_t arg = 31;
+    PID pid = Task_Create_RR(Msg_Send_Before_Recv_Recv, arg);
+
+    uint16_t x = 90;
+    Msg_Send(pid, 0x04, &x);
+
+    Assert(x == (90 - arg));
+
+    PID arg_pid = Task_GetArg();
+    Msg_Send(arg_pid, MSG_END, &x);
+}
+
+/*
+ * Async Send test
+ */
+
+void Msg_Async_Recv() {
+    uint16_t x = 0;
+
+    Msg_Recv(0x08, &x);
+    x -= 4;
+    Msg_Send(x, MSG_END, &x);
+}
+
+void Msg_Async_Send() {
+    PID pid = Task_Create_RR(Msg_Async_Recv, 0);
+
+    _delay_ms(200);
+    Msg_ASend(pid, 0x08, Task_GetArg() + 4);
+}
+
 void Msg_Test() {
-    /* Task_Create_RR(Msg_Send_Never, 0); */
-    /* Task_Create_RR(Msg_Recv_Never, 0); */
-    /* Task_Create_RR(Msg_Send_Bad_Mask, 0); */
+    Task_Create_RR(Msg_Send_Never, 0);
+    Task_Create_RR(Msg_Recv_Never, 0);
+    Task_Create_RR(Msg_Send_Bad_Mask, 0);
 
     PID my_pid = Task_Pid();
 
     // Send this pid as arg to these tasks that we will wait on
     // to confirm that they finish
     Task_Create_RR(Msg_Recv_Before_Send_Send, my_pid);
+    Task_Create_RR(Msg_Send_Before_Recv_Send, my_pid);
+    Task_Create_RR(Msg_Async_Send, my_pid);
 
     uint16_t x;
-    Msg_Recv(MSG_END, &x);
 
-    // Wait for tasks to be run
-    _delay_ms(1000);
+    // Wait on all the tasks that need to run to completion
+    Msg_Recv(MSG_END, &x);
+    Msg_Recv(MSG_END, &x);
+    Msg_Recv(MSG_END, &x);
 }

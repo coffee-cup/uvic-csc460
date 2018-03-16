@@ -133,7 +133,14 @@ PID Msg_Recv(MASK m, uint16_t* v) {
     };
 
     Kernel_Request(&info);
-    *v = *info.msg_ptr_data;
+
+    if (info.msg_ptr_data != NULL) {
+        // Data normal send
+        *v = *info.msg_ptr_data;
+    } else {
+        // Data from async send
+        *v = info.msg_data;
+    }
     return info.out_pid;
 }
 
@@ -149,7 +156,10 @@ void Msg_Rply(PID id, uint16_t r) {
 
 void Msg_ASend(PID id, MTYPE t, uint16_t v) {
     KERNEL_REQUEST_PARAMS info = {
-        .request = MSG_ASEND
+        .request = MSG_ASEND,
+        .msg_mask = t,
+        .msg_to = id,
+        .msg_data = v
     };
 
     Kernel_Request(&info);
