@@ -1,7 +1,7 @@
+#include <avr/io.h>
 #include "../../common.h"
 #include "tests.h"
 #include "test_list.h"
-#include <avr/io.h>
 #include "uart.h"
 
 #define Test_Case(m, mask, name, fn) \
@@ -51,6 +51,7 @@ void Test_Suite(TEST_MASKS mask) {
     Test_Case(mask, TEST_MSG, "Msg", Msg_Test);
     Test_Case(mask, TEST_OSFN, "OSFN", OSFN_Test);
     Test_Case(mask, TEST_MSG_TRACE, "Msg Trace", Msg_Trace_Test);
+    Test_Case(mask, TEST_TASKS, "Task", Task_Test);
 
     Check_PortE();
 

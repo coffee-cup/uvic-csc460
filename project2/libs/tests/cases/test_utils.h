@@ -1,7 +1,7 @@
 #ifndef _TEST_UTILS_H_
 #define _TEST_UTILS_H_
 
-#include "uart.h"
+#include "../../uart/uart.h"
 
 #define Assert(expr)                     \
 {                                        \

@@ -5,7 +5,8 @@
 #include "common.h"
 
 #ifdef RUN_TESTS
-#include "libs/tests/test_suite.c"
+#include "trace.h"
+#include "tests.h"
 
 /*
  * Runs the tests
