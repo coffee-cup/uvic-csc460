@@ -1,7 +1,7 @@
 #include "../../common.h"
 #include "../../os.h"
 #include "test_utils.h"
-#include "../trace/trace.h"
+#include "trace.h"
 #include <avr/io.h>
 #include <util/delay.h>
 
@@ -85,6 +85,8 @@ void Msg_Chain_Start(void) {
 }
 
 void Msg_Trace_Test() {
+    clear_trace();
     Simple_Msg_Trace();
+    clear_trace();
     Msg_Chain_Start();
 }
