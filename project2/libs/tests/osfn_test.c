@@ -12,7 +12,7 @@ void Arg_Test() {
 
 void Now_Test() {
     uint16_t n1 = Now();
-    _delay_ms(2);
+    _delay_ms(20);
     uint16_t n2 = Now();
 
     Assert(n1 < n2);
