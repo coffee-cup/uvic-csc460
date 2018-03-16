@@ -13,10 +13,7 @@
  */
 void Ping(void) TASK
 ({
-    //uint16_t x = 6;
     BIT_FLIP(PORTB, 0);
-    //Msg_Send(1, ANY, &x);
-    _delay_ms(20);
 })
 
 /**
@@ -25,8 +22,6 @@ void Ping(void) TASK
  */
 void Pong(void) TASK
 ({
-    //uint16_t x;
-    //Msg_Recv(ANY, &x);
     BIT_FLIP(PORTB, 1);
 })
 
