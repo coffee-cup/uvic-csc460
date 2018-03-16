@@ -16,8 +16,7 @@ typedef enum {
     NO_REQUEST_INFO = 5,
     WRONG_TASK_ORDER = 6,
     INVALID_PRIORITY = 7,
-    PERIODIC_MSG = 8,
-    FAILED_ASSERTION = 9
+    PERIODIC_MSG = 8
 } ABORT_CODE;
 
 // Aborts the RTOS and enters a "non-executing" state with an error code. That is, all tasks
@@ -95,7 +94,7 @@ PID  Msg_Recv(MASK m,           uint16_t* v);
 void Msg_Rply(PID  id,          uint16_t r);
 
 /**
- * Asychronously Send a message "v" of type "t" to "id". The task "id" must be blocked on
+ * Asynchronously Send a message "v" of type "t" to "id". The task "id" must be blocked on
  * Recv() state, otherwise it is a no-op. After passing "v" to "id", the returned PID of
  * Recv() is NULL (non-existent); thus, "id" doesn't need to reply to this message.
  * Note: The message type "t" must satisfy the MASK "m" imposed by "id". If not, then it
