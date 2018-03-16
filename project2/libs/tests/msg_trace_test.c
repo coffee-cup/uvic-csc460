@@ -11,6 +11,7 @@ static const MASK RELEASE = 0x02;
 // Process that just adds its arg to a trace
 void Task_Trace(void) {
     int i;
+    // Artificial delay so system task has chance to get created
     for (i = 0; i < 1000; i += 1) {}
     uint8_t arg = (uint8_t)Task_GetArg();
     add_to_trace(arg);
