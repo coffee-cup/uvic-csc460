@@ -1,4 +1,5 @@
 #include "process.h"
+#include "os.h"
 
 /**
  * Initializes a task queue for tracking a certain priority task.
@@ -8,6 +9,7 @@ task_queue_t* queue_init(task_queue_t* list, PRIORITY_LEVEL type) {
     // Have a non-null pointer, and a valid priority type
     // All conditions inside inner-most parens must be true to continue
     if (!(list && type < NUM_PRIORITY_LEVELS)) {
+        OS_Abort(QUEUEING_ERROR);
         return NULL;
     }
 
@@ -28,6 +30,7 @@ PD* peek(task_queue_t* list) {
     // Have a non-null list
     // All conditions inside inner-most parens must be true to continue
     if (!(list)) {
+        OS_Abort(QUEUEING_ERROR);
         return NULL;
     }
 
@@ -43,6 +46,7 @@ PD* deque(task_queue_t* list) {
     // Have a non-null list, and its length is greater than 0
     // All conditions inside inner-most parens must be true to continue
     if (!(list && list->length > 0)) {
+        OS_Abort(QUEUEING_ERROR);
         return NULL;
     }
 
@@ -68,6 +72,7 @@ void enqueue(task_queue_t* list, PD* task) {
     // Have non-null list and task, and the queue type matches the task priority.
     // All conditions inside inner-most parens must be true to continue
     if (!(list && task && list->type == task->priority)) {
+        OS_Abort(QUEUEING_ERROR);
         return;
     }
 
@@ -84,12 +89,14 @@ void enqueue(task_queue_t* list, PD* task) {
 
 
 /**
- * Inserts a task into the queue respecting time to next start
+ * Inserts a task into the queue respecting time to next start,
+ * This operation is only supported for PERIODIC queues
  */
 void insert(task_queue_t* list, PD* task) {
     // Have a non-null list, and the queue type matches the task priority.
     // All conditions inside inner-most parens must be true to continue
-    if (!(list && task && list->type == task->priority)) {
+    if (!(list && task && list->type == task->priority && list->type == PERIODIC)) {
+        OS_Abort(QUEUEING_ERROR);
         return;
     }
 

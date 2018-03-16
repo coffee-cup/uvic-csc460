@@ -64,7 +64,7 @@ PID Task_Create_RR(taskfuncptr f, int16_t arg) {
 PID Task_Create_Period(taskfuncptr f, int16_t arg, TICK period, TICK wcet, TICK offset) {
     KERNEL_REQUEST_PARAMS info = {
         .request = CREATE,
-        .priority = SYSTEM,
+        .priority = PERIODIC,
         .code = f,
         .arg = arg,
         .period = period,
