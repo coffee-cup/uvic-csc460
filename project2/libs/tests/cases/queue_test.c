@@ -1,5 +1,5 @@
-#include "../../common.h"
-#include "../../process.h"
+#include "../../../common.h"
+#include "../../../process.h"
 #include "test_utils.h"
 #include <avr/io.h>
 #include <util/delay.h>

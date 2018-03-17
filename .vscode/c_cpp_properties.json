@@ -89,6 +89,7 @@
                 "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
                 "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
                 "${workspaceRoot}/project2/libs/tests",
+                "${workspaceRoot}/project2/libs/tests/cases",
                 "${workspaceRoot}/project2/libs/uart",
                 "${workspaceRoot}/project2/libs/trace",
                 "${workspaceRoot}"
