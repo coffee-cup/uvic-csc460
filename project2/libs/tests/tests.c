@@ -1,7 +1,7 @@
+#include <avr/io.h>
 #include "../../common.h"
 #include "tests.h"
 #include "test_list.h"
-#include <avr/io.h>
 #include "uart.h"
 
 #define Test_Case(m, mask, name, fn) \
@@ -18,7 +18,7 @@
 
 void Check_PortE() {
     // If Port E is not 0x00 then a test has failed
-    if ((PORTE & 0xF0) != 0x00) {
+    if (MASK_TEST_ANY(PORTE, 0xF0)) {
         UART_print("PORTE not 0x00\n");
         UART_print("TESTS FAILED!\n");
         for (;;) {}
@@ -51,6 +51,7 @@ void Test_Suite(TEST_MASKS mask) {
     Test_Case(mask, TEST_MSG, "Msg", Msg_Test);
     Test_Case(mask, TEST_OSFN, "OSFN", OSFN_Test);
     Test_Case(mask, TEST_MSG_TRACE, "Msg Trace", Msg_Trace_Test);
+    Test_Case(mask, TEST_TASKS, "Task", Task_Test);
 
     Check_PortE();
 

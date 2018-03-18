@@ -1,11 +1,12 @@
 #include "../../common.h"
 #include "../../os.h"
 #include "test_utils.h"
-#include "../trace/trace.h"
 #include <avr/io.h>
 #include <util/delay.h>
 
 #define MSG_END 0x20
+
+#include "msg_test.h"
 
 /*
  * Blocked on Send/Recv Test

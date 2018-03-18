@@ -1,6 +1,8 @@
 #ifndef _TESTS_H_
 #define _TESTS_H_
 
+#include "../trace/trace.h"
+
 /**
  * To run tests, include this file from main.c and call Test_Suite(...)
  * with the masks for the tests you would like to run,
@@ -14,9 +16,8 @@ typedef enum {
     TEST_MSG            = 0x02,
     TEST_OSFN           = 0x04,
     TEST_MSG_TRACE      = 0x08,
-
-    // TEST_NEXT_THING  = 0x10,
-    TEST_ALL            = 0xFF // ie: TEST_QUEUE | TEST_THING | TEST_OTHER_THING | TEST_NEXT_THING ...
+    TEST_TASKS          = 0x10,
+    TEST_ALL            = 0xFF // ie: TEST_THING | TEST_OTHER_THING | TEST_NEXT_THING ...
 } TEST_MASKS;
 
 /**
