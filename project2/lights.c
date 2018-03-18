@@ -34,7 +34,7 @@ void Client(void) {
     }
 }
 
-void setup(void) {
+void setup_1(void) {
     // All outputs
     DDRB = 0xFF;
     PORTB = 0x00;
