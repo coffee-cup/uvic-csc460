@@ -196,6 +196,8 @@ void Msg_Test() {
     Task_Create_RR(Msg_Recv_Never, 0);
     Task_Create_RR(Msg_Send_Bad_Mask, 0);
 
+    _delay_ms(100);
+
     PID my_pid = Task_Pid();
 
     // Send this pid as arg to these tasks that we will wait on
