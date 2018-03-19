@@ -7,22 +7,10 @@ static PID server_pid;
 
 void Server(void) {
     uint16_t x;
-    int i;
     for (;;) {
         Msg_Recv(ANY, &x);
         PORTB = 0x00;
         BIT_SET(PORTB, x);
-        /* for (i = 0; i < 8; i += 1) { */
-        /*     Msg_Recv(1 << i, &x); */
-        /*     PORTB = 0x00; */
-        /*     BIT_SET(PORTB, x); */
-        /* } */
-        /* for (i = 7; i >= 0; i -= 1) { */
-        /*     Msg_Recv(1 << i, &x); */
-        /*     PORTB = 0x00; */
-        /*     BIT_SET(PORTB, x); */
-        /* } */
-        /* _delay_ms(8); */
     }
 }
 
@@ -42,7 +30,7 @@ void setup_1(void) {
     server_pid = Task_Create_RR(Server, 0);
     _delay_ms(1000);
 
-    int16_t speed = 4;
+    int16_t speed = 5;
     int16_t n = 8;
     int16_t p = speed * n;
 
