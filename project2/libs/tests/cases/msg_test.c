@@ -125,6 +125,7 @@ void Msg_Async_Send() {
 /*
  * Stress test
  */
+
 void Msg_Stress_Recv() {
     uint16_t x;
 
@@ -153,6 +154,7 @@ void Msg_Stress_Send() {
 /*
  * Out of order messages
  */
+
 void Msg_Out_Order_Recv() {
     uint16_t x;
     PID from;
@@ -195,6 +197,8 @@ void Msg_Test() {
     Task_Create_RR(Msg_Send_Never, 0);
     Task_Create_RR(Msg_Recv_Never, 0);
     Task_Create_RR(Msg_Send_Bad_Mask, 0);
+
+    _delay_ms(100);
 
     PID my_pid = Task_Pid();
 

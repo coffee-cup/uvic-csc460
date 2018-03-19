@@ -27,6 +27,8 @@
 #define HIGH_BYTE(X) ((((uint16_t)X) >> 8) & 0xFF)        // Returns the 8 MSB bits of X
 #define ZeroMemory(X, N) memset(&(X), 0, N)               // Sets N bytes of memory to 0 starting at X
 
+#define VALID_ID(id) (id >= 0 && id < MAXTHREAD)          // Returns TRUE if the id is a valid process id
+
 #define DEBUG 1
 
 // Baud rate for log messages
