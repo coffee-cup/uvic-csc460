@@ -91,6 +91,8 @@ void Msg_FIFO_Recv() {
     PID from;
     uint16_t x;
 
+    _delay_ms(100);
+
     from = Msg_Recv(ANY, &x);
     add_to_trace(x);
     Msg_Rply(from, 0);
@@ -112,7 +114,7 @@ void Msg_FIFO_Trace() {
     // This task should have a higher pid than the current task
     Task_Create_RR(Msg_FIFO_Send_1, pid);
 
-    _delay_ms(100);
+    _delay_ms(10);
     uint16_t x = 'b';
     Msg_Send(pid, ANY, &x);
 
