@@ -14,6 +14,5 @@
 #define OS_JUMP(f) asm("jmp " #f::)       /* direct jump to assembly label */
 
 void Kernel_Request(KERNEL_REQUEST_PARAMS* info);
-void Kernel_Abort(); // TODO remove this
 
 #endif
