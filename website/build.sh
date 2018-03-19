@@ -56,3 +56,13 @@ cp pandoc.css $OUTDIR
 
 # Remove tmp
 rm -rf ./tmp
+
+
+# Run doxygen and sphinx if project2 is in PROJECTS
+if [[ " ${PROJECTS[@]} " =~ "project2" ]]; then
+    mkdir -p build/rtd/doxygen
+    doxygen Doxyfile
+    make html
+    mv build/html build/project2/rtd
+    rm -rf build/doctrees build/rtd
+fi

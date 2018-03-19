@@ -1,6 +1,8 @@
 language: r
 pandoc_version: 1.19
 before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y doxygen python-sphinx
   - tlmgr install pagecolor
   - tlmgr install mdframed
   - tlmgr install needspace
@@ -14,6 +16,7 @@ install:
   - nvm install stable
   - nvm use stable
   - cd website
+  - pip install breathe
   - npm install
   - npm install --global surge
 script:
@@ -25,3 +28,4 @@ deploy:
     - ./deploy.sh
   on:
     branch: website
+
