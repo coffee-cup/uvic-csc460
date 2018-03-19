@@ -16,7 +16,7 @@ install:
   - nvm install stable
   - nvm use stable
   - cd website
-  - pip install breathe
+  - sudo pip install breathe
   - npm install
   - npm install --global surge
 script:
