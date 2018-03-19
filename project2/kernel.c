@@ -103,8 +103,6 @@ extern void Enter_Kernel();
 /* User level 'main' function */
 extern void setup(void);
 
-static void Dispatch(void);
-
 ISR(TIMER4_COMPA_vect) {
     if (KernelActive) {
 
