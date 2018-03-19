@@ -5,20 +5,20 @@
 #include <util/delay.h>
 
 void Task_Limit_Test() {
-    // Expect the system to abort because too many tasks are created
-    _delay_ms(1000);
+    // Expect the system to recover if too many tasks are created
+    _delay_ms(100);
 }
 
 void Task_Test() {
-    int i = 0;
-    for (; i < 17; i += 1) {
-        Task_Create_RR(Task_Limit_Test, 0);
-    }
-    AssertAborted();
-
+    // Creating task with null function should os abort
     Task_Create_RR(NULL, 0);
     AssertAborted();
 
+    int i;
+    for (i = 0; i < MAXTHREAD + 1; i += 1) {
+        Task_Create_RR(Task_Limit_Test, i);
+    }
+
     // Wait for tasks to be run
-    _delay_ms(100);
+    _delay_ms(1100);
 }

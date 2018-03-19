@@ -161,7 +161,12 @@ void Kernel_Task_Create_At(PD *p, taskfuncptr f) {
 void Kernel_Task_Create() {
     if (Tasks >= MAXTHREAD) {
         /* Too many tasks! */
-        OS_Abort(NO_DEAD_PROCESS);
+        /* OS_Abort(NO_DEAD_PROCESS); */
+        return;
+    }
+
+    if (request_info->code == NULL) {
+        OS_Abort(NULL_TASK_FUNCTION);
         return;
     }
 
@@ -270,7 +275,7 @@ static void Dispatch() {
     /* We use the invatiant that the running task is at the front of it's queue */
     switch (Cp->priority) {
         case SYSTEM:
-            if (system_tasks.length > 1){
+            if (system_tasks.length > 1) {
                 enqueue(&system_tasks, deque(&system_tasks));
             }
             break;
