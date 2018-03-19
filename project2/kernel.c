@@ -201,7 +201,7 @@ void Kernel_Task_Create() {
 
         } else if (Process[x].priority == PERIODIC) {
 
-            if (request_info->wcet > 0 && request_info->period > 0) {
+            if (request_info->period > 0 && request_info->wcet < request_info->period) {
                 Process[x].period = request_info->period;
                 Process[x].wcet = request_info->wcet;
                 Process[x].ttns = sys_clock + request_info->offset;
@@ -324,6 +324,12 @@ static void Dispatch() {
                based on increasing time to next start, only need to check first task */
             if (periodic_tasks.length > 0 && sys_clock >= peek(&periodic_tasks)->ttns) {
                 new_p = Queue_Rotate_Ready(&periodic_tasks);
+
+                // A periodic task must be run on its period
+                if (new_p != NULL && sys_clock > new_p->ttns) {
+                    OS_Abort(TIMING_VIOLATION);
+                    return;
+                }
             }
 
             /* No periodic tasks should be started, check round robin tasks now */
