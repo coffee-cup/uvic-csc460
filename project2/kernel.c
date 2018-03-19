@@ -161,7 +161,7 @@ void Kernel_Task_Create_At(PD *p, taskfuncptr f) {
 void Kernel_Task_Create() {
     if (Tasks >= MAXTHREAD) {
         /* Too many tasks! */
-        /* OS_Abort(NO_DEAD_PROCESS); */
+        /* Do not OS Abort because this error should be recoverable according to spec */
         return;
     }
 
@@ -432,7 +432,7 @@ void Kernel_Request_MsgSend() {
 
     // Check if process id is valid
     if (!VALID_ID(request_info->msg_to)) {
-        /* OS_Abort(INVALID_REQ_INFO); */
+        /* Do not OS Abort because sending a message to an invalid process is recoverable */
         return;
     }
 
@@ -515,7 +515,7 @@ void Kernel_Request_MsgRply() {
 
     // Check if process id is valid
     if (!VALID_ID(request_info->msg_to)) {
-        OS_Abort(INVALID_REQ_INFO);
+        /* Do not OS Abort because replying to an invalid process is recoverable */
         return;
     }
 
