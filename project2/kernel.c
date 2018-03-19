@@ -224,9 +224,6 @@ void Kernel_Task_Create() {
         OS_Abort(NO_DEAD_PROCESS);
         return;
     }
-
-    /* Dispatch because created task might be higher priority then the currently running task */
-    Dispatch();
 }
 
 /**
@@ -354,6 +351,9 @@ static void Dispatch() {
 
 void Kernel_Request_Create() {
     Kernel_Task_Create();
+
+    /* Dispatch because created task might be higher priority then the currently running task */
+    Dispatch();
 }
 
 void Kernel_Request_Next() {
