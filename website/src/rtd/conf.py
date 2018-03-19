@@ -49,7 +49,7 @@ master_doc = 'index'
 
 # Breate configuration
 breathe_projects = {
-    'RTOX': '../build/rtd/doxygen/xml/'
+    'RTOX': '../../build/rtd/doxygen/xml/'
 }
 
 breathe_default_project = 'RTOX'

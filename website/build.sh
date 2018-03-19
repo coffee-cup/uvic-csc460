@@ -63,6 +63,8 @@ if [[ " ${PROJECTS[@]} " =~ "project2" ]]; then
     mkdir -p build/rtd/doxygen
     doxygen Doxyfile
     make html
+    # Clear the output directory, for when this is a local build
+    rm -rf build/project2/rtd
     mv build/html build/project2/rtd
     rm -rf build/doctrees build/rtd
 fi
