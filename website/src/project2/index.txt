@@ -1,6 +1,6 @@
 index.md
 context_switching.md
-task_priority.md
+scheduling.md
 ipc.md
 booting.md
 errors.md
