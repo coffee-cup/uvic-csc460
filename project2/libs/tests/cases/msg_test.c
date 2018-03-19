@@ -125,6 +125,7 @@ void Msg_Async_Send() {
 /*
  * Stress test
  */
+
 void Msg_Stress_Recv() {
     uint16_t x;
 
@@ -153,6 +154,7 @@ void Msg_Stress_Send() {
 /*
  * Out of order messages
  */
+
 void Msg_Out_Order_Recv() {
     uint16_t x;
     PID from;

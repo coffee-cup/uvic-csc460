@@ -103,6 +103,8 @@ extern void Enter_Kernel();
 /* User level 'main' function */
 extern void setup(void);
 
+static void Dispatch(void);
+
 ISR(TIMER4_COMPA_vect) {
     if (KernelActive) {
 
@@ -222,6 +224,9 @@ void Kernel_Task_Create() {
         OS_Abort(NO_DEAD_PROCESS);
         return;
     }
+
+    /* Dispatch because created task might be higher priority then the currently running task */
+    Dispatch();
 }
 
 /**
