@@ -37,11 +37,9 @@ void print_trace(void) {
 // Compares an array with the trace
 // Returns 0 if it does not match
 int compare_trace(uint8_t arr[]) {
-    int length = sizeof(arr);
     int i;
-    for (i = 0; i < trace_counter && i < length; i += 1) {
+    for (i = 0; i < trace_counter; i += 1) {
         // 0 represents empty spot in array, do not compare
-        UART_Transmit0(arr[i]);
         if (arr[i] != trace_array[i]) {
             return 0;
         }

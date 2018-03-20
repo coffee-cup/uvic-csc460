@@ -3,7 +3,7 @@
 
 /**
  * Initializes a task queue for tracking a certain priority task.
- * Returns a pointer to the initialized list if successfull.
+ * Returns a pointer to the initialized list if successful.
  */
 task_queue_t* queue_init(task_queue_t* list, PRIORITY_LEVEL type) {
     // Have a non-null pointer, and a valid priority type

@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "process.h"
+#include "message.h"
 
 /*
  * inline assembly code to disable/enable maskable interrupts

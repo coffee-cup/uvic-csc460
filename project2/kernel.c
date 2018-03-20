@@ -4,8 +4,6 @@
 #include "kernel.h"
 #include "os.h"
 
-#define VALID_ID(id) (id >= 0 && id < MAXTHREAD)
-
 typedef void (*request_handler_func) (void);
 
 /**
@@ -28,18 +26,20 @@ task_queue_t system_tasks;
 task_queue_t periodic_tasks;
 task_queue_t rr_tasks;
 
-typedef struct msg_type {
-    uint16_t* data;             /* The data being sent in a message */
-    MASK      mask;             /* The mask for the specific message being sent */
-    PID       receiver;         /* The receiver of the message */
-} MSG;
-
 /**
  * This array represents an outgoing mailbox.
  * If Process[i] is in the SEND_BLOCK state then Messages[i] will be the message
  * it is trying to send.
  */
 static MSG Messages[MAXTHREAD];
+
+/**
+ * This message queue stores the order of messages that a process is trying to send.
+ * If a process is trying to send a message, the message will be in this queue.
+ * This queue is needed in addition to the Messages array so that the order of outgoing messages
+ * is first come first serve. When a process receives a message, it will receive the first message sent to it.
+ */
+msg_queue_t msg_queue;
 
 /**
  * Since this is a "full-served" model, the kernel is executing using its own
@@ -161,7 +161,12 @@ void Kernel_Task_Create_At(PD *p, taskfuncptr f) {
 void Kernel_Task_Create() {
     if (Tasks >= MAXTHREAD) {
         /* Too many tasks! */
-        OS_Abort(NO_DEAD_PROCESS);
+        /* Do not OS Abort because this error should be recoverable according to spec */
+        return;
+    }
+
+    if (request_info->code == NULL) {
+        OS_Abort(NULL_TASK_FUNCTION);
         return;
     }
 
@@ -194,7 +199,7 @@ void Kernel_Task_Create() {
 
         } else if (Process[x].priority == PERIODIC) {
 
-            if (request_info->wcet > 0 && request_info->period > 0) {
+            if (request_info->period > 0 && request_info->wcet < request_info->period) {
                 Process[x].period = request_info->period;
                 Process[x].wcet = request_info->wcet;
                 Process[x].ttns = sys_clock + request_info->offset;
@@ -270,7 +275,7 @@ static void Dispatch() {
     /* We use the invatiant that the running task is at the front of it's queue */
     switch (Cp->priority) {
         case SYSTEM:
-            if (system_tasks.length > 1){
+            if (system_tasks.length > 1) {
                 enqueue(&system_tasks, deque(&system_tasks));
             }
             break;
@@ -314,6 +319,12 @@ static void Dispatch() {
                based on increasing time to next start, only need to check first task */
             if (periodic_tasks.length > 0 && sys_clock >= peek(&periodic_tasks)->ttns) {
                 new_p = Queue_Rotate_Ready(&periodic_tasks);
+
+                // A periodic task must be run on its period
+                if (new_p != NULL && sys_clock > new_p->ttns) {
+                    OS_Abort(TIMING_VIOLATION);
+                    return;
+                }
             }
 
             /* No periodic tasks should be started, check round robin tasks now */
@@ -338,6 +349,9 @@ static void Dispatch() {
 
 void Kernel_Request_Create() {
     Kernel_Task_Create();
+
+    /* Dispatch because created task might be higher priority then the currently running task */
+    Dispatch();
 }
 
 void Kernel_Request_Next() {
@@ -398,6 +412,12 @@ void Kernel_Request_Terminate() {
         return;
     }
 
+    // Remove any messages being sent to this process
+    MSG *msg = msg_find_receiver(&msg_queue, Cp->process_id, ANY);
+    while (msg != NULL) {
+        msg = msg_find_receiver(&msg_queue, Cp->process_id, ANY);
+    }
+
     Cp->state = DEAD;
     Tasks -= 1;
     Dispatch();
@@ -412,12 +432,17 @@ void Kernel_Request_MsgSend() {
 
     // Check if process id is valid
     if (!VALID_ID(request_info->msg_to)) {
-        OS_Abort(INVALID_REQ_INFO);
+        /* Do not OS Abort because sending a message to an invalid process is recoverable */
         return;
     }
 
     PD *p_recv = &Process[request_info->msg_to];
     MTYPE recv_mask = p_recv->req_params->msg_mask;
+
+    // If sending to non-existent process, noop
+    if (p_recv->state == DEAD) {
+        return;
+    }
 
     // Check if info.msg_to is waiting for a message of same type
     if (p_recv->state == RECV_BLOCK && MASK_TEST_ANY(recv_mask, request_info->msg_mask)) {
@@ -436,6 +461,10 @@ void Kernel_Request_MsgSend() {
         msg->data = request_info->msg_ptr_data;
         msg->mask = request_info->msg_mask;
         msg->receiver = request_info->msg_to;
+        msg->sender = Cp->process_id;
+
+        // Add message to message queue
+        msg_enqueue(&msg_queue, msg);
 
         Cp->state = SEND_BLOCK;
     }
@@ -450,31 +479,25 @@ void Kernel_Request_MsgRecv() {
         return;
     }
 
-    // Check if there is a message waiting for us
-    PID sender_pid;
-    MSG *msg = NULL;
-    for (sender_pid = 0; sender_pid < MAXTHREAD; sender_pid += 1) {
-        if (Messages[sender_pid].receiver == Cp->process_id) {
-            msg = &Messages[sender_pid];
-            break;
-        }
-    }
+    // Get the first message that was sent to this process
+    MSG *msg = msg_find_receiver(&msg_queue, Cp->process_id, request_info->msg_mask);
 
     // Check if there is a message waiting for this process
-    if (msg != NULL && MASK_TEST_ANY(request_info->msg_mask, msg->mask)) {
+    if (msg != NULL) {
         // If yes, change state to ready and set msg data on Cp's request info
         request_info->msg_ptr_data = msg->data;
-        request_info->out_pid = sender_pid;
+        request_info->out_pid = msg->sender;
 
         Cp->state = READY;
 
         // Sender process now waiting for reply
-        PD *sender = &Process[sender_pid];
+        PD *sender = &Process[msg->sender];
         sender->state = REPLY_BLOCK;
 
         // Remove data from Messages
         msg->data = NULL;
         msg->receiver = -1;
+        msg->sender = -1;
     } else {
         // If not, set process to receive block state
         Cp->state = RECV_BLOCK;
@@ -492,7 +515,7 @@ void Kernel_Request_MsgRply() {
 
     // Check if process id is valid
     if (!VALID_ID(request_info->msg_to)) {
-        OS_Abort(INVALID_REQ_INFO);
+        /* Do not OS Abort because replying to an invalid process is recoverable */
         return;
     }
 
@@ -522,6 +545,11 @@ void Kernel_Request_MsgASend() {
 
     PD *p_recv = &Process[request_info->msg_to];
     MTYPE recv_mask = p_recv->req_params->msg_mask;
+
+    // If sending to non-existent process, noop
+    if (p_recv->state == DEAD) {
+        return;
+    }
 
     // Check if info.msg_to is waiting for a message of same type
     if (p_recv->state == RECV_BLOCK && MASK_TEST_ANY(recv_mask, request_info->msg_mask)) {
@@ -726,12 +754,15 @@ void Kernel_Init() {
         ZeroMemory(Messages[x], sizeof(MSG));
         Messages[x].data = NULL;
         Messages[x].receiver = -1;
+        Messages[x].sender = -1;
         Messages[x].mask = 0x00;
     }
 
     queue_init(&system_tasks, SYSTEM);
     queue_init(&rr_tasks, RR);
     queue_init(&periodic_tasks, PERIODIC);
+
+    msg_queue_init(&msg_queue);
 
     // Add the setup system task
     KERNEL_REQUEST_PARAMS info = {
