@@ -1,6 +1,6 @@
 # Inter process Communication
 
-Inter process communication (IPC) is an important part of any operating system. It allows isolated tasks to communicate and send data to and from each other. In modern operating system, IPC is normally accomplished in two ways, shared memory and message passing.
+Inter process communication (IPC) is an important part of any operating system. It allows isolated tasks to communicate and send data to and from each other. In modern operating systems, IPC is normally accomplished in two ways, shared memory and message passing.
 
 Shared memory is when multiple processes can access the same block of memory. This creates a shared buffer for the processes to communicate with each other. With shared memory there needs to be some way to _lock_ a resource, so when one processes is in a critical section, only that process can access the shared data and other processes will wait. This is typically implemented using mutexes and semaphores.
 
