@@ -4,7 +4,7 @@ Context switching is the process of storing the state (context) of a task and re
 
 - general purpose registers r0 through r31,
 - the status register (`0x3F`),
-- the extended indexing register (`0x3C`), and
+- the extended indirect register (`0x3C`), and
 - the stack pointer
 
 ![Context Switching _from [freertos.org](https://www.freertos.org/implementation/a00006.html)_](https://www.freertos.org/implementation/ExeContext.gif)
@@ -136,4 +136,6 @@ We want interrupts to be enabled when exiting the kernel. This is why we call `r
 
 ## 17-bit addressing problem
 
-The original context switching code provided to us was designed for the ATMega1280. This micro controller used 16 bit addressing as there was only 128K of memory available.
+The original context switching code provided to us was designed for the ATMega1280. [The report by Mike Krazanowski](https://connex.csc.uvic.ca/access/content/group/a665cfb0-e5ea-4601-adab-bdbea57c8ab7/Projects%20Related/Project%202/RTOS%20Sample%20Code/krazanowski_a2.pdf), explains the 17-bit addressing problem very well and greatly helped us in developing our context switching. The ATMega1280 used 16 bit addressing as there was only 128K of memory available. Since the ATMega2560 has 256K available, an extra register is needed to address all entire memory space. This extra register is the extended indirect register (`EIND`). When saving the stack pointers, 3 bytes needs to be popped as opposed to 2.
+
+![17-bit addressing problem (Mike Krazanowski)](https://i.imgur.com/2ozBAyA.png)
