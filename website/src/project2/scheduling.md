@@ -87,7 +87,7 @@ static void Dispatch() {
 ```
 The bottom half of dispatch, shown above, is for selecting a new task to run. The dispatcher looks though the system task queue first for any system task with `READY` state. This is search is handled by the `Queue_Rotate_Ready` function, which moves the first item to the end of the queue until the queue has been completely rotated, or until the item at head of the queue is in the `READY` state.
 
-If no system tasks were ready, we check for periodic tasks which are currently at their next scheduled start time. We rotate the queue here as well, since we allow *subtick* context switching in our kernel, that is it is possible for two periodic tasks to execute on the same tick, so long as neither process consumes the whole tick. If a periodic task is found, a timing violation check is performed before it is executed.
+If no system tasks were ready, we check for periodic tasks which are currently at their next scheduled start time. We rotate the queue here as well, since we allow *sub-tick* context switching in our kernel, that is it is possible for two periodic tasks to execute on the same tick, so long as neither process consumes the whole tick. If a periodic task is found, a timing violation check is performed before it is executed.
 
 Next, if no periodic tasks are ready to be executed, we finally check for round robin tasks. A round robin task is extracted in the same way that a system task is extracted. The source for `Queue_Rotate_Ready` is below.
 

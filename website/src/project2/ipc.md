@@ -1,10 +1,10 @@
-# Interprocess Communication
+# Inter process Communication
 
-Interprocess communication (IPC) is an important part of any operating system. It allows isolated tasks to communicate and send data to and from each other. In modern operating system, IPC is normally accomplished in two ways, shared memory and message passing.
+Inter process communication (IPC) is an important part of any operating system. It allows isolated tasks to communicate and send data to and from each other. In modern operating system, IPC is normally accomplished in two ways, shared memory and message passing.
 
 Shared memory is when multiple processes can access the same block of memory. This creates a shared buffer for the processes to communicate with each other. With shared memory there needs to be some way to _lock_ a resource, so when one processes is in a critical section, only that process can access the shared data and other processes will wait. This is typically implemented using mutexes and semaphores.
 
-Another method to accomplish interprocess communication is with message passing, which is the method we used for our RTOS. Message passing allows one process to synchronously (or asynchronously) send a message to another process using that processes id (pid). The data that is being sent is copied from the sender memory space to the receivers memory space. This removes any concern of race conditions that comes from multiple processes accessing the same resource.
+Another method to accomplish inter process communication is with message passing, which is the method we used for our RTOS. Message passing allows one process to synchronously (or asynchronously) send a message to another process using that processes id (pid). The data that is being sent is copied from the sender memory space to the receivers memory space. This removes any concern of race conditions that comes from multiple processes accessing the same resource.
 
 ## Message Passing API
 
@@ -65,7 +65,7 @@ The core logic of the `Msg_Send` function is shown below
 PD *p_recv = &Process[request_info->msg_to];
 MTYPE recv_mask = p_recv->req_params->msg_mask;
 
-// Check if the recipent is waiting for a message that matches the type of message sent
+// Check if the recipient is waiting for a message that matches the type of message sent
 if (p_recv->state == RECV_BLOCK && MASK_TEST_ANY(recv_mask, request_info->msg_mask)) {
     // If yes, change state of waiting process to ready and sender to reply block
     p_recv->state = READY;
@@ -175,7 +175,7 @@ if (p_recv->state == DEAD) {
     return;
 }
 
-// Check if recipent is waiting for a message of the same type
+// Check if recipient is waiting for a message of the same type
 if (p_recv->state == RECV_BLOCK && MASK_TEST_ANY(recv_mask, request_info->msg_mask)) {
     // If yes, change state of waiting process to ready and sender to reply block
     p_recv->state = READY;
