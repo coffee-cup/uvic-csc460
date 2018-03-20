@@ -153,7 +153,7 @@ The sequence diagram for the case where the sender is waiting for a receiver is 
 
 ![Send-Receive-Reply Communication 1](https://i.imgur.com/rLNtokW.png)
 
-The next sequence diagram shows the case where the receiver is waiting for the sender to,
+The next sequence diagram shows the case where the receiver is waiting for the sender to send,
 
 ![Send-Receive-Reply Communication 2](https://i.imgur.com/Hvy8UbF.png)
 
