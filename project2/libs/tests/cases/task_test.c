@@ -31,7 +31,6 @@ void Task_Create_MaxThread() {
 void Task_Create_Null() {
     Task_Create_RR(NULL, 0);
     AssertAborted();
-
 }
 
 /*

@@ -39,7 +39,7 @@ static MSG Messages[MAXTHREAD];
  * This queue is needed in addition to the Messages array so that the order of outgoing messages
  * is first come first serve. When a process receives a message, it will receive the first message sent to it.
  */
-msg_queue_t msg_queue;
+static msg_queue_t msg_queue;
 
 /**
  * Since this is a "full-served" model, the kernel is executing using its own
@@ -69,6 +69,9 @@ volatile static uint16_t Tasks;
 
 /** number of ticks elapsed since boot */
 volatile static TICK sys_clock;
+
+/** state of system clock overflow */
+volatile static OVERFLOW_STATE clock_state;
 
 /**
  * This internal kernel function is the context switching mechanism.
@@ -204,6 +207,7 @@ void Kernel_Task_Create() {
                 Process[x].wcet = request_info->wcet;
                 Process[x].ttns = sys_clock + request_info->offset;
                 Process[x].ticks_remaining = Process[x].wcet;
+                Process[x].clockState = clock_state;
 
                 insert(&periodic_tasks, &Process[x]);
             } else {
@@ -317,11 +321,13 @@ static void Dispatch() {
 
             /* Check for periodic tasks which are ready to run, assuming sorted order
                based on increasing time to next start, only need to check first task */
-            if (periodic_tasks.length > 0 && sys_clock >= peek(&periodic_tasks)->ttns) {
+            if (periodic_tasks.length > 0
+                && sys_clock >= peek(&periodic_tasks)->ttns
+                && clock_state == peek(&periodic_tasks)->clockState) {
                 new_p = Queue_Rotate_Ready(&periodic_tasks);
 
-                // A periodic task must be run on its period
-                if (new_p != NULL && sys_clock > new_p->ttns) {
+                if (new_p != NULL && sys_clock > new_p->ttns && clock_state == new_p->clockState) {
+                    // A periodic task must be run on its period
                     OS_Abort(TIMING_VIOLATION);
                     return;
                 }
@@ -355,6 +361,7 @@ void Kernel_Request_Create() {
 }
 
 void Kernel_Request_Next() {
+    TICK prev_ttns;
     switch (Cp->priority) {
         case SYSTEM:
             // System task yielded, nothing to do
@@ -362,8 +369,14 @@ void Kernel_Request_Next() {
 
         case PERIODIC:
             // The task yieleded, make it ready for next time
+            prev_ttns = Cp->ttns;
     		Cp->ttns += Cp->period;
 	        Cp->ticks_remaining = Cp->wcet;
+
+            // Overflow
+            if (Cp->ttns < prev_ttns) {
+                Cp->clockState = Cp->clockState == EVEN ? ODD : EVEN;
+            }
         break;
 
         case RR:
@@ -521,11 +534,15 @@ void Kernel_Request_MsgRply() {
 
     PD *p_recv = &Process[request_info->msg_to];
 
+    // If replying to non-existent process, noop
+    if (p_recv->state == DEAD) {
+        return;
+    }
+
     // Check if process replying to is in reply block state
     if (p_recv->state == REPLY_BLOCK) {
         p_recv->state = READY;
 
-        // I don't think this will work
         p_recv->req_params->msg_data = request_info->msg_data;
     } else {
         // If not, noop
@@ -607,7 +624,13 @@ void Kernel_Request_Timer() {
     }
 
     // Clock ticked, increment the value
+    TICK prev_clock = sys_clock;
     sys_clock += 1;
+
+    // Detect clock overflow
+    if (sys_clock < prev_clock) {
+        clock_state = clock_state == EVEN ? ODD : EVEN;
+    }
 
     // You were running before the tick, so you're ready now
     Cp->state = READY;
@@ -730,6 +753,7 @@ void Kernel_Init() {
     KernelActive = 0;
     NextP = 0;
     sys_clock = 0;
+    clock_state = EVEN;
 
     Kernel_Init_Clock();
 
@@ -750,6 +774,7 @@ void Kernel_Init() {
     for (x = 0; x < MAXTHREAD; x++) {
         ZeroMemory(Process[x], sizeof(PD));
         Process[x].state = DEAD;
+        Process[x].clockState = clock_state;
 
         ZeroMemory(Messages[x], sizeof(MSG));
         Messages[x].data = NULL;
