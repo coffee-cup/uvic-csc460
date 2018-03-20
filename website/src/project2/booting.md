@@ -10,7 +10,7 @@ When `avr-gcc` compiles the RTOS C code, it adds the C runtime. The function of 
 - Setup interrupt vector table and interrupt trampolines
 - Call the `int main` function
 
-This can be observed by viewing the disassembly our RTOS. Most of the disassembly is our compiled operating system, but some of it is from the C runtime. The following initializes the interrupt trampolines,
+This can be observed by viewing the disassembly of our RTOS. Most of the disassembly is our compiled operating system, but some of it is from the C runtime. The following initializes the interrupt trampolines,
 
 ```
 000000e4 <__trampolines_start>:
