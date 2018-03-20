@@ -1,15 +1,15 @@
 # Context Switching
 
-Context switching is the process of storing the state (context) of a task and restoring the state (context) of another. When context switching the stack pointer initial points to one tasks stack and is changed to point to another tasks stack. As the individual tasks do not know when this switching is going to happen, it can happen in the middle of an instruction. In order to save a tasks context, we need to know what exactly a context is. In the case of the atmega2560 and our RTOS, a context is
+Context switching is the process of storing the state of the hardware (i.e.: context) of a task and restoring the state (context) of another. When context switching the stack pointer initially points to a position within one task's workspace and is changed to point to another task's workspace. As from the task's perspective, they do not know when this switching is going to happen; in general context switching can occur in the middle of any line of code, which is to say switching can occur at the beginning of any AVR instruction. In order to save a task's context, we need to know what exactly a context is. In the case of the ATmega2560 and our RTOS, a context is
 
 - general purpose registers r0 through r31,
-- the status register (`0x3F`),
-- the extended indirect register (`0x3C`), and
-- the stack pointer
+- the status register (located at `0x3F`),
+- the extended indirect register (located at `0x3C`), and
+- the stack pointer (located at `0x3D -> 0x3E`)
 
 ![Context Switching _from [freertos.org](https://www.freertos.org/implementation/a00006.html)_](https://www.freertos.org/implementation/ExeContext.gif)
 
-The context switching code is implemented in assembly and called from our kernel. Saving the context simply involves pushing all of the registers onto the tasks stack.
+The context switching code is implemented in assembly and called from our kernel. Saving the context simply involves pushing all of the registers onto the current task's stack.
 
 ```assembly
 .macro SAVECTX
@@ -52,15 +52,15 @@ The context switching code is implemented in assembly and called from our kernel
 .endm
 ```
 
-Restoring a context is simply the reversing of saving a context. Instead of pushing, we pop.
+Restoring a context is simply the reversing of saving a context. Instead of `push`ing, we `pop`, and instead of reading (`in`), we write (`out`).
 
 When entering the kernel we need to
 
 - disable interrupts,
-- save the user level tasks context,
+- save the user level task's context,
 - save the hardware stack pointer as the global variable `CurrentSp`,
-- set the hardware stack pointer to the kernels stack pointer from the global variable `KernelSp`, and
-- restore the kernels context.
+- set the hardware stack pointer to the kernel's stack pointer from the global variable `KernelSp`, and
+- restore the kernel's context.
 
 This process can be seen in the following assembly code. Note that we disable interrupts in the `Kernel_Request` C function.
 
@@ -98,10 +98,10 @@ When entering the kernel we want interrupts to be disabled, which is why we call
 
 Exiting the kernel is a similar process. We need to
 
-- save the kernels context,
+- save the kernel's context,
 - save the hardware stack pointer into the global variable `KernelSp`,
 - load the tasks stack pointer from the variable `CurrentSp` into the hardware stack pointer, and
-- restore the tasks context
+- restore the task's context
 
 This process can be seen in the following assembly function,
 
@@ -132,10 +132,10 @@ Exit_Kernel:
     reti         ; Leaving kernel: re-enable all global interrupts
 ```
 
-We want interrupts to be enabled when exiting the kernel. This is why we call `reti` instead of `ret`. The process of exiting the kernel is the same if we enter the kernel from an external interrupt or from a user kernel request. For both cases we want interrupts to be enabled, so calling `reti` is not a problem.
+We want interrupts to be enabled when exiting the kernel. This is why we call `reti` instead of `ret`. Importantly, the process of exiting the kernel is the same if we enter the kernel from an external interrupt or from a user kernel request. For both cases we want interrupts to be enabled, so calling `reti` is not a problem.
 
 ## 17-bit addressing problem
 
-The original context switching code provided to us was designed for the ATMega1280. [The report by Mike Krazanowski](https://connex.csc.uvic.ca/access/content/group/a665cfb0-e5ea-4601-adab-bdbea57c8ab7/Projects%20Related/Project%202/RTOS%20Sample%20Code/krazanowski_a2.pdf), explains the 17-bit addressing problem very well and greatly helped us in developing our context switching. The ATMega1280 used 16 bit addressing as there was only 128K of memory available. Since the ATMega2560 has 256K available, an extra register is needed to address all entire memory space. This extra register is the extended indirect register (`EIND`). When saving the stack pointers, 3 bytes needs to be popped and restored as opposed to 2. This can be done by simply modifying the saving and restoring context assembly code to account for the extra byte.
+The original context switching code provided to us was designed for the ATMega1280. [The report by Mike Krazanowski](https://connex.csc.uvic.ca/access/content/group/a665cfb0-e5ea-4601-adab-bdbea57c8ab7/Projects%20Related/Project%202/RTOS%20Sample%20Code/krazanowski_a2.pdf), explains the 17-bit addressing problem very well and greatly helped us in developing our context switching. The ATMega1280 used 16 bit addressing as there was only 128K of memory available. Since the ATMega2560 has 256K available, an extra register is needed to address all entire memory space. This extra register is the extended indirect register (`EIND`). See [Memory Layout](#memory-layout) to see the initialization of the EIND byte, which can be initially written as zero because the compiler uses trampolines to access higher memory addresses. When saving the stack pointers, 3 bytes needs to be popped and restored as opposed to 2, as is with the `ret` and `reti` assembly instructions - both pop 3 bytes from the stack. This can be done by simply modifying the saving and restoring context assembly code to account for the extra byte.
 
 ![17-bit addressing problem (Mike Krazanowski)](https://i.imgur.com/2ozBAyA.png)
