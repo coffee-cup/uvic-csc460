@@ -147,6 +147,16 @@ Dispatch();
 
 A `Dispatch` is needed after replying to a process because the process replied to may be a higher priority.
 
+#### Sequence Diagrams
+
+The sequence diagram for the case where the sender is waiting for a receiver is shown in the following figure,
+
+![Send-Receive-Reply Communication 1](https://i.imgur.com/rLNtokW.png)
+
+The next sequence diagram shows the case where the receiver is waiting for the sender to,
+
+![Send-Receive-Reply Communication 2](https://i.imgur.com/Hvy8UbF.png)
+
 ### Asynchronous Communication
 
 Since periodic tasks cannot communicate synchronously, we need another way for them to communicate. The solution to this is asynchronous communication. The function used to do this has the following signature.
