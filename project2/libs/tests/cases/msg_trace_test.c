@@ -85,6 +85,7 @@ void Msg_Chain_Start(void) {
 
 /*
  * First in first out messages
+ * Order of sent messages is respected when receiving
  */
 
 void Msg_FIFO_Recv() {
@@ -135,6 +136,7 @@ void Msg_System_Recv() {
     PID from = Msg_Recv(ANY, &x);
     add_to_trace('c');
     Msg_Rply(from, 0);
+    add_to_trace('d');
 }
 
 void Msg_RR_Send() {
@@ -146,11 +148,11 @@ void Msg_RR_Send() {
 
     uint16_t x = 0;
     Msg_Send(pid, ANY, &x);
-    add_to_trace('d');
+    add_to_trace('e');
 
     add_to_trace('f');
 
-    uint8_t arr[] = {'s', 'a', 'b', 'c', 'd', 'f'};
+    uint8_t arr[] = {'s', 'a', 'b', 'c', 'd', 'e', 'f'};
     Assert(compare_trace(arr) == 1);
 }
 
