@@ -1,8 +1,9 @@
 index.md
+design.md
+booting.md
 context_switching.md
 scheduling.md
 ipc.md
-booting.md
 errors.md
 testing.md
 appendix.md
