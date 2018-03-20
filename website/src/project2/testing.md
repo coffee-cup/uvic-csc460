@@ -170,6 +170,12 @@ A `DEBUG` flag is used so we can easily disable the log messages when not testin
 LOG("OS Abort. Error code: %d\n", error);
 ```
 
+## Periodic Testing
+
+Periodic tasks can quickly be verified using a logic analyzer. The following image shows simple ping and pong tasks which were setup with a period of 2 ticks each (20 ms).
+
+![Periodic Testing](https://i.imgur.com/65lEe9B.png)
+
 ## Test Suite
 
 We wanted to be sure our RTOS was implemented exactly as designed and we also didn't want to break existing features as we developed new ones. A solution to this problem was to develop an automated testing suite.
