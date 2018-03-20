@@ -5,7 +5,7 @@
 The source code for our project can be found here:
 
 - [Latest Github source](https://github.com/coffee-cup/uvic-csc460/tree/master/project2)
-- [ZIP Download source](https://github.com/coffee-cup/uvic-csc460/archive/rtos.zip)
+- [ZIP Download](https://github.com/coffee-cup/uvic-csc460/archive/rtos.zip)
 
 ## Code documentation
 
