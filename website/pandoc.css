@@ -161,6 +161,11 @@ pre {
 
 pre.sourceCode {
     line-height: 1.4;
+    background-color: #f5f5f5;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    border-top: #999 1px solid;
+    border-bottom: #999 1px solid;
 }
 
 b,
