@@ -11,11 +11,11 @@ This year, each group was provided access to several Arduino Mega 2560 developme
 
 At the board level, the Arduino Mega 2560 provides 54 digital configurable input / output pins, 15 of which can be configured to output pulse width modulated signals. Furthermore, there are 16 analog input pins. The Arduino Mega 2560 has one non-volatile secondary storage device which can hold up to 256 kB of data (although 8 kB are commonly reserved for the bootloader). Additionally, the Arduino Mega 2560 has 8 kB of SRAM - this device however is volatile as it requires power to retain information.
 
-At the microprocessor level, the ATmega2560 operates on 8-bit registers at 16 MHz using AVR. Although, undocumented AVR is commonly accepted to stand for **A**lf-Egil and **V**egard's **R**ISC processor. The AVR architecture is a modified Harvard architecture which is part of the reduced instruction set computer (RISC) microprocessor family. The ATmega2560 has 32 8-bit general purpose registers, four Universal Synchronous/Asynchronous Receiver-Transmitters, and support for many peripherals including several 8 and 16 bit counter-timers, four 8-bit PWM channels and an additional twelve programmable (2 to 16-bit) resolution PWM channels.
+At the microprocessor level, the ATmega2560 operates on 8-bit registers at 16 MHz using AVR. Although undocumented, AVR is commonly accepted to stand for **A**lf-Egil and **V**egard's **R**ISC processor. The AVR architecture is a modified Harvard architecture which is part of the reduced instruction set computer (RISC) microprocessor family. The ATmega2560 has 32 8-bit general purpose registers, four Universal Synchronous/Asynchronous Receiver-Transmitters, and support for many peripherals including several 8 and 16 bit counter-timers, four 8-bit PWM channels and an additional twelve programmable (2 to 16-bit) resolution PWM channels.
 
 ## Kernel Design
 
-The kernel is critical part of our RTOS. As such, it received the most attention during implementation. It is also the owner of the `c` program's `main()` function. As discussed previously, a real-time operating system can be implemented using a time-sharing or event-driven scheme, or a hybrid of the two. Our operating system is a hybrid system. Tasks can generate 'events' by making system calls, meanwhile a counter-timer generates interrupts at a pre-specified frequency - we typically use 100 Hz or every 10 ms. This has the advantage of being more flexible when concerning usability. Tasks can voluntarily yield their share of the hardware, and if they do not, tasks of equal priority will still be given equal shares. The following diagram shows, at a high level, how the operating system starts its execution when the program begins. Some details are omitted for brevity.
+The kernel is a critical part of our RTOS. As such, it received the most attention during implementation. It is also the owner of the `c` program's `main()` function. As discussed previously, a real-time operating system can be implemented using a time-sharing or event-driven scheme, or a hybrid of the two. Our operating system is a hybrid system. Tasks can generate 'events' by making system calls, meanwhile a counter-timer generates interrupts at a pre-specified frequency - we typically use 100 Hz or every 10 ms. This has the advantage of being more flexible when concerning usability. Tasks can voluntarily yield their share of the hardware, and if they do not, tasks of equal priority will still be given equal shares. The following diagram shows, at a high level, how the operating system starts its execution when the program begins. Some details are omitted for brevity.
 
 [OSEntry]: https://i.imgur.com/5BxPZzZ.png "Entry point execution diagram"
 ![RTOS entry point execution diagram][OSEntry]
@@ -110,14 +110,14 @@ PID Task_Create_System(taskfuncptr f, int16_t arg);
 
 ### Periodic tasks
 
-A periodic task is the medium priority task. They are scheduled in accordance with their period and offset within at most 10 ms (1 tick jitter). A periodic task is immediately preempted at the next tick or 'rescheduling' syscall by any `READY` system task. Periodic tasks are never preempted by round-robin tasks. Periodic tasks run until they terminate, yield, or exceed their specified worst-case execution time, whichever first. Note that a periodic task **cannot** become blocked, this is because calls to any of the *synchronous* message passing functions devolves to a no-op if the caller is a periodic function. A periodic task cannot be preempted by any other running task. Tasks of this type are stored in their own task queue. To create a task of this type, the application can call the function below where it must provide a function pointer to execute as the task, an argument which is retrievable by the task, and measures for it's period, worst-case execution time, and starting offset respectively.
+A periodic task is the medium priority task. They are scheduled in accordance with their period and offset within at most 10 ms (1 tick jitter). A periodic task is immediately preempted at the next tick or 'rescheduling' syscall by any `READY` system task. Periodic tasks are never preempted by round-robin tasks. Periodic tasks run until they terminate, yield, or exceed their specified worst-case execution time, whichever first. Note that a periodic task **cannot** become blocked, this is because calls to any of the *synchronous* message passing functions devolve to an OS abort error if the caller is a periodic function. A periodic task cannot be preempted by any other running task. Tasks of this type are stored in their own task queue. To create a task of this type, the application can call the function below where it must provide a function pointer to execute as the task, an argument which is retrievable by the task, and measures for it's period, worst-case execution time, and starting offset respectively.
 ```c
 PID Task_Create_Period(taskfuncptr f, int16_t arg, TICK period, TICK wcet, TICK offset);
 ```
 
 ### Round Robin tasks
 
-A round robin task is the lowest priority task. They are scheduled on a first come, first serve basis, and for one tick at most at a time, or until they yield, or block, whichever first. A round robin task is preempted by any other running task. Tasks of this type are stored in their own task queue. To create a task of this type, the application can call the function below where it must provide a function pointer to execute as the task and an argument which is retrievable by the task.
+A round robin task is the lowest priority task. They are scheduled on a first come, first serve basis, and run for one tick at most at a time, or until they yield, or block, whichever first. A round robin task is preempted by any other running task. Tasks of this type are stored in their own task queue. To create a task of this type, the application can call the function below where it must provide a function pointer to execute as the task and an argument which is retrievable by the task.
 ```c
 PID Task_Create_RR(taskfuncptr f, int16_t arg);
 ```
@@ -130,18 +130,23 @@ A task can exist in one of the aforementioned 6 states - tracked by it's `state`
 A task which has it's state set to `DEAD` is never considered for rescheduling, and it's memory space is returned to the pool of available task memory. All available task memory is initialized with `DEAD` tasks, and a task may become dead if it performs a `return` instruction from its provided function (i.e.: at the bottom of it's stack), or if it ever calls `Task_Terminate` (i.e: regardless of the size of it's stack). `DEAD` tasks are removed from their respective task queue. Any priority task may become `DEAD`.
 
 ### Ready state
+
 A task with state `READY` is non-blocked and currently not running. It is considered for dispatch when rescheduling. Any priority task may be `READY`. Tasks which have become unblocked by leaving any of the blocking states are made `READY`.
 
 ### Running state
+
 A task with state `RUNNING` is non-blocked and currently running. It is not considered for dispatch when rescheduling as no tasks should be in the `RUNNING` state while the kernel is active. Any priority task may be `RUNNING`. Tasks may move to any other state from the `RUNNING` state, blocking states included. When a syscall is made a task is first made `READY`, then depending on the syscall it might be moved to a blocking state.
 
 ### Send Block state
+
 A task with state `SEND_BLOCK` is blocked and currently not running. It is not considered for dispatch when rescheduling as it will be unable to continue. Only system and round robin priority level tasks may enter the `SEND_BLOCK` state. When another task makes a syscall that resolves the `SEND_BLOCK` state, the task may be moved to another blocking state or made `READY` again.
 
 ### Reply Block state
+
 A task with state `REPLY_BLOCK` is blocked and currently not running. It is not considered for dispatch when rescheduling as it will be unable to continue. Only system and round robin priority level tasks may enter the `REPLY_BLOCK` state. When another task makes a syscall that resolves the `REPLY_BLOCK` state, the task may be moved to another blocking state or made `READY` again.
 
 ### Receive Block state
+
 A task with state `RECV_BLOCK` is blocked and currently not running. It is not considered for dispatch when rescheduling as it will be unable to continue. Only system and round robin priority level tasks may enter the `RECV_BLOCK` state. When another task makes a syscall that resolves the `RECV_BLOCK` state, is made `READY` again.
 
 More on SEND-RECEIVE-REPLY blocking state is given in the inter process communication section.
@@ -214,4 +219,3 @@ static void Next_Kernel_Request() {
     }
 }
 ```
-
