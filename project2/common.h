@@ -85,7 +85,7 @@ typedef enum priority_level {
 } PRIORITY_LEVEL;
 
 /**
- *  This is the set of states that a task can be in at any given time.
+ * This is the set of states that a task can be in at any given time.
  */
 typedef enum process_state {
     DEAD = 0,
@@ -96,6 +96,15 @@ typedef enum process_state {
     RECV_BLOCK,
     NUM_PROCESS_STATES /* Must be last */
 } PROCESS_STATE;
+
+/**
+ * This is the state of system clock overflow and is used to distinguish
+ * whether a periodic tasks ttns has overflowed and looped back around through 0.
+ */
+typedef enum overflow_state {
+    EVEN = 0,
+    ODD = 1
+} OVERFLOW_STATE;
 
 /**
  * This is the set of kernel requests, i.e., a request code for each system call.
