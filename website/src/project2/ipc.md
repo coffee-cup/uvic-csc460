@@ -55,7 +55,7 @@ void Msg_Rply(PID  id,          uint16_t r);
 
 #### Send
 
-`Msg_Send(p, t, v)` sends the data `v` to process `p` with the message type `t`. If process `p` is not already waiting for a message of type `t` (in Receive block state), then the sending process becomes blocked in the Send block state. On the other hand, if process `p` is waiting for a message of type `t` then the message is delivered immediately and the receiving process is transitioned to the Ready state.
+`Msg_Send(p, t, v)` sends the data `v` to process `p` with the message type `t`. If process `p` is not already waiting for a message of type `t` (in Receive block state), then the sending process becomes blocked in the Send block state and the message is added to the message queue. On the other hand, if process `p` is waiting for a message of type `t` then the message is delivered immediately and the receiving process is transitioned to the Ready state.
 
 The message is delivered to the receiving process by copying the data at the location of the `v` pointer, which is on the senders stack, to the receivers `request_info` data structure, which is located on the receivers stack. It is important that the data is copied to the receivers stack because when the original data sent goes out of scope on the senders stack, the receiver may still need access.
 
@@ -82,6 +82,9 @@ if (p_recv->state == RECV_BLOCK && MASK_TEST_ANY(recv_mask, request_info->msg_ma
     msg->data = request_info->msg_ptr_data;
     msg->mask = request_info->msg_mask;
     msg->receiver = request_info->msg_to;
+
+    // Add message to message queue
+    msg_enqueue(&msg_queue, msg);
 
     Cp->state = SEND_BLOCK;
 }
