@@ -39,7 +39,7 @@ static MSG Messages[MAXTHREAD];
  * This queue is needed in addition to the Messages array so that the order of outgoing messages
  * is first come first serve. When a process receives a message, it will receive the first message sent to it.
  */
-msg_queue_t msg_queue;
+static msg_queue_t msg_queue;
 
 /**
  * Since this is a "full-served" model, the kernel is executing using its own
@@ -534,11 +534,15 @@ void Kernel_Request_MsgRply() {
 
     PD *p_recv = &Process[request_info->msg_to];
 
+    // If replying to non-existent process, noop
+    if (p_recv->state == DEAD) {
+        return;
+    }
+
     // Check if process replying to is in reply block state
     if (p_recv->state == REPLY_BLOCK) {
         p_recv->state = READY;
 
-        // I don't think this will work
         p_recv->req_params->msg_data = request_info->msg_data;
     } else {
         // If not, noop
