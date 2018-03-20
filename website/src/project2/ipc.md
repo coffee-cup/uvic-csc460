@@ -35,7 +35,7 @@ static msg_queue_t msg_queue;
 
 The following figure shows how a processes state transitions as it synchronously communicates.
 
-![Message Passing State Diagram](https://i.imgur.com/ekTiy0W.png)
+![Message Passing State Diagram](https://i.imgur.com/GI6fvd6.png)
 
 A process is blocked and cannot be scheduled when it is in the three blocked states,
 
@@ -233,4 +233,6 @@ void setup_1(void) {
 }
 ```
 
-The result can be seen in the following gif.
+The speed of the lights can be set through a single `speed` variable. The periodic client just sends an asynchronous message to the server and then yields execution until its next period. The result can be seen in the following gif.
+
+![Client-Server Lights Loop](https://i.imgur.com/CrRRztz.gif)
