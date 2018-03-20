@@ -635,8 +635,8 @@ void Kernel_Request_Timer() {
     // You were running before the tick, so you're ready now
     Cp->state = READY;
 
-    // Only dispatch on tick for RR tasks
-    if (Cp->priority == RR) {
+    // Do not dispatch for periodic
+    if (Cp->priority != PERIODIC) {
         Dispatch();
     }
 }
