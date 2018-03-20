@@ -12,7 +12,7 @@ When `avr-gcc` compiles the RTOS C code, it adds the C runtime. The function of 
 
 This can be observed by viewing the disassembly of our RTOS. Most of the disassembly is our compiled operating system, but some of it is from the C runtime. The following initializes the interrupt trampolines,
 
-```
+```assembly
 000000e4 <__trampolines_start>:
       e4:	0c 94 8c 04 	jmp	0x918	; 0x918 <Kernel_Request_MsgASend>
       e8:	0c 94 bc 00 	jmp	0x178	; 0x178 <Kernel_Request_None>
@@ -35,13 +35,13 @@ This can be observed by viewing the disassembly of our RTOS. Most of the disasse
 
 We can also see where the `main` function is called after everything has been setup
 
-```
+```assembly
 0000015c <.do_clear_bss_start>:
-     15c:	a5 38       	cpi	r26, 0x85	; 133
+     15c:	a5 38       	cpi	r26, 0x85   ; 133
      15e:	b2 07       	cpc	r27, r18
-     160:	e1 f7       	brne	.-8      	; 0x15a <.do_clear_bss_loop>
-     162:	0e 94 7e 08 	call	0x10fc	; 0x10fc <main>
-     166:	0c 94 eb 09 	jmp	0x13d6	; 0x13d6 <exit>
+     160:	e1 f7       	brne	.-8     ; 0x15a <.do_clear_bss_loop>
+     162:	0e 94 7e 08 	call	0x10fc  ; 0x10fc <main>
+     166:	0c 94 eb 09 	jmp	0x13d6	    ; 0x13d6 <exit>
 ```
 
 The `main` function of our operating system simply initializes and starts the kernel

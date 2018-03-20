@@ -8,9 +8,9 @@ If we provide our own assembly for a `c` runtime, we could have the booting code
 0000015c <.do_clear_bss_start>:
      15c:	a5 38       	cpi	r26, 0x85	; 133
      15e:	b2 07       	cpc	r27, r18
-     160:	e1 f7       	brne	.-8      	; 0x15a <.do_clear_bss_loop>
+     160:	e1 f7       	brne	.-8     ; 0x15a <.do_clear_bss_loop>
      162:	0e 94 9d 08 	call	0x113a	; 0x113a <main>
-     166:	0c 94 0e 0a 	jmp	0x141c	; 0x141c <exit>
+     166:	0c 94 0e 0a 	jmp	0x141c	    ; 0x141c <exit>
 ```
 
 ## Stack overflow detection
