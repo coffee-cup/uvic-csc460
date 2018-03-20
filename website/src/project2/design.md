@@ -147,6 +147,71 @@ A task with state `RECV_BLOCK` is blocked and currently not running. It is not c
 More on SEND-RECEIVE-REPLY blocking state is given in the interprocess communication section.
 
 
-## Scheduler / Handler design
+## Request Handler design
 
+This kernel component is used in the kernel's event loop to handle kernel requests. Rather than having a giant, unreadable, `switch` statement for each type of kernel request, it was decided that the event loop would perform a table lookup to find the appropriate kernel request handler. This helps especially in testing and with scope management. The kernel event loop is shown below.
+
+```c
+static void Next_Kernel_Request() {
+    request_handler_func request_handlers[NUM_KERNEL_REQUEST_TYPES] = {
+        /* Must be in order of KERNEL_REQUEST_TYPE */
+        Kernel_Request_None,
+        Kernel_Request_Timer,
+        Kernel_Request_Create,
+        Kernel_Request_Next,
+        Kernel_Request_GetArg,
+        Kernel_Request_GetPid,
+        Kernel_Request_GetNow,
+        Kernel_Request_MsgSend,
+        Kernel_Request_MsgRecv,
+        Kernel_Request_MsgRply,
+        Kernel_Request_MsgASend,
+        Kernel_Request_Terminate
+    };
+
+    Dispatch();  /* select a new task to run */
+
+    for(;;) {
+        if (request_info) {
+            /* Clear the caller's request type */
+            request_info->request = NONE;
+            /* Clear our reference to request_info */
+            request_info = NULL;
+        } else {
+            if (KernelActive) {
+                OS_Abort(NO_REQUEST_INFO);
+                return;
+            }
+        }
+
+        /* activate this newly selected task */
+        CurrentSp = Cp->sp;
+        KernelActive = 1;
+        Exit_Kernel();    /* or CSwitch() */
+
+        /* if this task makes a kernel request, it will return to here! */
+        /* request_info should be valid again! */
+        if (!request_info) {
+            OS_Abort(NO_REQUEST_INFO);
+            return;
+        }
+
+        /* save the Cp's stack pointer */
+        Cp->sp = CurrentSp;
+
+        /* Switch current process state from RUNNING to READY */
+        Cp->state = READY;
+
+
+        /* Run the appropriate handler */
+        if (request_info->request >= NONE && request_info->request < NUM_KERNEL_REQUEST_TYPES) {
+            /* It's up to the handler to decide if it should dispatch */
+            request_handlers[request_info->request]();
+        } else {
+            OS_Abort(INVALID_REQ_INFO);
+            return;
+        }
+    }
+}
+```
 
