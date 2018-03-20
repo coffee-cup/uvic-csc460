@@ -142,7 +142,7 @@ void Msg_FIFO_Trace() {
 }
 ```
 
-We have shown our simpiler tests for brevity, but we encourage the reader to look at our [message](https://github.com/coffee-cup/uvic-csc460/blob/master/project2/libs/tests/cases/msg_trace_test.c) [tests](https://github.com/coffee-cup/uvic-csc460/blob/master/project2/libs/tests/cases/msg_test.c) in our test suite.
+We have shown our simpler tests for brevity, but we encourage the reader to look at our [message](https://github.com/coffee-cup/uvic-csc460/blob/master/project2/libs/tests/cases/msg_trace_test.c) [tests](https://github.com/coffee-cup/uvic-csc460/blob/master/project2/libs/tests/cases/msg_test.c) in our test suite.
 
 ## DEBUG Mode / LOG
 

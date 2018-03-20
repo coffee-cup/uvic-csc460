@@ -9,6 +9,6 @@ The source code for our project can be found here:
 
 ## Code documentation
 
-We built our OS with in-line documentation. To view a *work in progess* documentation page visit:
+We built our OS with in-line documentation. To view a *work in progress* documentation page visit:
 
 - [Living 'Read the Docs' page](/project2/rtd/)

@@ -144,7 +144,7 @@ A task with state `REPLY_BLOCK` is blocked and currently not running. It is not 
 ### Receive Block state
 A task with state `RECV_BLOCK` is blocked and currently not running. It is not considered for dispatch when rescheduling as it will be unable to continue. Only system and round robin priority level tasks may enter the `RECV_BLOCK` state. When another task makes a syscall that resolves the `RECV_BLOCK` state, is made `READY` again.
 
-More on SEND-RECEIVE-REPLY blocking state is given in the interprocess communication section.
+More on SEND-RECEIVE-REPLY blocking state is given in the inter process communication section.
 
 
 ## Request Handler design
