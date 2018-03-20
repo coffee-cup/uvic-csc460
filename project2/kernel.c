@@ -635,7 +635,10 @@ void Kernel_Request_Timer() {
     // You were running before the tick, so you're ready now
     Cp->state = READY;
 
-    Dispatch();
+    // Only dispatch on tick for RR tasks
+    if (Cp->priority == RR) {
+        Dispatch();
+    }
 }
 
 void Kernel_Request_GetArg() {
