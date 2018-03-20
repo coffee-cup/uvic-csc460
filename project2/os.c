@@ -22,26 +22,11 @@ void OS_Abort(ABORT_CODE error) {
         }
     #else
 
-    // Disable interrupts
-    OS_DI();
-    Kernel_Abort();
-    UART_Init0(LOGBAUD);
-
-    // Blink the built-in LED in accordance with the error code
-    BIT_SET(DDRB, 7); // Set PB7 as output
-    BIT_CLR(PORTB, 7);
-    uint8_t ctr;
-
-    for(;;) {
-        LOG("OS Abort. Error code: %d\n", error);
-        for (ctr = 0; ctr < error; ctr += 1) {
-            BIT_SET(PORTB, 7);
-            _delay_ms(200);
-            BIT_CLR(PORTB, 7);
-            _delay_ms(200);
-        }
-        _delay_ms(1000);
-    }
+    KERNEL_REQUEST_PARAMS info = {
+        .request = ABORT,
+        .abort_code = error
+    };
+    Kernel_Request(&info);
 
     #endif
 }

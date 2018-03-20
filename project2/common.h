@@ -111,6 +111,7 @@ typedef enum kernel_request_type {
     MSG_RPLY,
     MSG_ASEND,
     TERMINATE,
+    ABORT,
     NUM_KERNEL_REQUEST_TYPES /* Must be last */
 } KERNEL_REQUEST_TYPE;
 
@@ -131,6 +132,7 @@ typedef struct kernel_request_params_type {
     uint16_t                  msg_data;
     MTYPE                     msg_mask;
     PID                       msg_to;
+    ABORT_CODE                abort_code;
 } KERNEL_REQUEST_PARAMS;
 
 #endif

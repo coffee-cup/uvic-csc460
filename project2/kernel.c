@@ -1,8 +1,17 @@
 #include <stdint.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
+#include "common.h"
 #include "kernel.h"
 #include "os.h"
+
+/*
+ * inline assembly code to disable/enable maskable interrupts
+ * (N.B. Use with caution.)
+ */
+#define OS_DI()    asm volatile("cli"::)     /* disable all interrupts */
+#define OS_EI()    asm volatile("sei"::)     /* enable all interrupts */
+#define OS_JUMP(f) asm volatile("jmp " #f::) /* direct jump to assembly label */
 
 #define VALID_ID(id) (id >= 0 && id < MAXTHREAD)
 
@@ -373,6 +382,27 @@ void Kernel_Request_Next() {
     Dispatch();
 }
 
+void Kernel_Request_Abort() {
+    /* Disable system clock by setting prescaler to 0 */
+    MASK_CLR(TCCR4B, 0b111);
+
+    /* Blink the built-in LED in accordance with the error code */
+    BIT_SET(DDRB, 7); /* Set PB7 as output */
+    BIT_CLR(PORTB, 7);
+    uint8_t ctr;
+
+    for(;;) {
+        LOG("OS Abort. Error code: %d\n", request_info->abort_code);
+        for (ctr = 0; ctr < request_info->abort_code; ctr += 1) {
+            BIT_SET(PORTB, 7);
+            _delay_ms(200);
+            BIT_CLR(PORTB, 7);
+            _delay_ms(200);
+        }
+        _delay_ms(1000);
+    }
+}
+
 void Kernel_Request_Terminate() {
     /* deallocate all resources used by this task */
     /* Assume it will be at the front of it's queue? */
@@ -618,7 +648,8 @@ static void Next_Kernel_Request() {
         Kernel_Request_MsgRecv,
         Kernel_Request_MsgRply,
         Kernel_Request_MsgASend,
-        Kernel_Request_Terminate
+        Kernel_Request_Terminate,
+        Kernel_Request_Abort
     };
 
     Dispatch();  /* select a new task to run */
@@ -770,11 +801,6 @@ void Kernel_Request(KERNEL_REQUEST_PARAMS* info) {
         Cp->req_params = info;
         Enter_Kernel();
     }
-}
-
-void Kernel_Abort() {
-    // Debug func to pause kernel activity
-    KernelActive = 0;
 }
 
 int main(void) {
