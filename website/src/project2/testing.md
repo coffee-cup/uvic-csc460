@@ -21,7 +21,7 @@ void print_trace(void);
 int compare_trace(uint8_t arr[]);
 ```
 
-Internally, the trace is represented as a `static uint8_t` array of size `256`. When using this library, the trace is initially cleared of its contents. Then throughout execution of the program or RTOS, 8 bit pieces of data, such as `char`'s, can be added to the end of the trace. Upon OS abortion or termination, the trace can be printed and examined. The `compare_trace` is used to compare the internal trace to another array. This is useful when doing automated testing.
+Internally, the trace is represented as a `static uint8_t` array of size `256`. When using this library, the trace is initially cleared of its contents. Then throughout execution of the program or RTOS, 8 bit pieces of data, such as `char`'s, can be added to the end of the trace. Upon OS abortion or termination, the trace can be printed and examined. The `compare_trace` function is used to compare the internal trace to another array. This is useful when doing automated testing.
 
 ### Task Trace Tests
 
