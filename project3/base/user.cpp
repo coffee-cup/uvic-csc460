@@ -1,8 +1,12 @@
 #include <avr/io.h>
 #include <util/delay.h>
-#include "uart.h"
-#include "os.h"
-#include "../common/os/kernel.h"
+
+extern "C" {
+    #include "kernel.h"
+    #include "os.h"
+    #include "uart.h"
+    void create(void);
+}
 
 int main(void) {
     Kernel_Begin();

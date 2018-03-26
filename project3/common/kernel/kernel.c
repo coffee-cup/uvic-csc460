@@ -116,7 +116,8 @@ extern void Exit_Kernel();
 extern void Enter_Kernel();
 
 /* User level 'main' function */
-extern void create(void);
+/* extern void create(void); */
+void create(void);
 
 ISR(TIMER4_COMPA_vect) {
     if (KernelActive) {
