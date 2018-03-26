@@ -161,7 +161,7 @@ void Msg_ASend(PID id, MTYPE t, uint16_t v) {
     Kernel_Request(&info);
 }
 
-uint16_t Now() {
+TICK Now() {
     KERNEL_REQUEST_PARAMS info = {
         .request = GET_NOW
     };

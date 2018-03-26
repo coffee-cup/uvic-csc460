@@ -3,7 +3,7 @@
 
 /**
  * Initializes a task queue for tracking a certain priority task.
- * Returns a pointer to the initialized list if successfull.
+ * Returns a pointer to the initialized list if successful.
  */
 task_queue_t* queue_init(task_queue_t* list, PRIORITY_LEVEL type) {
     // Have a non-null pointer, and a valid priority type
@@ -87,6 +87,14 @@ void enqueue(task_queue_t* list, PD* task) {
     }
 }
 
+/**
+ * Returns whether task t1 is scheduled later than task t2.
+ * Takes into account the clock overflow state.
+ */
+BOOL later(PD* t1, PD* t2) {
+    return ((t1->clockState != t2->clockState && t1->ttns < t2->ttns) ||
+            (t1->clockState == t2->clockState && t1->ttns > t2->ttns));
+}
 
 /**
  * Inserts a task into the queue respecting time to next start,
@@ -112,7 +120,7 @@ void insert(task_queue_t* list, PD* task) {
 
         // Starting from the front, find the first element that
         // this task should run before
-        while (element != NULL && element->ttns < task->ttns) {
+        while (element != NULL && later(task, element)) {
             element_prev = element;
             element = element->next;
         }
