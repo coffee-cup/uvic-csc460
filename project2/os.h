@@ -5,21 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <avr/io.h>
-#include "process.h"
 #include "common.h"
-
-typedef enum {
-    TIMING_VIOLATION = 1,
-    NO_DEAD_PROCESS = 2,
-    INVALID_REQ_INFO = 3,
-    FAILED_START = 4,
-    NO_REQUEST_INFO = 5,
-    WRONG_TASK_ORDER = 6,
-    INVALID_PRIORITY = 7,
-    PERIODIC_MSG = 8,
-    QUEUEING_ERROR = 9,
-    NULL_TASK_FUNCTION = 10
-} ABORT_CODE;
 
 // Aborts the RTOS and enters a "non-executing" state with an error code. That is, all tasks
 // will be stopped.
