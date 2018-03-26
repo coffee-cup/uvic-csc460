@@ -6,28 +6,30 @@
 #include <util/delay.h>
 
 /*
- * Creating more than MAXTHREAD tasks should not crash
+ * Task for MAXTHREAD test below
  */
-
 void Task_Limit_Test() {
     // Expect the system to recover if too many tasks are created
+    // Need to make sure these tasks die
     _delay_ms(100);
 }
 
+/*
+ * Creating more than MAXTHREADS tasks should not
+ */
 void Task_Create_MaxThread() {
     int i;
     for (i = 0; i < MAXTHREAD + 1; i += 1) {
         Task_Create_RR(Task_Limit_Test, i);
     }
 
-    // Wait for tasks to be run
-    _delay_ms(1100);
+    // Wait for tasks to be run and die
+    _delay_ms(100 * (MAXTHREAD + 1));
 }
 
 /*
  * Creating a task with null function should OS abort
  */
-
 void Task_Create_Null() {
     Task_Create_RR(NULL, 0);
     AssertAborted();
@@ -36,7 +38,6 @@ void Task_Create_Null() {
 /*
  * A system task should run as soon as it is created
  */
-
 void Task_System() {
     add_to_trace('a');
 }

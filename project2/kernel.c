@@ -2,6 +2,7 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include "common.h"
+#include "process.h"
 #include "kernel.h"
 #include "os.h"
 
@@ -176,6 +177,7 @@ void Kernel_Task_Create() {
     if (Tasks >= MAXTHREAD) {
         /* Too many tasks! */
         /* Do not OS Abort because this error should be recoverable according to spec */
+        LOG("WARN: Too many task created\n");
         return;
     }
 

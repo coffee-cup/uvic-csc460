@@ -127,6 +127,23 @@ typedef enum kernel_request_type {
 } KERNEL_REQUEST_TYPE;
 
 /**
+ * This is the set of abort codes, they signify error states, and when the operating
+ * system has aborted, the onboard LED on the Arduino Mega 2650 will blink.
+ */
+typedef enum {
+    TIMING_VIOLATION = 1,
+    NO_DEAD_PROCESS = 2,
+    INVALID_REQ_INFO = 3,
+    FAILED_START = 4,
+    NO_REQUEST_INFO = 5,
+    WRONG_TASK_ORDER = 6,
+    INVALID_PRIORITY = 7,
+    PERIODIC_MSG = 8,
+    QUEUEING_ERROR = 9,
+    NULL_TASK_FUNCTION = 10
+} ABORT_CODE;
+
+/**
  * This struct is used to indirectly pass information within a kernel request
  */
 typedef struct kernel_request_params_type {
