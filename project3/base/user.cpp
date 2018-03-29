@@ -1,49 +1,54 @@
 #include <avr/io.h>
 #include <util/delay.h>
+#include <LiquidCrystal.h>
+#include "Keypad.h"
 
 extern "C" {
     #include "kernel.h"
     #include "os.h"
+    #include "common.h"
     #include "uart.h"
     void create(void);
 }
+
+Keypad pad;
 
 int main(void) {
     Kernel_Begin();
 }
 
-/**
- * A cooperative "Ping" task.
- * Added testing code for LEDs.
- */
-void Ping(void) TASK
-({
-    BIT_FLIP(PORTB, 0);
-})
+void init_io(void) {
+    // 1 = output, 0 = input
+    DDRB = 0xFF;
 
-/**
- * A cooperative "Pong" task.
- * Added testing code for LEDs.
- */
-void Pong(void) TASK
-({
-    BIT_FLIP(PORTB, 1);
-})
+    PORTB = 0xF0;
+}
+
+void LcdUpdate(void) {
+    char buf[16];
+    TICK now;
+
+    pad.clear();
+    for (;;) {
+        now = Now();
+        sprintf(buf, "Tick: %d", now);
+
+        pad.print(Keypad::LCD_ROW::TOP, buf);
+        Task_Next();
+    }
+}
 
 /**
  * This function creates two cooperative tasks, "Ping" and "Pong". Both
  * will run forever.
  */
 void create(void) {
+    init_io();
 
-    // Outputs for LED's
-    BIT_SET(DDRB, 0);
-    BIT_SET(DDRB, 1);
-    BIT_CLR(PORTB, 0);
-    BIT_CLR(PORTB, 1);
+    Task_Create_Period(LcdUpdate, 0, 50, 5, 4);
 
-    Task_Create_Period(Ping, 0, 2, 1, 0);
-    Task_Create_Period(Pong, 0, 2, 1, 1);
+    // Task_Create_Period(Ping, 0, 2, 1, 0);
+    // Task_Create_Period(Pong, 0, 2, 1, 1);
 
     // This function was called by the OS as a System task.
     // If a task executes a return statement it is terminated.
