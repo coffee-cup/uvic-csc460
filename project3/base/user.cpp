@@ -2,16 +2,19 @@
 #include <util/delay.h>
 #include <LiquidCrystal.h>
 #include "Keypad.h"
+#include "Joystick.h"
 
 extern "C" {
     #include "kernel.h"
     #include "os.h"
     #include "common.h"
     #include "uart.h"
+    #include "utils.h"
     void create(void);
 }
 
 Keypad pad;
+Joystick joystick1(15, 14, 0);
 
 int main(void) {
     Kernel_Begin();
@@ -22,6 +25,14 @@ void init_io(void) {
     DDRB = 0xFF;
 
     PORTB = 0xF0;
+}
+
+void joystickUpdate(void) {
+    for (;;) {
+        uint16_t val = joystick1.getX();
+        LOG("%d\n", val);
+        Task_Next();
+    }
 }
 
 void LcdUpdate(void) {
@@ -46,6 +57,7 @@ void create(void) {
     init_io();
 
     Task_Create_Period(LcdUpdate, 0, 50, 5, 4);
+    Task_Create_Period(joystickUpdate, 0, 2, 1, 0);
 
     // Task_Create_Period(Ping, 0, 2, 1, 0);
     // Task_Create_Period(Pong, 0, 2, 1, 1);
