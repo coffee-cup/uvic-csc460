@@ -35,10 +35,10 @@ typedef struct {
 PinDefs pin = {
     .joy1X  = 15,
     .joy1Y  = 14,
-    .joy1SW = 1, // PORTB
+    .joy1SW = 1, // PORTA
     .joy2X  = 12,
     .joy2Y  = 13,
-    .joy2SW = 0 // PORTB
+    .joy2SW = 0 // PORTA
 };
 
 Packet packet(512, 512, 0, 512, 512, 0);
@@ -55,10 +55,6 @@ int main(void) {
 }
 
 void create(void) {
-    // Init io
-    DDRB = 0xFF;
-    PORTB = 0xF0;
-
     // Create tasks
     Task_Create_Period(updatePacket, 0, UPDATE_PACKET_PERIOD, UPDATE_PACKET_WCET, UPDATE_PACKET_DELAY);
     Task_Create_Period(updateLcd,    0, UPDATE_LCD_PERIOD,    UPDATE_LCD_WCET,    UPDATE_LCD_DELAY);

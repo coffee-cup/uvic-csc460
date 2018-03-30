@@ -7,6 +7,10 @@ extern "C" {
 Keypad::Keypad() : lcd(8, 9, 4, 5, 6, 7) {
     analog_init();
 
+    // Set top 4 bits of PORTB as output
+    MASK_SET(DDRB, 0xF0);
+    MASK_SET(PORTB, 0xF0);
+
     lcd.begin(16, 2);
     lcd.setCursor(0, 0);
     lcd.clear();

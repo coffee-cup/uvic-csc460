@@ -9,8 +9,11 @@ Joystick::Joystick(uint8_t pinForX, uint8_t pinForY, uint8_t pinForClick)
     // They might already be initialized but thats fine
     analog_init();
 
-    // Set switch pin on PORTB to input
-    BIT_CLR(DDRB, this->pinSW);
+    // Set switch pin on PORTA to input
+    BIT_CLR(DDRA, this->pinSW);
+
+    // Pull up resistor
+    BIT_SET(PORTA, this->pinSW);
 }
 
 uint16_t Joystick::reduceRange(uint16_t value) {
@@ -43,6 +46,6 @@ uint16_t Joystick::getY() {
 }
 
 uint8_t Joystick::getClick() {
-    this->rawSW = BIT_TEST(PORTB, this->pinSW);
+    this->rawSW = !BIT_TEST(PINA, this->pinSW);
     return this->rawSW;
 }
