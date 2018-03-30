@@ -14,7 +14,6 @@ long constrain_u(long x, long min, long max);
 void analog_init();
 
 // Reads an analog signal from a channel
-uint16_t analog_read(int channel);
-
+uint16_t analog_read(uint8_t channel);
 
 #endif

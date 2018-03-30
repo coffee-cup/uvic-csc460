@@ -5,9 +5,12 @@ Joystick::Joystick(uint8_t pinForX, uint8_t pinForY, uint8_t pinForClick)
       pinY(pinForY),
       pinSW(pinForClick) {
 
+    // Init all analog pins
+    // They might already be initialized but thats fine
     analog_init();
 
-    // pinMode(this->pinSW, INPUT_PULLUP);
+    // Set switch pin on PORTB to input
+    BIT_CLR(DDRB, this->pinSW);
 }
 
 uint16_t Joystick::reduceRange(uint16_t value) {
@@ -40,7 +43,6 @@ uint16_t Joystick::getY() {
 }
 
 uint8_t Joystick::getClick() {
-    // this->rawSW = !digitalRead(this->pinSW);
-    // return this->rawSW;
-    return 0;
+    this->rawSW = BIT_TEST(PORTB, this->pinSW);
+    return this->rawSW;
 }

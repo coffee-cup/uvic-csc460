@@ -10,11 +10,10 @@ long constrain_u(long x, long min, long max) {
     return x;
 }
 
+/*
+ * Use ADC on the board
+ */
 void analog_init() {
-    /*
-     * Use ADC on the board
-     */
-
     // Configure analog inputs using ADC
     BIT_SET(ADCSRA, ADPS2);
     BIT_SET(ADCSRA, ADPS1);
@@ -34,11 +33,9 @@ void analog_init() {
 
     // Set PORTC to input for the switch
     PORTC = 0xFF;
-
 }
 
-// Reads an analog signal from a channel
-uint16_t analog_read(int channel) {
+uint16_t analog_read(uint8_t channel) {
     /* We're using Single Ended input for our ADC readings, this requires some
      * work to correctly set the mux values between the ADMUX and ADCSRB registers.
      * ADMUX contains the four LSB of the multiplexer, while the fifth bit is kept

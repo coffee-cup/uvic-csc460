@@ -8,9 +8,8 @@ extern "C" {
     #include "utils.h"
 }
 
-
 class Joystick {
-  protected:
+ protected:
     const uint8_t pinX;
     const uint8_t pinY;
     const uint8_t pinSW;
@@ -21,7 +20,7 @@ class Joystick {
     static const uint16_t MAX_ADC  = 1023;
     static const uint16_t DEADBAND = 20;
 
-  public:
+ public:
     Joystick(uint8_t pinX, uint8_t pinY, uint8_t pinSW);
 
     uint16_t rawX;
