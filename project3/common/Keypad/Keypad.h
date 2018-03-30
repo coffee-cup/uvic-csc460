@@ -4,6 +4,10 @@
 #include <Arduino.h>
 #include <LiquidCrystal.h>
 
+extern "C" {
+    #include "utils.h"
+}
+
 class Keypad {
   public:
     enum LCD_ROW {

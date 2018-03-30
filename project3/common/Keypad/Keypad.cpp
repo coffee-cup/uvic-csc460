@@ -88,7 +88,7 @@ void Keypad::clear(LCD_ROW row) {
 }
 
 Keypad::BUTTON Keypad::pollButtons() {
-    unsigned int adcValue = analogRead(0);
+    unsigned int adcValue = analog_read(0);
 
     if (adcValue > 1000) return (lastButton = Keypad::BUTTON::BUTTON_NONE);
     if (adcValue < 50)   return (lastButton = Keypad::BUTTON::BUTTON_RIGHT);
