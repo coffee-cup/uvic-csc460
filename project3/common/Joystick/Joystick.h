@@ -17,7 +17,6 @@ class Joystick {
 
 
     uint16_t reduceRange(uint16_t value);
-    uint16_t analogRead(uint16_t channel);
 
     static const uint16_t MAX_ADC  = 1023;
     static const uint16_t DEADBAND = 20;

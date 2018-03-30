@@ -72,7 +72,7 @@ Keypad::Keypad() : lcd(8, 9, 4, 5, 6, 7) {
     lcd.createChar(7, delta);
 }
 
-void Keypad::print(LCD_ROW row, char* text, bool resetCursor = true) {
+void Keypad::print(LCD_ROW row, char* text, bool resetCursor) {
     if (resetCursor) lcd.setCursor(0, row);
     lcd.print(text);
 }
