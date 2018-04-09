@@ -1,104 +1,118 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>      // ISR handling.
-#include <stdio.h>
+#include <stdio.h>              // vsnprintf
 #include "../os/common.h"
 #include "../os/os.h"
 #include "uart.h"
 
-bool uart0_initialized = FALSE;
-bool uart1_initialized = FALSE;
+#define CHAN_OK(chan) (chan >= 0 && chan < 4)
 
-void UART_Init0(uint32_t baud_rate) {
-    if (uart0_initialized) {
+bool uart_initialized[4] = {FALSE, FALSE, FALSE, FALSE};
+volatile uint16_t* UBRRn[4] = {&UBRR0, &UBRR1, &UBRR2, &UBRR3};
+volatile uint8_t*  UCSRnA[4] = {&UCSR0A, &UCSR1A, &UCSR2A, &UCSR3A};
+volatile uint8_t*  UCSRnB[4] = {&UCSR0B, &UCSR1B, &UCSR2B, &UCSR3B};
+volatile uint8_t*  UDRn[4]   = {&UDR0,   &UDR1,   &UDR2,   &UDR3  };
+
+uint8_t TXENn[4] = {TXEN0, TXEN1, TXEN2, TXEN3};
+uint8_t RXENn[4] = {RXEN0, RXEN1, RXEN2, RXEN3};
+uint8_t RXCn[4]  = {RXC0,  RXC1,  RXC2,  RXC3};
+uint8_t UDREn[4] = {UDRE0, UDRE1, UDRE2, UDRE3};
+
+uint32_t current_bauds[4] = {0, 0, 0, 0};
+
+
+void UART_Init(uint8_t chan, uint32_t baud_rate) {
+    if (!CHAN_OK(chan)) {
+        // Bad channel
         return;
     }
-    uart0_initialized = TRUE;
 
-	// Set baud rate
-	UBRR0 = MYBRR(baud_rate);
-	// Enable receiver and transmitter
-	UCSR0B = _BV(TXEN0) | _BV(RXEN0);
-	// Default frame format: 8 data, 1 stop bit , no parity
-}
-
-void UART_Init1(uint32_t baud_rate) {
-    if (uart1_initialized) {
+    // Request to change baud rate?
+    if (baud_rate == current_bauds[chan]) {
+        // Baud is unchanged
         return;
     }
-    uart1_initialized = TRUE;
 
-	// Set baud rate
-	UBRR2 = MYBRR(baud_rate);
-	// Enable receiver and transmitter
-	UCSR2B = _BV(TXEN2) | _BV(RXEN2);
-	// Default frame format: 8 data, 1 stop bit , no parity
+    uart_initialized[chan] = TRUE;
+    *UBRRn[chan] = MYBRR(baud_rate);
+    *UCSRnB[chan] = _BV(TXENn[chan]) | _BV(RXENn[chan]);
 }
 
-void UART_Transmit0(unsigned char data) {
-	// Busy wait for empty transmit buffer
-	while (!(UCSR0A & _BV(UDRE0)))
-		;
-	// Put data into buffer, sends the data
-	UDR0 = data;
+
+void UART_Transmit(uint8_t chan, uint8_t byte) {
+    if (!CHAN_OK(chan) || !uart_initialized[chan]) {
+        // Bad channel or not initialized
+        return;
+    }
+
+    // Busy wait for empty transmit buffer
+    while (!((*UCSRnA[chan]) & _BV(UDREn[chan])))
+    ;
+    // Put data into buffer, sends the data
+    *UDRn[chan] = byte;
 }
 
-void UART_Transmit1(unsigned char data) {
-	// Busy wait for empty transmit buffer
-	while (!(UCSR2A & _BV(UDRE2)))
-		;
-	// Put data into buffer, sends the data
-	UDR2 = data;
+
+uint8_t UART_Receive(uint8_t chan) {
+    if (!CHAN_OK(chan) || !uart_initialized[chan]) {
+        // Bad channel or not initialized
+        return -1;
+    }
+
+    // Busy wait for data to be received
+    while (!((*UCSRnA[chan]) & _BV(RXCn[chan])))
+    ;
+
+    // Get and return received data from buffer
+    return *UDRn[chan];
 }
 
-unsigned char UART_Receive0() {
-	// Busy wait for data to be received
-	while (!(UCSR0A & _BV(RXC0)))
-		;
-	// Get and return received data from buffer
-	return UDR0 ;
+
+int8_t UART_Async_Receive(uint8_t chan, uint8_t* out) {
+    if (!CHAN_OK(chan) || !uart_initialized[chan]) {
+        // Bad channel or not initialized
+        return -1;
+    }
+
+    if ((*UCSRnA[chan]) & _BV(RXCn[chan])) {
+        *out = *UDRn[chan];
+        return 0;
+    }
+
+    return -1;
 }
 
-unsigned char UART_Receive1() {
-	// Busy wait for data to be received
-	while (!(UCSR2A & _BV(RXC2)))
-		;
-	// Get and return received data from buffer
-	return UDR2 ;
+void UART_print(uint8_t chan, const char* fmt, ...) {
+    if (!CHAN_OK(chan) || !uart_initialized[chan]) {
+        // Bad channel or not initialized
+        return;
+    }
+
+    uint16_t old_sreg = SREG;
+    cli();
+
+    uint8_t buffer[TX_BUFFER_SIZE];
+    size_t size;
+    va_list args;
+
+    va_start(args, fmt);
+    size = vsnprintf((char*)buffer, sizeof(buffer), fmt, args);
+    va_end(args);
+
+    UART_send_raw_bytes(chan, size, buffer);
+
+    SREG = old_sreg;
 }
 
-int8_t UART_Receive1_Non_Blocking() {
-	if (UCSR2A & _BV(RXC2)) {
-		return UDR2;
-	}
-	return -1;
-}
 
-void UART_print(const char* fmt, ...) {
-	uint16_t sreg = SREG;
-	cli();
-	char buffer[TX_BUFFER_SIZE];
-	va_list args;
-	size_t size;
+void UART_send_raw_bytes(uint8_t chan, const uint8_t num_bytes, const uint8_t* data) {
+    if (!CHAN_OK(chan) || !uart_initialized[chan]) {
+        // Bad channel or not initialized
+        return;
+    }
 
-	va_start(args, fmt);
-	size = vsnprintf(buffer, sizeof(buffer), fmt, args);
-	va_end(args);
-
-	// Error case: do not output to UART
-	if (size < 0) {
-		return;
-	}
-
-	uint8_t i = 0;
-	while (i < size) {
-		UART_Transmit0(buffer[i++]);
-	}
-	SREG = sreg;
-}
-
-void UART_send_raw_bytes(const uint8_t num_bytes, const uint8_t* data) {
-	uint8_t i;
-	for (i = 0; i < num_bytes; i++) {
-		UART_Transmit0(data[i]);
-	}
+    uint8_t i;
+    for (i = 0; i < num_bytes; i++) {
+        UART_Transmit(chan, data[i]);
+    }
 }

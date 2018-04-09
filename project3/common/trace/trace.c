@@ -25,13 +25,9 @@ void clear_trace(void) {
 
 // Prints all the elements of the trace to UART
 void print_trace(void) {
-    UART_Init0(LOGBAUD);
-
-    int i;
-    for (i = 0; i < trace_counter; i += 1) {
-        UART_Transmit0(trace_array[i]);
-    }
-    UART_Transmit0('\n');
+    UART_Init(0, LOGBAUD);
+    UART_send_raw_bytes(0, trace_counter, trace_array);
+    UART_Transmit(0, '\n');
 }
 
 // Compares an array with the trace

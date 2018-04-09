@@ -6,7 +6,7 @@
 #define Assert(expr)                     \
 {                                        \
     if (!(expr)) {                       \
-        UART_print(                      \
+        LOG(                             \
             "Assert Failed! "            \
             "%s : %d\n",                 \
             __FILE__, __LINE__);         \
@@ -19,7 +19,7 @@
     if (MASK_TEST_ALL(PORTE, 0x0F)) {    \
         MASK_CLR(PORTE, 0x0F);           \
     } else {                             \
-        UART_print(                      \
+        LOG(                             \
             "Abort assertion failed "    \
             "at %s : %d\n",              \
             __FILE__, __LINE__);         \

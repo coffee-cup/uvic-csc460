@@ -1,24 +1,16 @@
 #include <avr/io.h>
 #include <util/delay.h>
-#include "os.h"
-#include "kernel.h"
-#include "common.h"
 
-#ifdef RUN_TESTS
-    #include "trace.h"
-    #include "tests.h"
+extern "C" {
+    #include "kernel.h"
+    #include "os.h"
+    #include "uart.h"
+    void create(void);
+}
 
-    /*
-    * Runs the tests
-    */
-    void run_tests(void) {
-        Test_Suite(TEST_ALL);
-
-        // Do not go to idle
-        for (;;) {}
-    }
-
-#endif
+int main(void) {
+    Kernel_Begin();
+}
 
 /**
  * A cooperative "Ping" task.
@@ -27,6 +19,7 @@
 void Ping(void) TASK
 ({
     BIT_FLIP(PORTB, 0);
+    UART_print(0, "Ping\n");
 })
 
 /**
@@ -36,13 +29,14 @@ void Ping(void) TASK
 void Pong(void) TASK
 ({
     BIT_FLIP(PORTB, 1);
+    UART_print(3, "Pong\n");
 })
 
 /**
  * This function creates two cooperative tasks, "Ping" and "Pong". Both
  * will run forever.
  */
-void setup(void) {
+void create(void) {
 
     // Outputs for LED's
     BIT_SET(DDRB, 0);
@@ -50,15 +44,14 @@ void setup(void) {
     BIT_CLR(PORTB, 0);
     BIT_CLR(PORTB, 1);
 
-    #ifdef RUN_TESTS
-        Task_Create_RR(run_tests, 0);
-    #else
-        Task_Create_Period(Ping, 0, 2, 1, 0);
-        Task_Create_Period(Pong, 0, 2, 1, 1);
-    #endif
+    UART_Init(0, LOGBAUD);
+    UART_Init(3, LOGBAUD);
+    Task_Create_Period(Ping, 0, 200, 1, 0);
+    Task_Create_Period(Pong, 0, 200, 1, 1);
 
     // This function was called by the OS as a System task.
     // If a task executes a return statement it is terminated.
     // Could also call Kernel_Request(TERMINATE) here.
+
     return;
 }

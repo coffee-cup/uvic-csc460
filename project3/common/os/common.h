@@ -38,8 +38,8 @@
 #define LOG(...)                         \
     {                                    \
         if (DEBUG) {                     \
-            UART_Init0(LOGBAUD);         \
-            UART_print(__VA_ARGS__);     \
+            UART_Init(0, LOGBAUD);       \
+            UART_print(0, __VA_ARGS__);  \
         }                                \
     }
 
