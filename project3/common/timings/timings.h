@@ -7,8 +7,8 @@
 #define UPDATE_PACKET_WCET 1
 #define UPDATE_PACKET_DELAY 0
 
-#define SEND_PACKET_PERIOD 5
-#define SEND_PACKET_WCET 1
+#define SEND_PACKET_PERIOD 200
+#define SEND_PACKET_WCET 2
 #define SEND_PACKET_DELAY 1
 
 #define UPDATE_LCD_PERIOD 50
@@ -17,9 +17,9 @@
 
 // Remote Station
 
-#define GET_DATA_PERIOD 50
-#define GET_DATA_WCET 1
-#define GET_DATA_DELAY 0
+#define GET_DATA_PERIOD 200
+#define GET_DATA_WCET 4
+#define GET_DATA_DELAY 1
 
 #define UPDATE_ARM_PERIOD 50
 #define UPDATE_ARM_WCET 1

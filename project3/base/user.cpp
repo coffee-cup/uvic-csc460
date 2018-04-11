@@ -48,6 +48,7 @@ Joystick joystick1(pin.joy1X, pin.joy1Y, pin.joy1SW);
 Joystick joystick2(pin.joy2X, pin.joy2Y, pin.joy2SW);
 
 void updatePacket(void);
+void sendPacket(void);
 void updateLcd(void);
 
 int main(void) {
@@ -56,8 +57,9 @@ int main(void) {
 
 void create(void) {
     // Create tasks
-    Task_Create_Period(updatePacket, 0, UPDATE_PACKET_PERIOD, UPDATE_PACKET_WCET, UPDATE_PACKET_DELAY);
-    Task_Create_Period(updateLcd,    0, UPDATE_LCD_PERIOD,    UPDATE_LCD_WCET,    UPDATE_LCD_DELAY);
+    // Task_Create_Period(updatePacket, 0, UPDATE_PACKET_PERIOD, UPDATE_PACKET_WCET, UPDATE_PACKET_DELAY);
+    Task_Create_Period(sendPacket,   0, SEND_PACKET_PERIOD,   SEND_PACKET_WCET,   SEND_PACKET_DELAY);
+    // Task_Create_Period(updateLcd,    0, UPDATE_LCD_PERIOD,    UPDATE_LCD_WCET,    UPDATE_LCD_DELAY);
 
     return;
 }
@@ -70,6 +72,23 @@ void updatePacket() {
         packet.field.joy2X  = joystick2.getX();
         packet.field.joy2Y  = joystick2.getY();
         packet.field.joy2SW = joystick2.getClick() == HIGH ? 0xFF : 0x00;
+
+        Task_Next();
+    }
+}
+
+void sendPacket() {
+    uint8_t channel = 1;
+    UART_Init(channel, 38400);
+
+    for (;;) {
+        if (UART_Writable(channel)) {
+            UART_Transmit(channel, 6);
+            // UART_Transmit(channel, PACKET_MAGIC);
+            // for (int i = 0; i < PACKET_SIZE; i += 1) {
+            //     UART_Transmit(channel, packet.data[i]);
+            // }
+        }
 
         Task_Next();
     }
