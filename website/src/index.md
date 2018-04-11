@@ -6,6 +6,7 @@ This site is for **Group 7** of the UVic class _CSC 460: Design and Analysis of 
 
 - [Project 1](/project1): Intro to hardware components
 - [Project 2](/project2): Real time operating system
+- [Project 3](/project3): Command and Control Game
 
 ## Team Members
 
