@@ -10,9 +10,6 @@
                 "${env:ARDUINO_DIR}/hardware/arduino/avr/cores/arduino",
                 "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
                 "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
-                "${workspaceRoot}/project2/libs/tests",
-                "${workspaceRoot}/project2/libs/uart",
-                "${workspaceRoot}/project2/libs/trace",
                 "${workspaceRoot}"
             ],
             "defines": [
@@ -29,9 +26,6 @@
                     "${env:ARDUINO_DIR}/hardware/arduino/avr/cores/arduino",
                     "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
                     "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
-                    "${workspaceRoot}/project2/libs/tests",
-                    "${workspaceRoot}/project2/libs/uart",
-                    "${workspaceRoot}/project2/libs/trace",
                     "${workspaceRoot}"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
@@ -52,9 +46,6 @@
                 "${env:ARDUINO_DIR}/hardware/arduino/avr/cores/arduino",
                 "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
                 "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
-                "${workspaceRoot}/project2/libs/tests",
-                "${workspaceRoot}/project2/libs/uart",
-                "${workspaceRoot}/project2/libs/trace",
                 "${workspaceRoot}"
             ],
             "defines": [
@@ -71,9 +62,6 @@
                     "${env:ARDUINO_DIR}/hardware/arduino/avr/cores/arduino",
                     "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
                     "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
-                    "${workspaceRoot}/project2/libs/tests",
-                    "${workspaceRoot}/project2/libs/uart",
-                    "${workspaceRoot}/project2/libs/trace",
                     "${workspaceRoot}"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
@@ -88,10 +76,11 @@
                 "${env:ARDUINO_DIR}/hardware/arduino/avr/cores/arduino",
                 "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
                 "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
-                "${workspaceRoot}/project2/libs/tests",
-                "${workspaceRoot}/project2/libs/tests/cases",
-                "${workspaceRoot}/project2/libs/uart",
-                "${workspaceRoot}/project2/libs/trace",
+                "${workspaceRoot}/project3/common/tests",
+                "${workspaceRoot}/project3/common/uart",
+                "${workspaceRoot}/project3/common/kernel",
+                "${workspaceRoot}/project3/common/os",
+                "${workspaceRoot}/project3/common/Roomba",
                 "${workspaceRoot}"
             ],
             "defines": [
@@ -109,9 +98,11 @@
                     "${env:ARDUINO_DIR}/hardware/arduino/avr/cores/arduino",
                     "${env:ARDUINO_DIR}/hardware/arduino/avr/variants/mega",
                     "${env:ARDUINO_DIR}/hardware/tools/avr/lib/gcc/avr/4.9.2/include",
-                    "${workspaceRoot}/project2/libs/tests",
-                    "${workspaceRoot}/project2/libs/uart",
-                    "${workspaceRoot}/project2/libs/trace",
+                    "${workspaceRoot}/project3/common/tests",
+                    "${workspaceRoot}/project3/common/uart",
+                    "${workspaceRoot}/project3/common/kernel",
+                    "${workspaceRoot}/project3/common/os",
+                    "${workspaceRoot}/project3/common/Roomba",
                     "${workspaceRoot}"
                 ],
                 "limitSymbolsToIncludedHeaders": true,

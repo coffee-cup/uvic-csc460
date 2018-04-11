@@ -140,7 +140,8 @@ typedef enum {
     INVALID_PRIORITY = 7,
     PERIODIC_MSG = 8,
     QUEUEING_ERROR = 9,
-    NULL_TASK_FUNCTION = 10
+    NULL_TASK_FUNCTION = 10,
+    UART_ERROR = 11
 } ABORT_CODE;
 
 /**
