@@ -871,10 +871,12 @@ int Kernel_Begin(void) {
     BIT_SET(DDRB, 6);
     BIT_SET(PORTB, 6);
 
-    // Debug pins
+    // Idle pin
     BIT_SET(DDRD, 0);
-    BIT_SET(DDRD, 1);
     BIT_CLR(PORTD, 0);
+
+    // Debug pin
+    BIT_SET(DDRD, 1);
     BIT_CLR(PORTD, 1);
 
     Kernel_Init();
