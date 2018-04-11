@@ -7,20 +7,20 @@
 #define Test_Case(m, mask, name, fn) \
     { \
         if ((m & mask) == mask) { \
-            UART_print("Starting %s test...\n", name); \
+            LOG("Starting %s test...\n", name); \
             BIT_SET(PORTD, 1); \
             fn(); \
             Check_PortE(); \
             BIT_CLR(PORTD, 1); \
-            UART_print("%s test complete\n", name); \
+            LOG("%s test complete\n", name); \
         } \
     }
 
 void Check_PortE() {
     // If Port E is not 0x00 then a test has failed
     if (PORTE != 0x00) {
-        UART_print("PORTE not 0x00\n");
-        UART_print("TESTS FAILED!\n");
+        LOG("PORTE not 0x00\n");
+        LOG("TESTS FAILED!\n");
         for (;;) {}
     }
 }
@@ -41,11 +41,9 @@ void Test_Suite(TEST_MASKS mask) {
     DDRE  = 0xFF;
     PORTE = 0;
 
-    UART_Init0(LOGBAUD);
-
     // Raise PD0 while any tests are active
     BIT_SET(PORTD, 0);
-    UART_print("Starting tests...\n");
+    LOG("Starting tests...\n");
 
     Test_Case(mask, TEST_QUEUE, "Queue", Task_Queue_Test);
     Test_Case(mask, TEST_MSG, "Msg", Msg_Test);
@@ -59,5 +57,5 @@ void Test_Suite(TEST_MASKS mask) {
     // Set PD0 back to low
     BIT_CLR(PORTD, 0);
 
-    UART_print("All Tests passed!\n");
+    LOG("All Tests passed!\n");
 }

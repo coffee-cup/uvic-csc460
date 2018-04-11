@@ -1,24 +1,12 @@
 #include <avr/io.h>
 #include <util/delay.h>
+#include "uart.h"
 #include "os.h"
-#include "kernel.h"
-#include "common.h"
+#include "../common/os/kernel.h"
 
-#ifdef RUN_TESTS
-    #include "trace.h"
-    #include "tests.h"
-
-    /*
-    * Runs the tests
-    */
-    void run_tests(void) {
-        Test_Suite(TEST_ALL);
-
-        // Do not go to idle
-        for (;;) {}
-    }
-
-#endif
+int main(void) {
+    Kernel_Begin();
+}
 
 /**
  * A cooperative "Ping" task.
@@ -42,7 +30,7 @@ void Pong(void) TASK
  * This function creates two cooperative tasks, "Ping" and "Pong". Both
  * will run forever.
  */
-void setup(void) {
+void create(void) {
 
     // Outputs for LED's
     BIT_SET(DDRB, 0);
@@ -50,12 +38,8 @@ void setup(void) {
     BIT_CLR(PORTB, 0);
     BIT_CLR(PORTB, 1);
 
-    #ifdef RUN_TESTS
-        Task_Create_RR(run_tests, 0);
-    #else
-        Task_Create_Period(Ping, 0, 2, 1, 0);
-        Task_Create_Period(Pong, 0, 2, 1, 1);
-    #endif
+    Task_Create_Period(Ping, 0, 2, 1, 0);
+    Task_Create_Period(Pong, 0, 2, 1, 1);
 
     // This function was called by the OS as a System task.
     // If a task executes a return statement it is terminated.
