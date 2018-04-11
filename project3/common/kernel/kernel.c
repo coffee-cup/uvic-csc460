@@ -866,7 +866,7 @@ void Kernel_Request(KERNEL_REQUEST_PARAMS* info) {
     }
 }
 
-int Kernel_Begin(void) {
+int main(void) {
     // Clock pin
     BIT_SET(DDRB, 6);
     BIT_SET(PORTB, 6);

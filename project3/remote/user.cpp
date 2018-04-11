@@ -6,7 +6,8 @@
 #include "Motor.h"
 
 Arm arm;
-Joystick joy(15, 14, 3);
+Joystick joy1(15, 14, 2);
+Joystick joy2(13, 12, 3);
 
 extern "C" {
     #include "kernel.h"
@@ -16,25 +17,33 @@ extern "C" {
     void create(void);
 }
 
-int main(void) {
-    Kernel_Begin();
-}
-
+// Weak attribute allows other functions to redefine
+// We want kernel main to be the actual main
+DELEGATE_MAIN()
 
 /**
  * A simple task to move a Roomba on the spot.
  */
 void Move(void) TASK ({
-    BIT_FLIP(PORTB, 0);
-    arm.setSpeedX(Arm::filterSpeed(joy.getX()));
-    arm.setSpeedY(Arm::filterSpeed(joy.getY()));
+    arm.setSpeedX(Arm::filterSpeed(joy1.getX()));
+    arm.setSpeedY(Arm::filterSpeed(joy2.getY()));
 })
 
 
-void Tick(void) TASK({
-    BIT_FLIP(PORTB, 1);
-    arm.tick();
-})
+void Tick(void) {
+    // 30 seconds === 30000 ms
+    uint32_t numLaserTicks = 30000 / MSECPERTICK;
+
+    TASK({
+        arm.tick();
+        if (joy1.getClick() && numLaserTicks > 1) {
+            BIT_SET(PORTC, 0);
+            numLaserTicks -= 2;
+        } else {
+            BIT_CLR(PORTC, 0);
+        }
+    })
+}
 
 /**
  * This function creates two cooperative tasks, "Ping" and "Pong". Both
@@ -45,9 +54,11 @@ void create(void) {
     // Outputs for Tasks's
     BIT_SET(DDRB, 0);
     BIT_SET(DDRB, 1);
+    BIT_SET(DDRC, 0); // Laser
 
     BIT_CLR(PORTB, 0);
     BIT_CLR(PORTB, 1);
+    BIT_CLR(PORTC, 0);
 
     arm.attach(2, 3);
 
