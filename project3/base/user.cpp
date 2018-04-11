@@ -57,7 +57,7 @@ int main(void) {
 
 void create(void) {
     // Create tasks
-    // Task_Create_Period(updatePacket, 0, UPDATE_PACKET_PERIOD, UPDATE_PACKET_WCET, UPDATE_PACKET_DELAY);
+    Task_Create_Period(updatePacket, 0, UPDATE_PACKET_PERIOD, UPDATE_PACKET_WCET, UPDATE_PACKET_DELAY);
     Task_Create_Period(sendPacket,   0, SEND_PACKET_PERIOD,   SEND_PACKET_WCET,   SEND_PACKET_DELAY);
     // Task_Create_Period(updateLcd,    0, UPDATE_LCD_PERIOD,    UPDATE_LCD_WCET,    UPDATE_LCD_DELAY);
 
@@ -83,11 +83,10 @@ void sendPacket() {
 
     for (;;) {
         if (UART_Writable(channel)) {
-            UART_Transmit(channel, 6);
-            // UART_Transmit(channel, PACKET_MAGIC);
-            // for (int i = 0; i < PACKET_SIZE; i += 1) {
-            //     UART_Transmit(channel, packet.data[i]);
-            // }
+            UART_Transmit(channel, PACKET_MAGIC);
+            for (int i = 0; i < PACKET_SIZE; i += 1) {
+                UART_Transmit(channel, packet.data[i]);
+            }
         }
 
         Task_Next();

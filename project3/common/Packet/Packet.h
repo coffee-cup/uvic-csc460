@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#define PACKET_MAGIC 0xF3
+#define PACKET_MAGIC 0x41
 #define TO16BIT(h, l) (h << 8 | l)
 #define PACKET_SIZE 10
 

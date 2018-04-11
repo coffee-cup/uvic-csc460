@@ -67,30 +67,26 @@ void getData() {
     UART_Init(channel, 38400);
 
     for (;;) {
-        int bytesAvailable = UART_Available(channel);
-        // LOG("%d\n", bytesAvailable);
-
-        if (bytesAvailable > 0) {
+        if (UART_Available(channel)) {
             uint8_t r = UART_Receive(channel);
-            LOG("%d\n", r);
 
             // If the first byte isn't magic, don't attempt to read a packet
-            // if (r == PACKET_MAGIC && bytesAvailable >= PACKET_SIZE + 1) {
-            //     uint8_t packet_buf[PACKET_SIZE];
+            if (r == PACKET_MAGIC) {
+                uint8_t packet_buf[PACKET_SIZE];
 
-            //     // Read in a packet and check its size
-            //     int i;
-            //     for (i = 0; i < PACKET_SIZE; i += 1) {
-            //         packet_buf[i] = UART_Receive(channel);
-            //     }
-            //     packet = Packet(packet_buf);
-            //     LOG("%d\n", packet.field.joy1X);
+                // Read in a packet and check its size
+                int i;
+                for (i = 0; i < PACKET_SIZE; i += 1) {
+                    packet_buf[i] = UART_Receive(channel);
+                }
+                packet = Packet(packet_buf);
+                LOG("%d\n", packet.field.joy1X);
 
-            //     // Read and discard anything else available
-            //     for (i = 0; i < bytesAvailable - 1 - PACKET_SIZE; i += 1) {
-            //         UART_Receive(channel);
-            //     }
-            // }
+                // Read and discard anything else available
+                while (UART_Available(channel)) {
+                    UART_Receive(channel);
+                }
+            }
         }
 
         Task_Next();

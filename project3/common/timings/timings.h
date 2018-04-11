@@ -17,7 +17,7 @@
 
 // Remote Station
 
-#define GET_DATA_PERIOD 200
+#define GET_DATA_PERIOD 400
 #define GET_DATA_WCET 4
 #define GET_DATA_DELAY 1
 
