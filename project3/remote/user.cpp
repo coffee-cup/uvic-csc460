@@ -5,9 +5,13 @@
 #include "Joystick.h"
 #include "Motor.h"
 
+#include "Packet.h"
+
 Arm arm;
 Joystick joy1(15, 14, 2);
 Joystick joy2(13, 12, 3);
+
+Packet packet(512, 512, 0, 512, 512, 0);
 
 extern "C" {
     #include "kernel.h"
@@ -22,15 +26,17 @@ extern "C" {
 DELEGATE_MAIN()
 
 /**
- * A simple task to move a Roomba on the spot.
+ *
  */
-void Move(void) TASK ({
-    arm.setSpeedX(Arm::filterSpeed(joy1.getX()));
-    arm.setSpeedY(Arm::filterSpeed(joy2.getY()));
+void UpdateArm(void) TASK ({
+    arm.setSpeedX(Arm::filterSpeed(packet.joy1X()));
+    arm.setSpeedY(Arm::filterSpeed(packet.joy1Y()));
 })
 
-
-void Tick(void) {
+/**
+ *
+ */
+void TickArm(void) {
     // 30 seconds === 30000 ms
     uint32_t numLaserTicks = 30000 / MSECPERTICK;
 
@@ -45,9 +51,34 @@ void Tick(void) {
     })
 }
 
+void RXData(void) {
+    uint8_t data_channel = 2;
+    uint8_t buffer[PACKET_SIZE];
+    uint8_t byte, i;
+    UART_Init(data_channel, 38400);
+
+    TASK({
+        i += 1;
+        if (UART_BytesAvailable(data_channel, 2)) {
+            if (UART_Async_Receive(data_channel, &byte)) {
+                if (byte == HIGH_BYTE(PACKET_MAGIC)) {
+                    i += 1;
+                    if (UART_Async_Receive(data_channel, &byte)) {
+                        if (byte == LOW_BYTE(PACKET_MAGIC)) {
+                            LOG(">>>> PM after %d tries\n", i);
+                            i = 0;
+                        } else {
+                            LOG("<< Not magic\n");
+                        }
+                    }
+                }
+            }
+        }
+    })
+}
+
 /**
- * This function creates two cooperative tasks, "Ping" and "Pong". Both
- * will run forever.
+ *
  */
 void create(void) {
 
@@ -62,8 +93,9 @@ void create(void) {
 
     arm.attach(2, 3);
 
-    Task_Create_Period(Tick, 0, 2, 1, 2);
-    Task_Create_Period(Move, 0, 10, 2, 1);
+    Task_Create_Period(RXData, 0, 10, 5, 1);
+    // Task_Create_Period(TickArm, 0, 2, 1, 2);
+    // Task_Create_Period(UpdateArm, 0, 10, 2, 5);
 
 
     // This function was called by the OS as a System task.
