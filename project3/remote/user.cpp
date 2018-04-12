@@ -3,6 +3,14 @@
 #include "Roomba.h"
 #include "Packet.h"
 
+#include "Arm.h"
+#include "Joystick.h"
+#include "Motor.h"
+
+Arm arm;
+Joystick joy1(15, 14, 2);
+Joystick joy2(13, 12, 3);
+
 extern "C" {
     #include "kernel.h"
     #include "os.h"
@@ -53,17 +61,49 @@ int main(void) {
     Kernel_Begin();
 }
 
+// Weak attribute allows other functions to redefine
+// We want kernel main to be the actual main
+DELEGATE_MAIN()
+
+/**
+ * A simple task to move a Roomba on the spot.
+ */
+void Move(void) TASK ({
+    arm.setSpeedX(Arm::filterSpeed(joy1.getX()));
+    arm.setSpeedY(Arm::filterSpeed(joy2.getY()));
+})
+
+
+void Tick(void) {
+    // 30 seconds === 30000 ms
+    uint32_t numLaserTicks = 30000 / MSECPERTICK;
+
+    TASK({
+        arm.tick();
+        if (joy1.getClick() && numLaserTicks > 1) {
+            BIT_SET(PORTC, 0);
+            numLaserTicks -= 2;
+        } else {
+            BIT_CLR(PORTC, 0);
+        }
+    })
+}
+
 void create(void) {
 
     // Outputs for Tasks's
     BIT_SET(DDRB, 0);
     BIT_SET(DDRB, 1);
+    BIT_SET(DDRC, 0); // Laser
+
     BIT_CLR(PORTB, 0);
     BIT_CLR(PORTB, 1);
+    BIT_CLR(PORTC, 0);
 
-    if (!roomba.init()) {
-        OS_Abort(FAILED_START);
-    }
+    arm.attach(2, 3);
+
+    Task_Create_Period(Tick, 0, 2, 1, 2);
+    Task_Create_Period(Move, 0, 10, 2, 1);
 
     // Task_Create_Period(getData, 0, GET_DATA_PERIOD, GET_DATA_WCET, GET_DATA_DELAY);
     Task_Create_Period(commandRoomba, 0, COMMAND_ROOMBA_PERIOD, COMMAND_ROOMBA_WCET, COMMAND_ROOMBA_DELAY);
@@ -73,6 +113,10 @@ void create(void) {
 }
 
 void commandRoomba() {
+    if (!roomba.init()) {
+        OS_A
+    }
+
     roomba.set_mode(Roomba::OI_MODE_TYPE::SAFE_MODE);
 
     Move move;
