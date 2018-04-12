@@ -58,21 +58,45 @@ void RXData(void) {
     UART_Init(data_channel, 38400);
 
     TASK({
-        i += 1;
-        if (UART_BytesAvailable(data_channel, 2)) {
+        if (UART_Available(data_channel)) {
             if (UART_Async_Receive(data_channel, &byte)) {
                 if (byte == HIGH_BYTE(PACKET_MAGIC)) {
-                    i += 1;
+                    buffer[0] = byte;
+
                     if (UART_Async_Receive(data_channel, &byte)) {
                         if (byte == LOW_BYTE(PACKET_MAGIC)) {
-                            LOG(">>>> PM after %d tries\n", i);
-                            i = 0;
+                            buffer[1] = byte;
+
+                            while(!UART_BytesAvailable(data_channel, PACKET_SIZE - 2))
+                                ;
+
+                            for (i = 2; i < PACKET_SIZE; i += 1) {
+                                if (UART_Async_Receive(data_channel, &byte)){
+                                    buffer[i] = byte;
+                                } else {
+                                    LOG("Expected a packet to be available!\n");
+                                    OS_Abort(0);
+                                }
+                            }
+                            packet = Packet(buffer);
+                            LOG(">> [%X]:[%u]:[%u]:[%u]:[%u]:[%c]:[%c]\n", packet.magic(),
+                                packet.joy1X(), packet.joy1Y(),
+                                packet.joy2X(), packet.joy2Y(),
+                                packet.joy1SW() ? '#' : '/',
+                                packet.joy2SW() ? '#' : '/'
+                            );
+
                         } else {
-                            LOG("<< Not magic\n");
+                            LOG("<< More Trash! [%X]\n", byte);
                         }
                     }
+                } else {
+                    LOG("<< Trash [%X]\n", byte);
+                    UART_Flush(data_channel);
                 }
             }
+        } else {
+            LOG("--");
         }
     })
 }

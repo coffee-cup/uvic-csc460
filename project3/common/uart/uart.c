@@ -66,7 +66,6 @@ void UART_Transmit(uint8_t chan, uint8_t byte) {
 
     uint16_t old_sreg = SREG;
     cli();
-    // BEGIN CITICAL SECTION
 
     // Busy wait for empty transmit buffer
     while (!((*UCSRnA[chan]) & _BV(UDREn[chan])))
@@ -75,7 +74,6 @@ void UART_Transmit(uint8_t chan, uint8_t byte) {
     // Put data into buffer, sends the data
     *UDRn[chan] = byte;
 
-    // END CRITICAL SECTION
     SREG = old_sreg;
 }
 
@@ -88,17 +86,30 @@ bool UART_Async_Receive(uint8_t chan, uint8_t* out) {
     }
 
     if (UART_Available(chan)) {
+
+        uint16_t old_sreg = SREG;
+        cli();
+
         // Return a byte from the buffer
         *out = _RXBUFn[chan][_RXRn[chan]];
 
         // Update the last byte read index
-        uint16_t old = _RXRn[chan];
-
-        // Update the last read index
         _RXRn[chan] = (_RXRn[chan] + 1) % RX_BUFFER_SIZE;
-        if (old > _RXRn[chan] && _RXWn[chan]) {
-            _RXWn[chan] = FALSE;
+
+        // Check for read index wrap / overflow
+        if (_RXRn[chan] == 0) {
+            if (_RXWn[chan]) {
+                _RXWn[chan] = FALSE;
+            } else {
+                // The read index is ahead of the write index.
+                // Evidence is that RXRn wrapped, but RXWn shows
+                // that RXIn hasn't wrapped
+                LOG("Out of bounds UART read\n");
+                OS_Abort(UART_ERROR);
+            }
         }
+
+        SREG = old_sreg;
 
         return TRUE;
     } else {
@@ -114,8 +125,13 @@ bool UART_Available(uint8_t chan) {
         return FALSE;
     }
 
+    uint16_t old_sreg = SREG;
+    cli();
+    bool avail = _RXWn[chan] || _RXRn[chan] < _RXIn[chan];
+    SREG = old_sreg;
+
     // Data has arrived since last read
-    return _RXWn[chan] || _RXRn[chan] < _RXIn[chan];
+    return avail;
 }
 
 
@@ -126,17 +142,35 @@ bool UART_BytesAvailable(uint8_t chan, uint16_t num) {
         return FALSE;
     }
 
+    uint16_t old_sreg = SREG;
+    cli();
     uint16_t last_read = _RXRn[chan];
     uint16_t last_rxd  = _RXIn[chan];
-
-    // LOG("UART_BA: [%d->%d]\n", last_read, last_rxd);
     bool     has_wrapped = _RXWn[chan];
+
+    SREG = old_sreg;
 
     if (!has_wrapped) {
         return last_rxd - last_read >= num;
     } else {
         return RX_BUFFER_SIZE - last_read + last_rxd >= num;
     }
+}
+
+void UART_Flush(uint8_t chan) {
+    if (!CHAN_OK(chan) || !uart_initialized[chan]) {
+        // Bad channel or not initialized
+        OS_Abort(UART_ERROR);
+        return;
+    }
+
+    uint16_t old_sreg = SREG;
+    cli();
+
+    _RXRn[chan] = _RXIn[chan];
+    _RXWn[chan] = FALSE;
+
+    SREG = old_sreg;
 }
 
 
@@ -166,7 +200,7 @@ void UART_print(uint8_t chan, const char* fmt, ...) {
     va_list args;
 
     va_start(args, fmt);
-    size = vsnprintf((char*)buffer, sizeof(buffer), fmt, args);
+    size = vsnprintf((char*)buffer, TX_BUFFER_SIZE, fmt, args);
     va_end(args);
 
     UART_send_raw_bytes(chan, size, buffer);
@@ -200,19 +234,27 @@ void UART_ISR(uint8_t chan) {
     while ( !((*UCSRnA[chan]) & _BV(RXCn[chan])))
         ;
 
-    // Write the rx data into the ring buffer
-    _RXBUFn[chan][_RXIn[chan]] = *UDRn[chan];
+    if (_RXWn[chan] && _RXRn[chan] == _RXIn[chan]){
+        // Ring buffer is full
+        LOG("UART RX full: Dropping data!\n");
+        uint8_t dummy = *UDRn[chan];
+        (void) dummy;
+    } else {
+        // Write the rx data into the ring buffer
+        _RXBUFn[chan][_RXIn[chan]] = *UDRn[chan];
 
-    // Update the ring buffer index
-    uint16_t old = _RXIn[chan];
-    _RXIn[chan] = (_RXIn[chan] + 1) % RX_BUFFER_SIZE;
-    if (old > _RXIn[chan]) {
-        _RXWn[chan] = TRUE;
-    }
+        // Update the ring buffer index
+        _RXIn[chan] = (_RXIn[chan] + 1) % RX_BUFFER_SIZE;
 
-    if (!_RXWn[chan] && _RXIn[chan] < _RXRn[chan]) {
-        LOG("Rx buffer overrun!\n");
-        OS_Abort(UART_ERROR);
+        // Check for index wrap / overflow
+        if (_RXIn[chan] == 0) {
+            if (_RXWn[chan]) {
+                LOG("!! Wrapped again?!\n");
+                OS_Abort(UART_ERROR);
+            } else {
+                _RXWn[chan] = TRUE;
+            }
+        }
     }
 }
 

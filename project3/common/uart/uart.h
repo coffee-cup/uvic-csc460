@@ -14,6 +14,7 @@ bool UART_Async_Receive(uint8_t chan, uint8_t* out);
 
 bool UART_Available(uint8_t chan);
 bool UART_BytesAvailable(uint8_t chan, uint16_t num);
+void UART_Flush(uint8_t chan);
 
 bool UART_Writable(uint8_t chan);
 
