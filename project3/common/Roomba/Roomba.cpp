@@ -141,6 +141,24 @@ bool Roomba::check_sensor(OI_SENSOR_ARGS sensor, uint8_t nbytes, uint16_t *data)
     return success;
 }
 
+void Roomba::set_song(uint8_t song_number, uint8_t song_length, uint8_t *song) {
+    issue_cmd(OI_COMMAND::SONG);
+    issue_cmd(song_number);
+    issue_cmd(song_length);
+
+    // song[2i + 0] = note
+    // song[2i + 1] = duration
+    for (int i = 0; i < song_length; i += 1) {
+        issue_cmd(song[2 * i + 0]);
+        issue_cmd(song[2 * i + 1]);
+    }
+}
+
+void Roomba::play_song(uint8_t song_number) {
+    issue_cmd(OI_COMMAND::PLAY);
+    issue_cmd(song_number);
+}
+
 void Roomba::drive(int16_t velocity, int16_t radius) {
     issue_cmd(OI_COMMAND::DRIVE);
     issue_cmd(HIGH_BYTE(velocity));

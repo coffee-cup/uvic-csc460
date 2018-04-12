@@ -17,6 +17,11 @@ extern "C" {
     void create(void);
 }
 
+#define DEAD_SONG 0
+#define FREE_SONG 1
+#define STAY_SONG 2
+#define START_SONG 3
+
 Roomba roomba(/*Serial*/ 3, /*Port A pin*/ 0);
 Packet packet(512, 512, 0, 512, 512, 0);
 
@@ -93,16 +98,38 @@ void getData(void) TASK ({
     // LOG("%d\n", packet.field.joy1X);
 })
 
+void songs() {
+    uint8_t d = 16;
+    uint8_t s = 6;
+
+    // Death song
+    uint8_t dead_song[] = {60, d, 59, d, 57, d, 55, d, 53, d, 52, d, 50, d, 48, d * 5};
+    roomba.set_song(DEAD_SONG, 8, dead_song);
+
+    d = 8;
+    uint8_t stay_song[] = {95, d, 100, d * 6};
+    roomba.set_song(STAY_SONG, 2, stay_song);
+
+    uint8_t free_song[] = {79, d, 83, d, 86, d, 91, d, 95, d, 80, s, 84, d, 87, s, 92, s, 96, d, 82, s, 86, d, 89, d, 94, s, 98, s};
+    roomba.set_song(FREE_SONG, 15, free_song);
+
+    uint8_t start_song[] = {88, d, 91, d * 3, 100, d, 96, d, 98, d * 2, 103, d};
+    roomba.set_song(START_SONG, 6, start_song);
+}
+
 void commandRoomba() {
-    if (!roomba.init()) {
-        OS_Abort(FAILED_START);
-    }
+    roomba.init();
+    // if (!roomba.init()) {
+    //     OS_Abort(FAILED_START);
+    // }
 
     roomba.set_mode(Roomba::OI_MODE_TYPE::SAFE_MODE);
+    songs();
+    roomba.play_song(START_SONG);
 
     Move move;
     for (;;) {
-        choose_move(&move);
+        // choose_move(&move);
 
         uint16_t dir = 0;
         uint16_t speed = move.speed;
@@ -126,8 +153,8 @@ void commandRoomba() {
             break;
         }
 
-        speed = roomba_speed(speed);
-        roomba.drive(speed, dir);
+        // speed = roomba_speed(speed);
+        // roomba.drive(speed, dir);
 
         Task_Next();
     }

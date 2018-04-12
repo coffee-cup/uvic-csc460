@@ -24,6 +24,9 @@ class Roomba {
     bool check_left_bumper();
     bool check_right_bumper();
 
+    void set_song(uint8_t song_number, uint8_t song_length, uint8_t *song);
+    void play_song(uint8_t song_number);
+
   private:
     uint8_t uart_channel;
     uint8_t baud_change_pin;
