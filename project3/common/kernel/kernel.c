@@ -116,7 +116,7 @@ extern void Exit_Kernel();
 extern void Enter_Kernel();
 
 /* User level 'main' function */
-extern void setup(void);
+extern void create(void);
 
 ISR(TIMER4_COMPA_vect) {
     if (KernelActive) {
@@ -669,8 +669,8 @@ void Kernel_Request_Timer() {
     // You were running before the tick, so you're ready now
     Cp->state = READY;
 
-    // Only dispatch on tick for RR tasks
-    if (Cp->priority == RR) {
+    // Do not dispatch for periodic
+    if (Cp->priority != PERIODIC) {
         Dispatch();
     }
 }
@@ -831,7 +831,7 @@ void Kernel_Init() {
     KERNEL_REQUEST_PARAMS info = {
         .request = CREATE,
         .priority = SYSTEM,
-        .code = setup,
+        .code = create,
         .arg = 0
     };
 
@@ -871,10 +871,12 @@ int main(void) {
     BIT_SET(DDRB, 6);
     BIT_SET(PORTB, 6);
 
-    // Debug pins
+    // Idle pin
     BIT_SET(DDRD, 0);
-    BIT_SET(DDRD, 1);
     BIT_CLR(PORTD, 0);
+
+    // Debug pin
+    BIT_SET(DDRD, 1);
     BIT_CLR(PORTD, 1);
 
     Kernel_Init();

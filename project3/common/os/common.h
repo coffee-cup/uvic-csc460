@@ -38,8 +38,8 @@
 #define LOG(...)                         \
     {                                    \
         if (DEBUG) {                     \
-            UART_Init0(LOGBAUD);         \
-            UART_print(__VA_ARGS__);     \
+            UART_Init(0, LOGBAUD);       \
+            UART_print(0, __VA_ARGS__);  \
         }                                \
     }
 
@@ -140,7 +140,9 @@ typedef enum {
     INVALID_PRIORITY = 7,
     PERIODIC_MSG = 8,
     QUEUEING_ERROR = 9,
-    NULL_TASK_FUNCTION = 10
+    NULL_TASK_FUNCTION = 10,
+    UART_ERROR = 11,
+    PWM_ERROR = 12
 } ABORT_CODE;
 
 /**
