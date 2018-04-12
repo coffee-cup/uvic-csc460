@@ -84,6 +84,28 @@ bool Roomba::check_oi_mode(uint16_t* mode){
     return check_sensor(OI_SENSOR_ARGS::OIMODE, 1, mode);
 }
 
+bool Roomba::check_light_bumper(uint16_t *data) {
+    return check_sensor(OI_SENSOR_ARGS::LIGHT_BUMPER, 1, data);
+}
+
+bool Roomba::check_virtual_wall() {
+    uint16_t data = 0;
+    check_sensor(OI_SENSOR_ARGS::VIRTUAL_WALL, 1, &data);
+    return data;
+}
+
+bool Roomba::check_left_bumper() {
+    uint16_t data = 0;
+    check_sensor(OI_SENSOR_ARGS::BUMPERS, 1, &data);
+    return MASK_TEST_ANY(data, 0x02);
+}
+
+bool Roomba::check_right_bumper() {
+    uint16_t data = 0;
+    check_sensor(OI_SENSOR_ARGS::BUMPERS, 1, &data);
+    return MASK_TEST_ANY(data, 0x01);
+}
+
 //Generic check for up to 2 bytes from a sensor request
 bool Roomba::check_sensor(OI_SENSOR_ARGS sensor, uint8_t nbytes, uint16_t *data) {
 
@@ -125,6 +147,10 @@ void Roomba::drive(int16_t velocity, int16_t radius) {
     issue_cmd(LOW_BYTE(velocity));
     issue_cmd(HIGH_BYTE(radius));
     issue_cmd(LOW_BYTE(radius));
+}
+
+void Roomba::stop() {
+    drive(0, 0);
 }
 
 void Roomba::dock() {

@@ -3,18 +3,26 @@
 
 #include <stdint.h>
 
+#define STRAIGHT 32768
+
 class Roomba {
   public:
     Roomba(uint8_t serial_connector, uint8_t brc_pin);
 
     bool init();
     void drive(int16_t velocity, int16_t radius);
+    void stop();
     void dock();
 
     bool check_oi_mode(uint16_t* mode);
     bool check_power(uint16_t* power);
     bool check_power_capacity(uint16_t* power);
+    bool check_light_bumper(uint16_t* data);
     void power_off();
+
+    bool check_virtual_wall();
+    bool check_left_bumper();
+    bool check_right_bumper();
 
   private:
     uint8_t uart_channel;
@@ -44,9 +52,13 @@ class Roomba {
 
     // Nor is this an exhaustive list of arguments to the SENSOR command
     enum OI_SENSOR_ARGS {
+        BUMPERS = 7U,
+        VIRTUAL_WALL = 13U,
         BATTERY_CHARGE = 25U,
         BATTERY_CAPACITY = 26U,
-        OIMODE = 35U
+        OIMODE = 35U,
+        LIGHT_BUMPER = 45U,
+        LIGHT_BUMP_LEFT = 46U
     };
 
     /// Arguments to the BAUD OI_COMMAND
