@@ -18,6 +18,7 @@ extern "C" {
 }
 
 #define DEAD_SONG 0
+#define LASER_SONG 0
 #define FREE_SONG 1
 #define STAY_SONG 2
 #define START_SONG 3
@@ -28,6 +29,9 @@ Packet packet(512, 512, 0, 512, 512, 0);
 Arm arm;
 Joystick joy1(15, 14, 2);
 Joystick joy2(13, 12, 3);
+
+volatile uint8_t mode = NO_MODE;
+volatile bool game_on = false;
 
 void choose_move(Move* move) {
     bool is_wall = roomba.check_virtual_wall();
@@ -57,7 +61,7 @@ void choose_move(Move* move) {
         return;
     }
 
-    choose_user_move(move, joy1.getX(), 1023 - joy1.getY());
+    choose_user_move(move, joy1.getX(), 1023 - joy1.getY(), mode);
 }
 
 // Weak attribute allows other functions to redefine
@@ -84,6 +88,22 @@ void Tick(void) {
     })
 }
 
+void modeChange(void) {
+    mode = (mode == FREE_MODE)
+        ? STAY_MODE
+        : FREE_MODE;
+    LOG("mode %d\n", mode);
+}
+
+void start_game() {
+    if (!game_on) {
+        game_on = true;
+        mode = STAY_MODE;
+        roomba.play_song(START_SONG);
+        // Task_Create_Period(modeChange, 0, MODE_PERIOD, MODE_WCET, MODE_DELAY);
+    }
+}
+
 void getData(void) TASK ({
     packet.field.joy1X = joy1.getX();
     packet.field.joy1Y = joy1.getY();
@@ -93,14 +113,12 @@ void getData(void) TASK ({
 })
 
 void load_songs() {
-    uint8_t d = 16;
+    uint8_t d = 8;
     uint8_t s = 6;
 
-    // Death song
-    uint8_t dead_song[] = {60, d, 59, d, 57, d, 55, d, 53, d, 52, d, 50, d, 48, d * 5};
-    roomba.set_song(DEAD_SONG, 8, dead_song);
+    uint8_t laser_song[] = {100, d};
+    roomba.set_song(LASER_SONG, 1, laser_song);
 
-    d = 8;
     uint8_t stay_song[] = {95, d, 100, d * 4};
     roomba.set_song(STAY_SONG, 2, stay_song);
 
@@ -109,6 +127,22 @@ void load_songs() {
 
     uint8_t start_song[] = {88, d, 91, d * 3, 100, d, 96, d, 98, d * 2, 103, d};
     roomba.set_song(START_SONG, 6, start_song);
+}
+
+void die(void) {
+    // Death song
+    uint8_t d = 16;
+    uint8_t dead_song[] = {60, d, 59, d, 57, d, 55, d, 53, d, 52, d, 50, d, 48, d * 5};
+    roomba.set_song(DEAD_SONG, 8, dead_song);
+    roomba.play_song(DEAD_SONG);
+}
+
+// A RR task to play a sound for how much laser we have left
+void laser_strength(uint8_t n) {
+    // uint8_t n = Task_GetArg();
+    for (int i = 0; i < n; i += 1) {
+        roomba.play_song(LASER_SONG);
+    }
 }
 
 void commandRoomba() {
@@ -120,10 +154,15 @@ void commandRoomba() {
     roomba.set_mode(Roomba::OI_MODE_TYPE::SAFE_MODE);
     load_songs();
 
-    // roomba.play_song(STAY_SONG);
+    laser_strength(4);
+    // roomba.play_song(_SONG);
 
     Move move;
     for (;;) {
+        if (joy1.getClick() && !game_on) {
+            start_game();
+        }
+
         choose_move(&move);
         // LOG("%d\t%d\n", move.left_speed, move.right_speed);
 

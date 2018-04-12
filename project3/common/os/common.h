@@ -66,6 +66,10 @@
 #define WORKSPACE    256                 /* in bytes, per THREAD */
 #define MSECPERTICK  10                  /* resolution of a system TICK in milliseconds */
 
+#define FREE_MODE 0
+#define STAY_MODE 1
+#define NO_MODE 3
+
 typedef uint16_t     PID;                /* Process ID: always non-zero if it is valid */
 typedef uint16_t     TICK;               /* Tick type: Length of 1 TICK is defined by MSECPERTICK */
 typedef bool         BOOL;               /* Boolean type: C99 introduced _Bool */

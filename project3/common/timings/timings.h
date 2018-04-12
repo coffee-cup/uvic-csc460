@@ -1,6 +1,8 @@
 #ifndef _TIMINGS_H_
 #define _TIMINGS_H_
 
+#include "common.h"
+
 // Base Station
 
 #define UPDATE_PACKET_PERIOD 5
@@ -17,7 +19,7 @@
 
 // Remote Station
 
-#define GET_DATA_PERIOD 500
+#define GET_DATA_PERIOD 1000
 #define GET_DATA_WCET 2
 #define GET_DATA_DELAY 10
 
@@ -32,5 +34,9 @@
 #define ARM_TICK_PERIOD 2
 #define ARM_TICK_WCET 1
 #define ARM_TICK_DELAY 2
+
+#define MODE_PERIOD (60000 / MSECPERTICK) // 60 seconds
+#define MODE_WCET 1
+#define MODE_DELAY 0
 
 #endif

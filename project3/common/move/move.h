@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "utils.h"
+#include "common.h"
 
 #define MAX_SPEED (200)
 #define DEADBAND (20)
@@ -34,6 +35,6 @@ void set_speeds(Move *move, int16_t left_speed, int16_t right_speed);
 int16_t roomba_speed(int16_t speed);
 
 // Choose a user speed based on x and y joystick directions
-void choose_user_move(Move *move, uint16_t x, uint16_t y);
+void choose_user_move(Move *move, uint16_t x, uint16_t y, uint8_t mode);
 
 #endif

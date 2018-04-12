@@ -37,12 +37,12 @@ int16_t roomba_speed(int16_t speed) {
         : map_u(speed, 0, 100, 0, MAX_SPEED);
 }
 
-void choose_user_move(Move *move, uint16_t x_, uint16_t y_) {
+void choose_user_move(Move *move, uint16_t x_, uint16_t y_, uint8_t mode) {
     // Map x and y from [0, 1023] to [100, 100]
     int16_t x = cmap_u(x_, 0, 1023, -100, 100);
     int16_t y = cmap_u(y_, 0, 1023, -100, 100);
 
-    if (abs_u(x) > DEADBAND && abs_u(y) > DEADBAND) {
+    if (abs_u(x) > DEADBAND && abs_u(y) > DEADBAND && mode != STAY_MODE) {
         // Angled drive
         x = cmap_u(x, -100, 100, -25, 25);
         int16_t left_x = 25 + x;
@@ -58,7 +58,7 @@ void choose_user_move(Move *move, uint16_t x_, uint16_t y_) {
         set_speeds(move,
                    cmap_u(left_x + y, -75, 75, -100, 100),
                    cmap_u(right_x + y, -75, 75, -100, 100));
-    } else if (abs_u(y) > DEADBAND) {
+    } else if (abs_u(y) > DEADBAND && mode != STAY_MODE) {
         // Straight drive
         forward(move, y);
     } else if (abs_u(x) > DEADBAND) {
