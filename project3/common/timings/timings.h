@@ -17,9 +17,9 @@
 
 // Remote Station
 
-#define GET_DATA_PERIOD 80
-#define GET_DATA_WCET 1
-#define GET_DATA_DELAY 1
+#define GET_DATA_PERIOD 500
+#define GET_DATA_WCET 2
+#define GET_DATA_DELAY 10
 
 #define UPDATE_ARM_PERIOD 50
 #define UPDATE_ARM_WCET 1
@@ -28,5 +28,9 @@
 #define COMMAND_ROOMBA_PERIOD 500
 #define COMMAND_ROOMBA_WCET 4
 #define COMMAND_ROOMBA_DELAY 2
+
+#define ARM_TICK_PERIOD 2
+#define ARM_TICK_WCET 1
+#define ARM_TICK_DELAY 2
 
 #endif

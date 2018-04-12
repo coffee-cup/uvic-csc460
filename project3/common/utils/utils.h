@@ -10,6 +10,9 @@ long map_u(long x, long in_min, long in_max, long out_min, long out_max);
 // Constrains the value x to [min, max]
 long constrain_u(long x, long min, long max);
 
+// Maps and constrains x
+long cmap_u(long x, long in_min, long in_max, long out_min, long out_max);
+
 // Calculates the absolute value of a number
 long abs_u(long x);
 

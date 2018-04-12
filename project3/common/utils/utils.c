@@ -11,6 +11,10 @@ long constrain_u(long x, long min, long max) {
     return x;
 }
 
+long cmap_u(long x, long in_min, long in_max, long out_min, long out_max) {
+    return constrain_u(map_u(x, in_min, in_max, out_min, out_max), out_min, out_max);
+}
+
 long abs_u(long x) {
     if (x > 0) return x;
     if (x < 0) return -x;

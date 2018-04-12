@@ -20,6 +20,6 @@ typedef struct move_type {
 } Move;
 
 void move_change(Move *move, DIRECTION dir, int16_t speed);
-int16_t roomba_speed(Move *move);
+int16_t roomba_speed(int16_t speed);
 
 #endif
