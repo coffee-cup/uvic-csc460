@@ -36,7 +36,6 @@ void UART_Init(uint8_t chan, uint32_t baud_rate) {
         LOG("Changed baud rate for channel %u\n", chan);
     }
 
-    BIT_SET(DDRB, 2);
     uart_initialized[chan] = TRUE;
     current_bauds[chan] = baud_rate;
     *UBRRn[chan] = MYBRR(baud_rate);
@@ -52,10 +51,8 @@ void UART_Transmit(uint8_t chan, uint8_t byte) {
     }
 
     // Busy wait for empty transmit buffer
-    BIT_SET(PORTB, 2);
     while (!((*UCSRnA[chan]) & _BV(UDREn[chan])))
     ;
-    BIT_CLR(PORTB, 2);
     // Put data into buffer, sends the data
     *UDRn[chan] = byte;
 }

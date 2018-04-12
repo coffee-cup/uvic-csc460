@@ -1,34 +1,47 @@
 #include <avr/io.h>
 #include <util/delay.h>
-#include "Roomba.h"
 
-Roomba roomba(/*Serial*/ 3, /*Port A pin*/ 0);
+#include "Arm.h"
+#include "Joystick.h"
+#include "Motor.h"
+
+Arm arm;
+Joystick joy1(15, 14, 2);
+Joystick joy2(13, 12, 3);
 
 extern "C" {
     #include "kernel.h"
     #include "os.h"
     #include "uart.h"
+    #include "utils.h"
     void create(void);
 }
 
-int main(void) {
-    Kernel_Begin();
-}
+// Weak attribute allows other functions to redefine
+// We want kernel main to be the actual main
+DELEGATE_MAIN()
 
 /**
- * A cooperative "Ping" task.
- * Added testing code for LEDs.
+ * A simple task to move a Roomba on the spot.
  */
-void Move(void) {
-    uint8_t i = 0;
-    TASK ({
-        BIT_FLIP(PORTB, 0);
-            LOG("Move\n");
-            roomba.drive(100, i % 2 ? 1 : -1);
-            if (++i >= 5) {
-                roomba.power_off();
-                Task_Terminate();
-            }
+void Move(void) TASK ({
+    arm.setSpeedX(Arm::filterSpeed(joy1.getX()));
+    arm.setSpeedY(Arm::filterSpeed(joy2.getY()));
+})
+
+
+void Tick(void) {
+    // 30 seconds === 30000 ms
+    uint32_t numLaserTicks = 30000 / MSECPERTICK;
+
+    TASK({
+        arm.tick();
+        if (joy1.getClick() && numLaserTicks > 1) {
+            BIT_SET(PORTC, 0);
+            numLaserTicks -= 2;
+        } else {
+            BIT_CLR(PORTC, 0);
+        }
     })
 }
 
@@ -41,17 +54,17 @@ void create(void) {
     // Outputs for Tasks's
     BIT_SET(DDRB, 0);
     BIT_SET(DDRB, 1);
+    BIT_SET(DDRC, 0); // Laser
+
     BIT_CLR(PORTB, 0);
     BIT_CLR(PORTB, 1);
+    BIT_CLR(PORTC, 0);
 
-    if (roomba.init()) {
-        roomba.set_mode(Roomba::OI_MODE_TYPE::SAFE_MODE);
-        roomba.leds(Roomba::OI_LED_MASK_ARGS::CHECK_ROBOT_LED, 0, 0);
+    arm.attach(2, 3);
 
-        Task_Create_Period(Move, 0, 100, 20, 5);
-    } else {
-        OS_Abort(FAILED_START);
-    }
+    Task_Create_Period(Tick, 0, 2, 1, 2);
+    Task_Create_Period(Move, 0, 10, 2, 1);
+
 
     // This function was called by the OS as a System task.
     // If a task executes a return statement it is terminated.
