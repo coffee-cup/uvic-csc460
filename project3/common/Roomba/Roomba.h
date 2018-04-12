@@ -11,6 +11,7 @@ class Roomba {
 
     bool init();
     void drive(int16_t velocity, int16_t radius);
+    void direct_drive(int16_t left_speed, int16_t right_speed);
     void stop();
     void dock();
 
@@ -49,6 +50,7 @@ class Roomba {
         PLAY = 141U,      // play a song that was loaded using SONG
         SENSORS = 142U,   // retrieve one of the sensor packets
         DOCK = 143U,      // force the Roomba to seek its dock.
+        DIRECT_DRIVE = 145U, // control each wheels speed individually
         STOP_SCI = 173U,  // stop the Roomba's SCI
 
     };

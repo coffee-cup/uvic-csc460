@@ -51,7 +51,8 @@ bool Roomba::init() {
     bool success = check_oi_mode(&mode);
 
     // First check couldn't get data and should be in mode 1
-    if (!success || mode != 1) {
+    // if (!success || mode != 1) {
+    if (!success) {
         LOG("Failed to communicate with Roomba, is it on? (Mode: %x)\n");
         success = false;
     }
@@ -60,7 +61,7 @@ bool Roomba::init() {
         // Check for battery power
         success = check_power(&power) && check_power_capacity(&power_cap);
         if (success) {
-            LOG("Power: %u / %u\nDone Startup (in passive mode)\n", power, power_cap);
+            LOG("Power: %u / %u\nDone Startup\n", power, power_cap);
         } else {
             LOG("Couldn't get Roomba power\nStartup Failed!\n");
         }
@@ -165,6 +166,14 @@ void Roomba::drive(int16_t velocity, int16_t radius) {
     issue_cmd(LOW_BYTE(velocity));
     issue_cmd(HIGH_BYTE(radius));
     issue_cmd(LOW_BYTE(radius));
+}
+
+void Roomba::direct_drive(int16_t left_speed, int16_t right_speed) {
+    issue_cmd(OI_COMMAND::DIRECT_DRIVE);
+    issue_cmd(HIGH_BYTE(right_speed));
+    issue_cmd(LOW_BYTE(right_speed));
+    issue_cmd(HIGH_BYTE(left_speed));
+    issue_cmd(LOW_BYTE(left_speed));
 }
 
 void Roomba::stop() {

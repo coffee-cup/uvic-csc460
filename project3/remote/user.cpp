@@ -35,35 +35,29 @@ void choose_move(Move* move) {
     bool is_rightb = roomba.check_right_bumper();
 
     // Set base move to stop
-    move_change(move, STOP, 0);
+    stop(move);
 
     if (is_wall) {
-        move_change(move, BACKWARD, 50);
+        backward(move, 50);
         return;
     }
 
     if (is_leftb && is_rightb) {
-        move_change(move, BACKWARD, 50);
+        backward(move, 50);
         return;
     }
 
     if (is_leftb) {
-        move_change(move, RIGHT, 50);
+        spin_right(move, 50);
         return;
     }
 
     if (is_rightb) {
-        move_change(move, LEFT, 50);
+        spin_left(move, 50);
         return;
     }
 
-    int x = cmap_u(joy1.getX(), 0, 1023, -100, 100);
-    if (abs_u(x) <= 5) x = 0;
-    if (x < 10) {
-        move_change(move, LEFT, abs_u(x));
-    } else if (x > 10) {
-        move_change(move, RIGHT, x);
-    }
+    choose_user_move(move, joy1.getX(), 1023 - joy1.getY());
 }
 
 // Weak attribute allows other functions to redefine
@@ -98,7 +92,7 @@ void getData(void) TASK ({
     // LOG("%d\n", packet.field.joy1X);
 })
 
-void songs() {
+void load_songs() {
     uint8_t d = 16;
     uint8_t s = 6;
 
@@ -107,7 +101,7 @@ void songs() {
     roomba.set_song(DEAD_SONG, 8, dead_song);
 
     d = 8;
-    uint8_t stay_song[] = {95, d, 100, d * 6};
+    uint8_t stay_song[] = {95, d, 100, d * 4};
     roomba.set_song(STAY_SONG, 2, stay_song);
 
     uint8_t free_song[] = {79, d, 83, d, 86, d, 91, d, 95, d, 80, s, 84, d, 87, s, 92, s, 96, d, 82, s, 86, d, 89, d, 94, s, 98, s};
@@ -124,37 +118,19 @@ void commandRoomba() {
     // }
 
     roomba.set_mode(Roomba::OI_MODE_TYPE::SAFE_MODE);
-    songs();
-    roomba.play_song(START_SONG);
+    load_songs();
+
+    // roomba.play_song(STAY_SONG);
 
     Move move;
     for (;;) {
-        // choose_move(&move);
+        choose_move(&move);
+        // LOG("%d\t%d\n", move.left_speed, move.right_speed);
 
-        uint16_t dir = 0;
-        uint16_t speed = move.speed;
+        int16_t left_speed = roomba_speed(move.left_speed);
+        int16_t right_speed = roomba_speed(move.right_speed);
 
-        switch (move.dir) {
-        case FORWARD:
-            dir = STRAIGHT;
-            break;
-        case BACKWARD:
-            dir = STRAIGHT;
-            speed *= -1;
-            break;
-        case RIGHT:
-            dir = -1;
-            break;
-        case LEFT:
-            dir = 1;
-            break;
-        case STOP:
-            speed = 0;
-            break;
-        }
-
-        // speed = roomba_speed(speed);
-        // roomba.drive(speed, dir);
+        roomba.direct_drive(left_speed, right_speed);
 
         Task_Next();
     }
