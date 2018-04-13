@@ -18,10 +18,13 @@ extern "C" {
 }
 
 #define DEAD_SONG 0
-#define LASER_SONG 0
+// #define LASER_SONG 0
 #define FREE_SONG 1
 #define STAY_SONG 2
 #define START_SONG 3
+
+#define LIGHT_ALPHA 0.5
+#define LIGHT_THRESHOLD 20
 
 Roomba roomba(/*Serial*/ 3, /*Port A pin*/ 0);
 Packet packet(512, 512, 0, 512, 512, 0);
@@ -34,6 +37,7 @@ volatile uint8_t mode = NO_MODE;
 volatile bool game_on = false;
 volatile uint8_t health = 10;
 volatile bool dead = false;
+volatile uint16_t light_average = 0;
 
 void choose_move(Move* move) {
     bool is_wall = roomba.check_virtual_wall();
@@ -91,7 +95,7 @@ void UpdateArm(void) {
 void laserStrength(void) {
     uint8_t n = Task_GetArg();
     for (int i = 0; i < n; i += 1) {
-        roomba.play_song(LASER_SONG);
+        // roomba.play_song(LASER_SONG);
         _delay_ms(10);
     }
 }
@@ -123,22 +127,33 @@ void TickArm(void) {
 }
 
 void modeChange(void) TASK ({
+    if (dead) {
+        return;
+    }
     mode = (mode == FREE_MODE)
         ? STAY_MODE
         : FREE_MODE;
-    uint8_t song = (mode == FREE_MODE)
-        ? FREE_SONG
-        : STAY_SONG;
-    roomba.play_song(song);
+
+    // Play the same song
+    roomba.play_song(STAY_SONG);
+
+    // uint8_t song = (mode == FREE_MODE)
+    //     ? FREE_SONG
+    //     : STAY_SONG;
+    // roomba.play_song(song);
     // LOG("mode %d\n", mode);
 })
 
 void load_songs() {
-    uint8_t d = 8;
     uint8_t s = 6;
+    uint8_t d = 16;
 
-    uint8_t laser_song[] = {100, d};
-    roomba.set_song(LASER_SONG, 1, laser_song);
+    uint8_t dead_song[] = {60, d, 59, d, 57, d, 55, d, 53, d, 52, d, 50, d, 48, d * 5};
+    roomba.set_song(DEAD_SONG, 8, dead_song);
+
+    d = 8;
+    // uint8_t laser_song[] = {100, d};
+    // roomba.set_song(LASER_SONG, 1, laser_song);
 
     uint8_t stay_song[] = {95, d, 100, d * 4};
     roomba.set_song(STAY_SONG, 2, stay_song);
@@ -154,31 +169,38 @@ void start_game() {
     if (!game_on || dead) {
         load_songs();
         game_on = true;
+        dead = false;
         numLaserTicks = 30000 / MSECPERTICK;
-        mode = STAY_MODE;
+        health = 10;
+        mode = FREE_MODE;
         roomba.play_song(START_SONG);
+        roomba.leds(0, 0, 255);
         Task_Create_Period(modeChange, 0, MODE_PERIOD, MODE_WCET, MODE_DELAY);
     }
+}
+
+void deadSong(void) {
+    // Death song
+    // _delay_ms(10);
+    roomba.play_song(DEAD_SONG);
 }
 
 void die(void) {
     if (dead) {
         return;
     }
-    // Death song
-    uint8_t d = 16;
-    uint8_t dead_song[] = {60, d, 59, d, 57, d, 55, d, 53, d, 52, d, 50, d, 48, d * 5};
-    roomba.set_song(DEAD_SONG, 8, dead_song);
-    roomba.play_song(DEAD_SONG);
     dead = true;
     LOG("DEAD\n");
+    roomba.play_song(DEAD_SONG);
+    roomba.leds(0, 255, 255);
+    // Task_Create_RR(deadSong, 0);
 }
 
 void commandRoomba() {
     Move move;
     for (;;) {
         // Check if we should start the game
-        if (packet.joy2SW() && !game_on) {
+        if (packet.joy2SW() && (!game_on || dead)) {
             start_game();
         }
 
@@ -289,14 +311,28 @@ void logPacket(void) TASK({
     BIT_CLR(PORTB, 1);
 })
 
-void lightSensorRead(void) TASK({
-    if (game_on) {
-        health -= 1;
-        if (health <= 0) {
-            die();
+void lightSensorRead(void) {
+    analog_init();
+
+    for (;;) {
+        uint16_t val = analog_read(13);
+        // LOG("%d\t", val);
+
+        // Compare read value to last average
+        if (game_on && !dead && val > light_average + LIGHT_THRESHOLD) {
+            health -= 1;
+            if (health <= 0) {
+                die();
+            }
+        } else {
+            // Compute new average
+            light_average = (LIGHT_ALPHA * val) + ((1 - LIGHT_ALPHA) * light_average);
         }
+        // LOG("%d\n", light_average);
+
+        Task_Next();
     }
-})
+}
 
 /**
  *
@@ -323,7 +359,7 @@ void create(void)
     Task_Create_Period(UpdateArm, 0, UPDATE_ARM_PERIOD, UPDATE_ARM_WCET, UPDATE_ARM_DELAY);
     Task_Create_Period(TickArm, 0, ARM_TICK_PERIOD, ARM_TICK_WCET, ARM_TICK_DELAY);
     Task_Create_Period(RXData, 0, GET_DATA_PERIOD, GET_DATA_WCET, GET_DATA_DELAY);
-    // Task_Create_Period(lightSensorRead, 0, LIGHT_SENSOR_PERIOD, LIGHT_SENSOR_WCET, LIGHT_SENSOR_DELAY);
+    Task_Create_Period(lightSensorRead, 0, LIGHT_SENSOR_PERIOD, LIGHT_SENSOR_WCET, LIGHT_SENSOR_DELAY);
     Task_Create_RR(setupRoomba, 0);
 
     // Task_Create_Period(logPacket, 0, 10, 5, 15);
