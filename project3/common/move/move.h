@@ -25,7 +25,7 @@ void backward(Move *move, int16_t speed);
 // Spin on a dime right
 void spin_right(Move *move, int16_t speed);
 
-// Spin on a dim left
+// Spin on a dime left
 void spin_left(Move *move, int16_t speed);
 
 // Set direction of both wheels separately
