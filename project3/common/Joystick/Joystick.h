@@ -14,7 +14,6 @@ class Joystick {
     const uint8_t pinY;
     const uint8_t pinSW;
 
-
     uint16_t reduceRange(uint16_t value);
 
     static const uint16_t MAX_ADC  = 1023;

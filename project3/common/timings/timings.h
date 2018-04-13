@@ -1,13 +1,15 @@
 #ifndef _TIMINGS_H_
 #define _TIMINGS_H_
 
+#include "common.h"
+
 // Base Station
 
-#define UPDATE_PACKET_PERIOD 5
+#define UPDATE_PACKET_PERIOD 2
 #define UPDATE_PACKET_WCET 1
 #define UPDATE_PACKET_DELAY 0
 
-#define SEND_PACKET_PERIOD 5
+#define SEND_PACKET_PERIOD 2
 #define SEND_PACKET_WCET 1
 #define SEND_PACKET_DELAY 1
 
@@ -17,16 +19,29 @@
 
 // Remote Station
 
-#define GET_DATA_PERIOD 50
+#define GET_DATA_PERIOD 2
 #define GET_DATA_WCET 1
-#define GET_DATA_DELAY 0
+#define GET_DATA_DELAY 100
 
-#define UPDATE_ARM_PERIOD 50
+#define UPDATE_ARM_PERIOD 2
 #define UPDATE_ARM_WCET 1
-#define UPDATE_ARM_DELAY 2
+#define UPDATE_ARM_DELAY 5
 
-#define COMMAND_ROOMBA_PERIOD 100
-#define COMMAND_ROOMBA_WCET 2
-#define COMMAND_ROOMBA_DELAY 4
+#define COMMAND_ROOMBA_PERIOD 20
+#define COMMAND_ROOMBA_WCET 19
+#define COMMAND_ROOMBA_DELAY 20
+
+#define ARM_TICK_PERIOD 1
+#define ARM_TICK_WCET 0
+#define ARM_TICK_DELAY 9
+
+#define LIGHT_SENSOR_PERIOD 2
+#define LIGHT_SENSOR_WCET 1
+#define LIGHT_SENSOR_DELAY 10
+
+/* #define MODE_PERIOD (10000 / MSECPERTICK) // 60 seconds */
+#define MODE_PERIOD 1000
+#define MODE_WCET 1
+#define MODE_DELAY 0
 
 #endif

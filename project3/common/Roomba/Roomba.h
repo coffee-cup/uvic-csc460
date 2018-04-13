@@ -3,18 +3,30 @@
 
 #include <stdint.h>
 
+#define STRAIGHT 32768
+
 class Roomba {
   public:
     Roomba(uint8_t serial_connector, uint8_t brc_pin);
 
     bool init();
     void drive(int16_t velocity, int16_t radius);
+    void direct_drive(int16_t left_speed, int16_t right_speed);
+    void stop();
     void dock();
 
     bool check_oi_mode(uint16_t* mode);
     bool check_power(uint16_t* power);
     bool check_power_capacity(uint16_t* power);
+    bool check_light_bumper(uint16_t* data);
     void power_off();
+
+    bool check_virtual_wall();
+    bool check_left_bumper();
+    bool check_right_bumper();
+
+    void set_song(uint8_t song_number, uint8_t song_length, uint8_t *song);
+    void play_song(uint8_t song_number);
 
   private:
     uint8_t uart_channel;
@@ -38,15 +50,20 @@ class Roomba {
         PLAY = 141U,      // play a song that was loaded using SONG
         SENSORS = 142U,   // retrieve one of the sensor packets
         DOCK = 143U,      // force the Roomba to seek its dock.
+        DIRECT_DRIVE = 145U, // control each wheels speed individually
         STOP_SCI = 173U,  // stop the Roomba's SCI
 
     };
 
     // Nor is this an exhaustive list of arguments to the SENSOR command
     enum OI_SENSOR_ARGS {
+        BUMPERS = 7U,
+        VIRTUAL_WALL = 13U,
         BATTERY_CHARGE = 25U,
         BATTERY_CAPACITY = 26U,
-        OIMODE = 35U
+        OIMODE = 35U,
+        LIGHT_BUMPER = 45U,
+        LIGHT_BUMP_LEFT = 46U
     };
 
     /// Arguments to the BAUD OI_COMMAND
