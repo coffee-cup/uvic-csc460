@@ -1,7 +1,6 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include "Roomba.h"
-#include "Packet.h"
 #include "Arm.h"
 #include "Joystick.h"
 #include "Motor.h"

@@ -2,7 +2,6 @@
 #define __UART_H__
 
 #include <avr/common.h>
-#include "common.h"
 
 #define TX_BUFFER_SIZE 64
 #define RX_BUFFER_SIZE 32
