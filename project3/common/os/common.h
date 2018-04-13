@@ -99,7 +99,7 @@ typedef enum process_state {
 
 /**
  * This is the state of system clock overflow and is used to distinguish
- * whether a periodic tasks ttns has overflowed and looped back around through 0.
+ * whether a periodic tasks time of next start has overflowed and looped back around through 0.
  */
 typedef enum overflow_state {
     EVEN = 0,
