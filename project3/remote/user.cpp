@@ -41,11 +41,19 @@ volatile uint8_t health = 10;
 volatile bool dead = false;
 volatile uint16_t light_average = 0;
 volatile bool started_before = false;
+volatile int16_t continue_move = -1;
 
 void choose_move(Move* move) {
     bool is_wall = roomba.check_virtual_wall();
     bool is_leftb = roomba.check_left_bumper();
     bool is_rightb = roomba.check_right_bumper();
+
+    if (continue_move > 0) {
+        continue_move -= 1;
+        return;
+    } else {
+        continue_move = -1;
+    }
 
     // Set base move to stop
     stop(move);
@@ -62,6 +70,7 @@ void choose_move(Move* move) {
 
     if (is_leftb && is_rightb) {
         backward(move, 50);
+        continue_move = 4;
         return;
     }
 
