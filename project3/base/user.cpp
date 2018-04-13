@@ -58,16 +58,16 @@ void TXData(void) {
     TASK({
         if (UART_Writable(data_channel)) {
             UART_send_raw_bytes(data_channel, PACKET_SIZE, packet.data);
-            LOG(">");
         }
     })
 }
 
 void create(void) {
     UART_Init(data_channel, 38400);
+
     // Create tasks
-    Task_Create_Period(updatePacket, 0, 1,  0, 1);
-    Task_Create_Period(TXData,       0, 20, 4, 5);
+    Task_Create_Period(updatePacket, 0, UPDATE_PACKET_PERIOD, UPDATE_PACKET_WCET, UPDATE_PACKET_DELAY);
+    Task_Create_Period(TXData,       0, SEND_PACKET_PERIOD,   SEND_PACKET_WCET,   SEND_PACKET_DELAY);
 
     return;
 }

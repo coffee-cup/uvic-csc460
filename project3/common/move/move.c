@@ -31,10 +31,7 @@ void set_speeds(Move *move, int16_t left_speed, int16_t right_speed) {
 }
 
 int16_t roomba_speed(int16_t speed) {
-    speed = constrain_u(speed, -100, 100);
-    return speed < 0
-        ? map_u(speed, -100, 0, -MAX_SPEED, 0)
-        : map_u(speed, 0, 100, 0, MAX_SPEED);
+    return cmap_u(speed, -100, 100, -MAX_SPEED, MAX_SPEED);
 }
 
 void choose_user_move(Move *move, uint16_t x_, uint16_t y_, uint8_t mode) {
