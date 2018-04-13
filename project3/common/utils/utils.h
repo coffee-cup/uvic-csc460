@@ -29,4 +29,6 @@ volatile uint16_t* pwm_attach(uint8_t port_pin);
 void pwm_write(volatile uint16_t* OCR, uint16_t value);
 
 
+void utils_abort(ABORT_CODE code);
+
 #endif
