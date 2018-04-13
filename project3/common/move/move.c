@@ -42,6 +42,7 @@ void choose_user_move(Move *move, uint16_t x_, uint16_t y_, uint8_t mode) {
     int16_t x = cmap_u(x_, 0, 1023, -100, 100);
     int16_t y = cmap_u(y_, 0, 1023, -100, 100);
 
+    LOG("%d\n", mode);
     if (abs_u(x) > DEADBAND && abs_u(y) > DEADBAND && mode != STAY_MODE) {
         // Angled drive
         x = cmap_u(x, -100, 100, -25, 25);
@@ -63,7 +64,7 @@ void choose_user_move(Move *move, uint16_t x_, uint16_t y_, uint8_t mode) {
         forward(move, y);
     } else if (abs_u(x) > DEADBAND) {
         // Spin drive
-        spin_right(move, x);
+        spin_right(move, x * 75 / 100);
     } else {
         // Stop
         stop(move);

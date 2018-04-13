@@ -27,11 +27,13 @@ Roomba roomba(/*Serial*/ 3, /*Port A pin*/ 0);
 Packet packet(512, 512, 0, 512, 512, 0);
 
 Arm arm;
-Joystick joy1(15, 14, 2);
-Joystick joy2(13, 12, 3);
 
+// 30 seconds === 30000 ms
+int32_t numLaserTicks = 30000 / MSECPERTICK;
 volatile uint8_t mode = NO_MODE;
 volatile bool game_on = false;
+volatile uint8_t health = 10;
+volatile bool dead = false;
 
 void choose_move(Move* move) {
     bool is_wall = roomba.check_virtual_wall();
@@ -40,6 +42,11 @@ void choose_move(Move* move) {
 
     // Set base move to stop
     stop(move);
+
+    // Do not move if dead
+    if (game_on && dead) {
+        return;
+    }
 
     if (is_wall) {
         backward(move, 50);
@@ -61,7 +68,7 @@ void choose_move(Move* move) {
         return;
     }
 
-    choose_user_move(move, joy1.getX(), 1023 - joy1.getY(), mode);
+    choose_user_move(move, 1023 - packet.joy1X(), 1023 - packet.joy1Y(), mode);
 }
 
 // Weak attribute allows other functions to redefine
@@ -75,51 +82,55 @@ void UpdateArm(void) {
     arm.attach(2, 3);
 
     TASK({
-        arm.setSpeedX(Arm::filterSpeed(packet.joy1X()));
-        arm.setSpeedY(Arm::filterSpeed(packet.joy1Y()));
+        arm.setSpeedX(Arm::filterSpeed(packet.joy2X()));
+        arm.setSpeedY(Arm::filterSpeed(packet.joy2Y()));
     })
 }
+
+// A RR task to play a sound for how much laser we have left
+void laserStrength(void) {
+    uint8_t n = Task_GetArg();
+    for (int i = 0; i < n; i += 1) {
+        roomba.play_song(LASER_SONG);
+        _delay_ms(10);
+    }
+}
+
 
 /**
  * A simple periodic task to update the pan and tilt kit's position
  */
 void TickArm(void) {
-    // 30 seconds === 30000 ms
-    uint32_t numLaserTicks = 30000 / MSECPERTICK;
-
     TASK({
         arm.tick();
-        if (joy1.getClick() && numLaserTicks > 1) {
+        if (packet.joy1SW() && numLaserTicks > 0) {
             BIT_SET(PORTC, 0);
-            numLaserTicks -= 2;
+            if (game_on) {
+                numLaserTicks -= ARM_TICK_PERIOD;
+            }
+            // LOG("%d\n", numLaserTicks);
+
+            // // Play sound for how much is left
+            // if (numLaserTicks == 0 ||
+            //     numLaserTicks == 1000 ||
+            //     numLaserTicks == 2000) {
+            //     Task_Create_RR(laserStrength, (numLaserTicks / 1000) + 1);
+            // }
         } else {
             BIT_CLR(PORTC, 0);
         }
     })
 }
 
-void modeChange(void) {
+void modeChange(void) TASK ({
     mode = (mode == FREE_MODE)
         ? STAY_MODE
         : FREE_MODE;
-    LOG("mode %d\n", mode);
-}
-
-void start_game() {
-    if (!game_on) {
-        game_on = true;
-        mode = STAY_MODE;
-        roomba.play_song(START_SONG);
-        // Task_Create_Period(modeChange, 0, MODE_PERIOD, MODE_WCET, MODE_DELAY);
-    }
-}
-
-void getData(void) TASK ({
-    // packet.field.joy1X = joy1.getX();
-    // packet.field.joy1Y = joy1.getY();
-    // packet.field.joy1SW = joy1.getClick() == 1 ? 0xFF : 0x00;
-
-    // LOG("%d\n", packet.field.joy1X);
+    uint8_t song = (mode == FREE_SONG)
+        ? FREE_SONG
+        : STAY_SONG;
+    roomba.play_song(song);
+    // LOG("mode %d\n", mode);
 })
 
 void load_songs() {
@@ -139,37 +150,35 @@ void load_songs() {
     roomba.set_song(START_SONG, 6, start_song);
 }
 
+void start_game() {
+    if (!game_on || dead) {
+        load_songs();
+        game_on = true;
+        numLaserTicks = 30000 / MSECPERTICK;
+        mode = STAY_MODE;
+        roomba.play_song(START_SONG);
+        Task_Create_Period(modeChange, 0, MODE_PERIOD, MODE_WCET, MODE_DELAY);
+    }
+}
+
 void die(void) {
+    if (dead) {
+        return;
+    }
     // Death song
     uint8_t d = 16;
     uint8_t dead_song[] = {60, d, 59, d, 57, d, 55, d, 53, d, 52, d, 50, d, 48, d * 5};
     roomba.set_song(DEAD_SONG, 8, dead_song);
     roomba.play_song(DEAD_SONG);
-}
-
-// A RR task to play a sound for how much laser we have left
-void laser_strength(uint8_t n) {
-    // uint8_t n = Task_GetArg();
-    for (int i = 0; i < n; i += 1) {
-        roomba.play_song(LASER_SONG);
-    }
+    dead = true;
+    LOG("DEAD\n");
 }
 
 void commandRoomba() {
-    roomba.init();
-    // if (!roomba.init()) {
-    //     OS_Abort(FAILED_START);
-    // }
-
-    roomba.set_mode(Roomba::OI_MODE_TYPE::SAFE_MODE);
-    load_songs();
-
-    laser_strength(4);
-    // roomba.play_song(_SONG);
-
     Move move;
     for (;;) {
-        if (joy1.getClick() && !game_on) {
+        // Check if we should start the game
+        if (packet.joy2SW() && !game_on) {
             start_game();
         }
 
@@ -184,6 +193,17 @@ void commandRoomba() {
         Task_Next();
     }
 }
+
+void setupRoomba() {
+    roomba.init();
+
+    roomba.set_mode(Roomba::OI_MODE_TYPE::SAFE_MODE);
+    load_songs();
+    roomba.play_song(FREE_SONG);
+
+    Task_Create_Period(commandRoomba, 0, COMMAND_ROOMBA_PERIOD, COMMAND_ROOMBA_WCET, COMMAND_ROOMBA_DELAY);
+}
+
 
 /**
  * A Periodic task to receive packets from a sender.
@@ -269,6 +289,15 @@ void logPacket(void) TASK({
     BIT_CLR(PORTB, 1);
 })
 
+void lightSensorRead(void) TASK({
+    if (game_on) {
+        health -= 1;
+        if (health <= 0) {
+            die();
+        }
+    }
+})
+
 /**
  *
  */
@@ -287,12 +316,17 @@ void create(void)
     BIT_SET(DDRC, 0);
     BIT_CLR(PORTC, 0);
 
-    // Task_Create_Period(ArmMove, 0, 10, 2, 1);
-    // Task_Create_Period(Tick, 0, ARM_TICK_PERIOD, ARM_TICK_WCET, ARM_TICK_DELAY);
+    // Photoresistor
+    BIT_CLR(DDRA, 3);
+    BIT_SET(PORTA, 3);
 
+    Task_Create_Period(UpdateArm, 0, UPDATE_ARM_PERIOD, UPDATE_ARM_WCET, UPDATE_ARM_DELAY);
+    Task_Create_Period(TickArm, 0, ARM_TICK_PERIOD, ARM_TICK_WCET, ARM_TICK_DELAY);
     Task_Create_Period(RXData, 0, GET_DATA_PERIOD, GET_DATA_WCET, GET_DATA_DELAY);
-    Task_Create_Period(logPacket, 0, 10, 5, 15);
-    Task_Create_Period(commandRoomba, 0, COMMAND_ROOMBA_PERIOD, COMMAND_ROOMBA_WCET, COMMAND_ROOMBA_DELAY);
+    // Task_Create_Period(lightSensorRead, 0, LIGHT_SENSOR_PERIOD, LIGHT_SENSOR_WCET, LIGHT_SENSOR_DELAY);
+    Task_Create_RR(setupRoomba, 0);
+
+    // Task_Create_Period(logPacket, 0, 10, 5, 15);
 
     // This function was called by the OS as a System task.
     // If a task executes a return statement it is terminated.
