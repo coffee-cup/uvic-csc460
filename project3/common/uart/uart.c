@@ -1,9 +1,9 @@
+
 #include <avr/io.h>
 #include <avr/interrupt.h>      // ISR handling.
 #include <stdio.h>              // vsnprintf
-#include "../os/common.h"
-#include "../os/os.h"
 #include "uart.h"
+#include "os.h"
 
 #define CHAN_OK(chan) (chan >= 0 && chan < 4)
 
@@ -275,4 +275,3 @@ ISR(USART2_RX_vect) {
 ISR(USART3_RX_vect) {
     UART_ISR(3);
 }
-

@@ -11,8 +11,8 @@ extern "C" {
     #include "kernel.h"
     #include "os.h"
     #include "common.h"
-    #include "uart.h"
     #include "utils.h"
+    #include "uart.h"
     #include "timings.h"
     #include "move.h"
     void create(void);
@@ -116,9 +116,9 @@ void start_game() {
 }
 
 void getData(void) TASK ({
-    packet.field.joy1X = joy1.getX();
-    packet.field.joy1Y = joy1.getY();
-    packet.field.joy1SW = joy1.getClick() == 1 ? 0xFF : 0x00;
+    // packet.field.joy1X = joy1.getX();
+    // packet.field.joy1Y = joy1.getY();
+    // packet.field.joy1SW = joy1.getClick() == 1 ? 0xFF : 0x00;
 
     // LOG("%d\n", packet.field.joy1X);
 })

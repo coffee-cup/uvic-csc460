@@ -19,9 +19,9 @@
 
 // Remote Station
 
-#define GET_DATA_PERIOD 1000
-#define GET_DATA_WCET 2
-#define GET_DATA_DELAY 10
+#define GET_DATA_PERIOD 10
+#define GET_DATA_WCET 9
+#define GET_DATA_DELAY 9
 
 #define UPDATE_ARM_PERIOD 50
 #define UPDATE_ARM_WCET 1
