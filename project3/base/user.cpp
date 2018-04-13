@@ -1,7 +1,6 @@
 #include <avr/io.h>
 #include <util/delay.h>
-#include <LiquidCrystal.h>
-#include "Keypad.h"
+
 #include "Joystick.h"
 #include "Packet.h"
 
@@ -14,14 +13,6 @@ extern "C" {
     #include "timings.h"
     void create(void);
 }
-
-#define DELTA_CHAR '\x07'
-#define YBAR_CHAR  '\x06'
-#define XBAR_CHAR  '\x05'
-#define SWON_CHAR  '\x04'
-#define SWOFF_CHAR '\x03'
-
-#define CLEAR_TERM "\x1B[2J\x1B[H"
 
 typedef struct {
     const uint8_t joy1X;
@@ -43,67 +34,40 @@ PinDefs pin = {
 
 Packet packet(512, 512, 0, 512, 512, 0);
 
-Keypad pad;
 Joystick joystick1(pin.joy1X, pin.joy1Y, pin.joy1SW);
 Joystick joystick2(pin.joy2X, pin.joy2Y, pin.joy2SW);
 
-void updatePacket(void);
-void sendPacket(void);
-void updateLcd(void);
+DELEGATE_MAIN();
+uint8_t data_channel = 2;
 
-int main(void) {
-    Kernel_Begin();
+void updatePacket(void) {
+    TASK({
+        if (UART_Available(data_channel)) {
+            UART_Flush(data_channel);
+        }
+        packet.joy1X(joystick1.getX());
+        packet.joy1Y(joystick1.getY());
+        packet.joy1SW(joystick1.getClick() ? 0xFF : 0x00);
+        packet.joy2X(joystick2.getX());
+        packet.joy2Y(joystick2.getY());
+        packet.joy2SW(joystick2.getClick() ? 0xFF : 0x00);
+    })
+}
+
+void TXData(void) {
+    TASK({
+        if (UART_Writable(data_channel)) {
+            UART_send_raw_bytes(data_channel, PACKET_SIZE, packet.data);
+            LOG(">");
+        }
+    })
 }
 
 void create(void) {
+    UART_Init(data_channel, 38400);
     // Create tasks
-    Task_Create_Period(updatePacket, 0, UPDATE_PACKET_PERIOD, UPDATE_PACKET_WCET, UPDATE_PACKET_DELAY);
-    Task_Create_Period(sendPacket,   0, SEND_PACKET_PERIOD,   SEND_PACKET_WCET,   SEND_PACKET_DELAY);
-    // Task_Create_Period(updateLcd,    0, UPDATE_LCD_PERIOD,    UPDATE_LCD_WCET,    UPDATE_LCD_DELAY);
+    Task_Create_Period(updatePacket, 0, 1,  0, 1);
+    Task_Create_Period(TXData,       0, 20, 4, 5);
 
     return;
-}
-
-void updatePacket() {
-    for (;;) {
-        packet.field.joy1X  = joystick1.getX();
-        packet.field.joy1Y  = joystick1.getY();
-        packet.field.joy1SW = joystick1.getClick() == HIGH ? 0xFF : 0x00;
-        packet.field.joy2X  = joystick2.getX();
-        packet.field.joy2Y  = joystick2.getY();
-        packet.field.joy2SW = joystick2.getClick() == HIGH ? 0xFF : 0x00;
-
-        Task_Next();
-    }
-}
-
-void sendPacket() {
-    uint8_t channel = 1;
-    UART_Init(channel, 38400);
-
-    for (;;) {
-        if (UART_Writable(channel)) {
-            UART_Transmit(channel, PACKET_MAGIC);
-            for (int i = 0; i < PACKET_SIZE; i += 1) {
-                UART_Transmit(channel, packet.data[i]);
-            }
-        }
-
-        Task_Next();
-    }
-}
-
-void updateLcd(void) {
-    char buf[16];
-
-    pad.clear();
-    for (;;) {
-        sprintf(buf, "%c:%4d %c:%4d %c" , XBAR_CHAR, joystick1.rawX, YBAR_CHAR, joystick1.rawY, joystick1.rawSW ? SWON_CHAR : SWOFF_CHAR);
-        pad.print(Keypad::LCD_ROW::TOP, buf);
-
-        sprintf(buf, "%c:%4d %c:%4d %c" , XBAR_CHAR, joystick2.rawX, YBAR_CHAR, joystick2.rawY, joystick2.rawSW ? SWON_CHAR : SWOFF_CHAR);
-        pad.print(Keypad::LCD_ROW::BOTTOM, buf);
-
-        Task_Next();
-    }
 }

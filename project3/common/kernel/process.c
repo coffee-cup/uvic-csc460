@@ -92,12 +92,12 @@ void enqueue(task_queue_t* list, PD* task) {
  * Takes into account the clock overflow state.
  */
 BOOL later(PD* t1, PD* t2) {
-    return ((t1->clockState != t2->clockState && t1->ttns < t2->ttns) ||
-            (t1->clockState == t2->clockState && t1->ttns > t2->ttns));
+    return ((t1->clockState != t2->clockState && t1->tons < t2->tons) ||
+            (t1->clockState == t2->clockState && t1->tons > t2->tons));
 }
 
 /**
- * Inserts a task into the queue respecting time to next start,
+ * Inserts a task into the queue respecting time of next start,
  * This operation is only supported for PERIODIC queues
  */
 void insert(task_queue_t* list, PD* task) {

@@ -19,9 +19,9 @@ typedef struct ProcessDescriptor {
     PRIORITY_LEVEL            priority;
     TICK                      period;               /* The period of a PERIODIC task */
     TICK                      wcet;                 /* The worst case execution time of a PERIODIC task */
-    TICK                      ttns;                 /* The time to next start for a PERIODIC task */
+    TICK                      tons;                 /* The time of the next start for a PERIODIC task */
     TICK                      ticks_remaining;      /* Until a PERIODIC or RR task is forced to yield */
-    volatile OVERFLOW_STATE clockState;             /* The EVEN or ODD state of the clock ttns is in */
+    volatile OVERFLOW_STATE clockState;             /* The EVEN or ODD state of the clock tons is in */
     struct ProcessDescriptor* next;
     volatile KERNEL_REQUEST_PARAMS *req_params;
 } PD;
