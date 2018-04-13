@@ -126,7 +126,7 @@ void modeChange(void) TASK ({
     mode = (mode == FREE_MODE)
         ? STAY_MODE
         : FREE_MODE;
-    uint8_t song = (mode == FREE_SONG)
+    uint8_t song = (mode == FREE_MODE)
         ? FREE_SONG
         : STAY_SONG;
     roomba.play_song(song);
