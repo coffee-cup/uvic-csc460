@@ -63,7 +63,7 @@ void choose_user_move(Move *move, uint16_t x_, uint16_t y_, uint8_t mode) {
         forward(move, y);
     } else if (abs_u(x) > DEADBAND) {
         // Spin drive
-        spin_right(move, x * 75 / 100);
+        spin_right(move, x / 100 * 50);
     } else {
         // Stop
         stop(move);

@@ -14,7 +14,7 @@ class Arm {
   protected:
     static const uint8_t DEG_MIN = 1;
     static const uint8_t DEG_MAX = 179;
-    static const uint8_t S_MAX_SPEED = 30; // deg / sec
+    static const uint8_t S_MAX_SPEED = 15; // deg / sec
 
     void setServoPos(Motor, uint8_t);
     void setJointSpeed(Joint &joint, int8_t s);

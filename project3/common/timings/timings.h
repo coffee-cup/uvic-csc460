@@ -19,29 +19,28 @@
 
 // Remote Station
 
-#define GET_DATA_PERIOD 2
-#define GET_DATA_WCET 1
+#define GET_DATA_PERIOD 4
+#define GET_DATA_WCET 3
 #define GET_DATA_DELAY 100
 
 #define UPDATE_ARM_PERIOD 2
 #define UPDATE_ARM_WCET 1
 #define UPDATE_ARM_DELAY 5
 
-#define COMMAND_ROOMBA_PERIOD 20
-#define COMMAND_ROOMBA_WCET 19
+#define COMMAND_ROOMBA_PERIOD 25
+#define COMMAND_ROOMBA_WCET 24
 #define COMMAND_ROOMBA_DELAY 20
 
-#define ARM_TICK_PERIOD 1
-#define ARM_TICK_WCET 0
+#define ARM_TICK_PERIOD 2
+#define ARM_TICK_WCET 1
 #define ARM_TICK_DELAY 9
 
 #define LIGHT_SENSOR_PERIOD 3
 #define LIGHT_SENSOR_WCET 2
 #define LIGHT_SENSOR_DELAY 10
 
-/* #define MODE_PERIOD (10000 / MSECPERTICK) // 60 seconds */
-#define MODE_PERIOD 1000
-#define MODE_WCET 1
+#define MODE_PERIOD (60000 / MSECPERTICK) // 60 seconds
+#define MODE_WCET 2
 #define MODE_DELAY 0
 
 #endif

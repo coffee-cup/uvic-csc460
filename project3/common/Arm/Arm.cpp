@@ -13,7 +13,7 @@ Arm::Arm():
         .servo   = Motor()
     }),
     Y({
-        .pos     = 90,
+        .pos     = 0,
         .speed   = 0,
         .lastRun = Now(),
         .servo   = Motor()

@@ -29,7 +29,7 @@
 
 #define VALID_ID(id) (id >= 0 && id < MAXTHREAD)          // Returns TRUE if the id is a valid process id
 
-#define DEBUG 1
+#define DEBUG 0
 
 // Baud rate for log messages
 #define LOGBAUD (38400)

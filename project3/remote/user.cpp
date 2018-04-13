@@ -24,7 +24,9 @@ extern "C" {
 #define START_SONG 3
 
 #define LIGHT_ALPHA 0.5
-#define LIGHT_THRESHOLD 20
+#define LIGHT_THRESHOLD 30
+
+#define STUPID 0
 
 Roomba roomba(/*Serial*/ 3, /*Port A pin*/ 0);
 Packet packet(512, 512, 0, 512, 512, 0);
@@ -38,6 +40,7 @@ volatile bool game_on = false;
 volatile uint8_t health = 10;
 volatile bool dead = false;
 volatile uint16_t light_average = 0;
+volatile bool started_before = false;
 
 void choose_move(Move* move) {
     bool is_wall = roomba.check_virtual_wall();
@@ -73,6 +76,10 @@ void choose_move(Move* move) {
     }
 
     choose_user_move(move, 1023 - packet.joy1X(), 1023 - packet.joy1Y(), mode);
+
+    if (move->left_speed == 0 && move->right_speed == 0 && mode == STAY_MODE && STUPID) {
+        forward(move, 8);
+    }
 }
 
 // Weak attribute allows other functions to redefine
@@ -172,10 +179,13 @@ void start_game() {
         dead = false;
         numLaserTicks = 30000 / MSECPERTICK;
         health = 10;
-        mode = FREE_MODE;
+        mode = STAY_MODE;
         roomba.play_song(START_SONG);
         roomba.leds(0, 0, 255);
-        Task_Create_Period(modeChange, 0, MODE_PERIOD, MODE_WCET, MODE_DELAY);
+        if (!started_before) {
+            Task_Create_Period(modeChange, 0, MODE_PERIOD, MODE_WCET, MODE_DELAY);
+            started_before = true;
+        }
     }
 }
 
@@ -185,8 +195,8 @@ void die(void) {
     }
     dead = true;
     LOG("DEAD\n");
-    roomba.play_song(DEAD_SONG);
     roomba.leds(0, 255, 255);
+    roomba.play_song(DEAD_SONG);
     // Task_Create_RR(deadSong, 0);
 }
 
