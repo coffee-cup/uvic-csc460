@@ -179,12 +179,6 @@ void start_game() {
     }
 }
 
-void deadSong(void) {
-    // Death song
-    // _delay_ms(10);
-    roomba.play_song(DEAD_SONG);
-}
-
 void die(void) {
     if (dead) {
         return;
