@@ -236,9 +236,11 @@ void UART_ISR(uint8_t chan) {
 
     if (_RXWn[chan] && _RXRn[chan] == _RXIn[chan]){
         // Ring buffer is full
-        LOG("UART RX full: Dropping data!\n");
-        uint8_t dummy = *UDRn[chan];
+        LOG("UART RX[%u] full: Dropping data!\n", chan);
+        uint8_t dummy;
+        while ( *UCSRnA[chan] & _BV(RXCn[chan]) ) dummy = *UDRn[chan];
         (void) dummy;
+
     } else {
         // Write the rx data into the ring buffer
         _RXBUFn[chan][_RXIn[chan]] = *UDRn[chan];
