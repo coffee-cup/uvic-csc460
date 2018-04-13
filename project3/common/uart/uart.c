@@ -275,4 +275,3 @@ ISR(USART2_RX_vect) {
 ISR(USART3_RX_vect) {
     UART_ISR(3);
 }
-

@@ -51,7 +51,8 @@ bool Roomba::init() {
     bool success = check_oi_mode(&mode);
 
     // First check couldn't get data and should be in mode 1
-    if (!success || mode != 1) {
+    // if (!success || mode != 1) {
+    if (!success) {
         LOG("Failed to communicate with Roomba, is it on? (Mode: %x)\n");
         success = false;
     }
@@ -60,7 +61,7 @@ bool Roomba::init() {
         // Check for battery power
         success = check_power(&power) && check_power_capacity(&power_cap);
         if (success) {
-            LOG("Power: %u / %u\nDone Startup (in passive mode)\n", power, power_cap);
+            LOG("Power: %u / %u\nDone Startup\n", power, power_cap);
         } else {
             LOG("Couldn't get Roomba power\nStartup Failed!\n");
         }
@@ -82,6 +83,28 @@ bool Roomba::check_power_capacity(uint16_t *power) {
 //Checks the current open interface mode
 bool Roomba::check_oi_mode(uint16_t* mode){
     return check_sensor(OI_SENSOR_ARGS::OIMODE, 1, mode);
+}
+
+bool Roomba::check_light_bumper(uint16_t *data) {
+    return check_sensor(OI_SENSOR_ARGS::LIGHT_BUMPER, 1, data);
+}
+
+bool Roomba::check_virtual_wall() {
+    uint16_t data = 0;
+    check_sensor(OI_SENSOR_ARGS::VIRTUAL_WALL, 1, &data);
+    return data;
+}
+
+bool Roomba::check_left_bumper() {
+    uint16_t data = 0;
+    check_sensor(OI_SENSOR_ARGS::BUMPERS, 1, &data);
+    return MASK_TEST_ANY(data, 0x02);
+}
+
+bool Roomba::check_right_bumper() {
+    uint16_t data = 0;
+    check_sensor(OI_SENSOR_ARGS::BUMPERS, 1, &data);
+    return MASK_TEST_ANY(data, 0x01);
 }
 
 //Generic check for up to 2 bytes from a sensor request
@@ -119,12 +142,42 @@ bool Roomba::check_sensor(OI_SENSOR_ARGS sensor, uint8_t nbytes, uint16_t *data)
     return success;
 }
 
+void Roomba::set_song(uint8_t song_number, uint8_t song_length, uint8_t *song) {
+    issue_cmd(OI_COMMAND::SONG);
+    issue_cmd(song_number);
+    issue_cmd(song_length);
+
+    // song[2i + 0] = note
+    // song[2i + 1] = duration
+    for (int i = 0; i < song_length; i += 1) {
+        issue_cmd(song[2 * i + 0]);
+        issue_cmd(song[2 * i + 1]);
+    }
+}
+
+void Roomba::play_song(uint8_t song_number) {
+    issue_cmd(OI_COMMAND::PLAY);
+    issue_cmd(song_number);
+}
+
 void Roomba::drive(int16_t velocity, int16_t radius) {
     issue_cmd(OI_COMMAND::DRIVE);
     issue_cmd(HIGH_BYTE(velocity));
     issue_cmd(LOW_BYTE(velocity));
     issue_cmd(HIGH_BYTE(radius));
     issue_cmd(LOW_BYTE(radius));
+}
+
+void Roomba::direct_drive(int16_t left_speed, int16_t right_speed) {
+    issue_cmd(OI_COMMAND::DIRECT_DRIVE);
+    issue_cmd(HIGH_BYTE(right_speed));
+    issue_cmd(LOW_BYTE(right_speed));
+    issue_cmd(HIGH_BYTE(left_speed));
+    issue_cmd(LOW_BYTE(left_speed));
+}
+
+void Roomba::stop() {
+    drive(0, 0);
 }
 
 void Roomba::dock() {

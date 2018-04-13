@@ -230,7 +230,7 @@ void Kernel_Task_Create() {
                 Process[x].ticks_remaining = Process[x].wcet;
                 Process[x].clockState = clock_state;
 
-                insert(&periodic_tasks, &Process[x]);
+                insert(&periodic_tasks, &Process[x], sys_clock);
             } else {
                 DIRECT_ABORT(INVALID_REQ_INFO);
             }
@@ -269,7 +269,7 @@ PD* Queue_Rotate_Ready(task_queue_t* queue) {
             // Move non-ready tasks to the end of the queue
             // If this is a periodic queue, use insert
             if (queue->type == PERIODIC) {
-                insert(queue, deque(queue));
+                insert(queue, deque(queue), sys_clock);
             } else {
                 enqueue(queue, deque(queue));
             }
@@ -307,7 +307,7 @@ static void Dispatch() {
 
         case PERIODIC:
             if (periodic_tasks.length > 1) {
-                insert(&periodic_tasks, deque(&periodic_tasks));
+                insert(&periodic_tasks, deque(&periodic_tasks), sys_clock);
             }
             break;
 
@@ -344,7 +344,8 @@ static void Dispatch() {
                based on increasing time of next start, only need to check first task */
             if (periodic_tasks.length > 0
                 && sys_clock >= peek(&periodic_tasks)->tons
-                && clock_state == peek(&periodic_tasks)->clockState) {
+                && clock_state == peek(&periodic_tasks)->clockState
+            ) {
                 new_p = Queue_Rotate_Ready(&periodic_tasks);
 
                 if (new_p != NULL &&
@@ -426,24 +427,7 @@ void Kernel_Request_Next() {
 }
 
 void Kernel_Request_Abort() {
-    /* Disable system clock by setting prescaler to 0 */
-    MASK_CLR(TCCR4B, 0b111);
-
-    /* Blink the built-in LED in accordance with the error code */
-    BIT_SET(DDRB, 7); /* Set PB7 as output */
-    BIT_CLR(PORTB, 7);
-    uint8_t ctr;
-
-    for(;;) {
-        LOG("OS Abort. Error code: %d\n", request_info->abort_code);
-        for (ctr = 0; ctr < request_info->abort_code; ctr += 1) {
-            BIT_SET(PORTB, 7);
-            _delay_ms(200);
-            BIT_CLR(PORTB, 7);
-            _delay_ms(200);
-        }
-        _delay_ms(1000);
-    }
+    utils_abort(request_info->abort_code);
 }
 
 void Kernel_Request_Terminate() {

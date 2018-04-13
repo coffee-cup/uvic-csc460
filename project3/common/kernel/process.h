@@ -38,6 +38,6 @@ task_queue_t* queue_init(task_queue_t* list, PRIORITY_LEVEL type);
 PD*  peek   (task_queue_t* list);
 PD*  deque  (task_queue_t* list);
 void enqueue(task_queue_t* list, PD* task);
-void insert (task_queue_t* list, PD* task);
+void insert (task_queue_t* list, PD* task, TICK sys_clock);
 
 #endif

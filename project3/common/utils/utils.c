@@ -1,5 +1,5 @@
 #include "utils.h"
-#include "os.h" // OS_Abort
+#include <util/delay.h>
 
 long map_u(long x, long in_min, long in_max, long out_min, long out_max) {
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
@@ -9,6 +9,10 @@ long constrain_u(long x, long min, long max) {
     if (x < min) return min;
     else if (x > max) return max;
     return x;
+}
+
+long cmap_u(long x, long in_min, long in_max, long out_min, long out_max) {
+    return constrain_u(map_u(x, in_min, in_max, out_min, out_max), out_min, out_max);
 }
 
 long abs_u(long x) {
@@ -132,4 +136,26 @@ void pwm_write(volatile uint16_t* OCR3n, uint16_t micro_seconds) {
     // Max = 5000 / 2000 * 250 = 625
     uint16_t value = map_u(micro_seconds, 500, 2500, 125, 625);
     *OCR3n = value;
+}
+
+
+void utils_abort(ABORT_CODE code) {
+    /* Disable system clock by setting prescaler to 0 */
+    MASK_CLR(TCCR4B, 0b111);
+
+    /* Blink the built-in LED in accordance with the error code */
+    BIT_SET(DDRB, 7); /* Set PB7 as output */
+    BIT_CLR(PORTB, 7);
+    uint8_t ctr;
+
+    for(;;) {
+        LOG("OS Abort. Error code: %d\n", code);
+        for (ctr = 0; ctr < code; ctr += 1) {
+            BIT_SET(PORTB, 7);
+            _delay_ms(200);
+            BIT_CLR(PORTB, 7);
+            _delay_ms(200);
+        }
+        _delay_ms(1000);
+    }
 }

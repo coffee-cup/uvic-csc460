@@ -37,7 +37,6 @@ Packet packet(512, 512, 0, 512, 512, 0);
 Joystick joystick1(pin.joy1X, pin.joy1Y, pin.joy1SW);
 Joystick joystick2(pin.joy2X, pin.joy2Y, pin.joy2SW);
 
-
 DELEGATE_MAIN();
 uint8_t data_channel = 2;
 
@@ -49,7 +48,6 @@ void updatePacket(void) {
         packet.joy1X(joystick1.getX());
         packet.joy1Y(joystick1.getY());
         packet.joy1SW(joystick1.getClick() ? 0xFF : 0x00);
-
         packet.joy2X(joystick2.getX());
         packet.joy2Y(joystick2.getY());
         packet.joy2SW(joystick2.getClick() ? 0xFF : 0x00);
@@ -66,7 +64,6 @@ void TXData(void) {
 }
 
 void create(void) {
-
     UART_Init(data_channel, 38400);
     // Create tasks
     Task_Create_Period(updatePacket, 0, 1,  0, 1);

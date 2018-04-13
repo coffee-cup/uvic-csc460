@@ -1,5 +1,6 @@
 #include "process.h"
 #include "os.h"
+#include "utils.h"
 
 /**
  * Initializes a task queue for tracking a certain priority task.
@@ -9,7 +10,7 @@ task_queue_t* queue_init(task_queue_t* list, PRIORITY_LEVEL type) {
     // Have a non-null pointer, and a valid priority type
     // All conditions inside inner-most parens must be true to continue
     if (!(list && type < NUM_PRIORITY_LEVELS)) {
-        OS_Abort(QUEUEING_ERROR);
+        utils_abort(QUEUEING_ERROR);
         return NULL;
     }
 
@@ -30,7 +31,7 @@ PD* peek(task_queue_t* list) {
     // Have a non-null list
     // All conditions inside inner-most parens must be true to continue
     if (!(list)) {
-        OS_Abort(QUEUEING_ERROR);
+        utils_abort(QUEUEING_ERROR);
         return NULL;
     }
 
@@ -46,7 +47,7 @@ PD* deque(task_queue_t* list) {
     // Have a non-null list, and its length is greater than 0
     // All conditions inside inner-most parens must be true to continue
     if (!(list && list->length > 0)) {
-        OS_Abort(QUEUEING_ERROR);
+        utils_abort(QUEUEING_ERROR);
         return NULL;
     }
 
@@ -58,9 +59,9 @@ PD* deque(task_queue_t* list) {
     } else {
         // Still have some items left, clean up
         list->head = element->next;
-        element->next = NULL;
     }
 
+    element->next = NULL;
     return element;
 }
 
@@ -72,7 +73,7 @@ void enqueue(task_queue_t* list, PD* task) {
     // Have non-null list and task, and the queue type matches the task priority.
     // All conditions inside inner-most parens must be true to continue
     if (!(list && task && list->type == task->priority)) {
-        OS_Abort(QUEUEING_ERROR);
+        utils_abort(QUEUEING_ERROR);
         return;
     }
 
@@ -100,11 +101,11 @@ BOOL later(PD* t1, PD* t2) {
  * Inserts a task into the queue respecting time of next start,
  * This operation is only supported for PERIODIC queues
  */
-void insert(task_queue_t* list, PD* task) {
+void insert(task_queue_t* list, PD* task, TICK sys_clock) {
     // Have a non-null list, and the queue type matches the task priority.
     // All conditions inside inner-most parens must be true to continue
     if (!(list && task && list->type == task->priority && list->type == PERIODIC)) {
-        OS_Abort(QUEUEING_ERROR);
+        utils_abort(QUEUEING_ERROR);
         return;
     }
 
@@ -120,7 +121,9 @@ void insert(task_queue_t* list, PD* task) {
 
         // Starting from the front, find the first element that
         // this task should run before
-        while (element != NULL && later(task, element)) {
+        while (element != NULL && (
+            later(task, element) || element->ticks_remaining < element->wcet || element->tons <= sys_clock
+        )) {
             element_prev = element;
             element = element->next;
         }
@@ -141,8 +144,8 @@ void insert(task_queue_t* list, PD* task) {
         // Task runs before some element and after other,
         // inserting between existing elements
         else {
-            element->next = task;
             task->next = element;
+            element_prev->next = task;
         }
 
         list->length += 1;
