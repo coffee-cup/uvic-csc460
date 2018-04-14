@@ -432,6 +432,10 @@ iframe {
     max-width: 100%;
 }
 
+.tree-dirs {
+    line-height: initial;
+}
+
 #TOC::-webkit-scrollbar {
     display: none;
 }
