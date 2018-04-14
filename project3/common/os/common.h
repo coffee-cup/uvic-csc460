@@ -29,7 +29,7 @@
 
 #define VALID_ID(id) (id >= 0 && id < MAXTHREAD)          // Returns TRUE if the id is a valid process id
 
-#define DEBUG 1
+#define DEBUG 0
 
 // Baud rate for log messages
 #define LOGBAUD (38400)
@@ -38,8 +38,8 @@
 #define LOG(...)                         \
     {                                    \
         if (DEBUG) {                     \
-            UART_Init0(LOGBAUD);         \
-            UART_print(__VA_ARGS__);     \
+            UART_Init(0, LOGBAUD);       \
+            UART_print(0, __VA_ARGS__);  \
         }                                \
     }
 
@@ -65,6 +65,10 @@
 #define MAXTHREAD    16                  /* Maximum supported threads */
 #define WORKSPACE    256                 /* in bytes, per THREAD */
 #define MSECPERTICK  10                  /* resolution of a system TICK in milliseconds */
+
+#define FREE_MODE 0
+#define STAY_MODE 1
+#define NO_MODE 3
 
 typedef uint16_t     PID;                /* Process ID: always non-zero if it is valid */
 typedef uint16_t     TICK;               /* Tick type: Length of 1 TICK is defined by MSECPERTICK */
@@ -99,7 +103,7 @@ typedef enum process_state {
 
 /**
  * This is the state of system clock overflow and is used to distinguish
- * whether a periodic tasks ttns has overflowed and looped back around through 0.
+ * whether a periodic tasks time of next start has overflowed and looped back around through 0.
  */
 typedef enum overflow_state {
     EVEN = 0,
@@ -140,7 +144,9 @@ typedef enum {
     INVALID_PRIORITY = 7,
     PERIODIC_MSG = 8,
     QUEUEING_ERROR = 9,
-    NULL_TASK_FUNCTION = 10
+    NULL_TASK_FUNCTION = 10,
+    UART_ERROR = 11,
+    PWM_ERROR = 12
 } ABORT_CODE;
 
 /**

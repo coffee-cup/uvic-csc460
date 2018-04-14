@@ -7,6 +7,8 @@
 #include <avr/io.h>
 #include "common.h"
 
+int main(void);
+
 // Aborts the RTOS and enters a "non-executing" state with an error code. That is, all tasks
 // will be stopped.
 void OS_Abort(ABORT_CODE error);

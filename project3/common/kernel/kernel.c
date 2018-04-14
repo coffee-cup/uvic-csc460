@@ -16,6 +16,14 @@
 
 #define VALID_ID(id) (id >= 0 && id < MAXTHREAD)
 
+/* Predeclare abort handler so anyone can jump to it */
+void Kernel_Request_Abort();
+#define DIRECT_ABORT(CODE) { \
+    KERNEL_REQUEST_PARAMS __abort = { .request = ABORT, .abort_code = CODE }; \
+    request_info = &__abort; \
+    Kernel_Request_Abort(); \
+}
+
 typedef void (*request_handler_func) (void);
 
 /**
@@ -116,7 +124,7 @@ extern void Exit_Kernel();
 extern void Enter_Kernel();
 
 /* User level 'main' function */
-extern void setup(void);
+extern void create(void);
 
 ISR(TIMER4_COMPA_vect) {
     if (KernelActive) {
@@ -125,7 +133,7 @@ ISR(TIMER4_COMPA_vect) {
         BIT_FLIP(PORTB, 6);
 
         if (request_info != NULL) {
-            OS_Abort(INVALID_REQ_INFO);
+            DIRECT_ABORT(INVALID_REQ_INFO);
         }
 
         KERNEL_REQUEST_PARAMS info = {
@@ -182,7 +190,7 @@ void Kernel_Task_Create() {
     }
 
     if (request_info->code == NULL) {
-        OS_Abort(NULL_TASK_FUNCTION);
+        DIRECT_ABORT(NULL_TASK_FUNCTION);
         return;
     }
 
@@ -218,17 +226,17 @@ void Kernel_Task_Create() {
             if (request_info->period > 0 && request_info->wcet < request_info->period) {
                 Process[x].period = request_info->period;
                 Process[x].wcet = request_info->wcet;
-                Process[x].ttns = sys_clock + request_info->offset;
+                Process[x].tons = sys_clock + request_info->offset;
                 Process[x].ticks_remaining = Process[x].wcet;
                 Process[x].clockState = clock_state;
 
-                insert(&periodic_tasks, &Process[x]);
+                insert(&periodic_tasks, &Process[x], sys_clock);
             } else {
-                OS_Abort(INVALID_REQ_INFO);
+                DIRECT_ABORT(INVALID_REQ_INFO);
             }
 
         } else {
-            OS_Abort(INVALID_REQ_INFO);
+            DIRECT_ABORT(INVALID_REQ_INFO);
             return;
         }
 
@@ -236,7 +244,7 @@ void Kernel_Task_Create() {
         Tasks += 1;
     } else {
         /* Couldn't find a dead task */
-        OS_Abort(NO_DEAD_PROCESS);
+        DIRECT_ABORT(NO_DEAD_PROCESS);
         return;
     }
 }
@@ -261,7 +269,7 @@ PD* Queue_Rotate_Ready(task_queue_t* queue) {
             // Move non-ready tasks to the end of the queue
             // If this is a periodic queue, use insert
             if (queue->type == PERIODIC) {
-                insert(queue, deque(queue));
+                insert(queue, deque(queue), sys_clock);
             } else {
                 enqueue(queue, deque(queue));
             }
@@ -299,7 +307,7 @@ static void Dispatch() {
 
         case PERIODIC:
             if (periodic_tasks.length > 1) {
-                insert(&periodic_tasks, deque(&periodic_tasks));
+                insert(&periodic_tasks, deque(&periodic_tasks), sys_clock);
             }
             break;
 
@@ -313,7 +321,7 @@ static void Dispatch() {
             // Could have Cp == IdleProcess, in which case the priority isn't a normal value
             // Only abort if the CP isn't the idle process
             if (Cp != &IdleProcess) {
-                OS_Abort(INVALID_PRIORITY);
+                DIRECT_ABORT(INVALID_PRIORITY);
                 return;
             }
         break;
@@ -333,15 +341,20 @@ static void Dispatch() {
         if (new_p == NULL) {
 
             /* Check for periodic tasks which are ready to run, assuming sorted order
-               based on increasing time to next start, only need to check first task */
+               based on increasing time of next start, only need to check first task */
             if (periodic_tasks.length > 0
-                && sys_clock >= peek(&periodic_tasks)->ttns
-                && clock_state == peek(&periodic_tasks)->clockState) {
+                && sys_clock >= peek(&periodic_tasks)->tons
+                && clock_state == peek(&periodic_tasks)->clockState
+            ) {
                 new_p = Queue_Rotate_Ready(&periodic_tasks);
 
-                if (new_p != NULL && sys_clock > new_p->ttns && clock_state == new_p->clockState) {
+                if (new_p != NULL &&
+                  new_p->ticks_remaining == new_p->wcet &&
+                  sys_clock > new_p->tons &&
+                  clock_state == new_p->clockState) {
                     // A periodic task must be run on its period
-                    OS_Abort(TIMING_VIOLATION);
+                    LOG("Missed starting time!\n");
+                    DIRECT_ABORT(TIMING_VIOLATION);
                     return;
                 }
             }
@@ -374,7 +387,7 @@ void Kernel_Request_Create() {
 }
 
 void Kernel_Request_Next() {
-    TICK prev_ttns;
+    TICK prev_tons;
     switch (Cp->priority) {
         case SYSTEM:
             // System task yielded, nothing to do
@@ -382,12 +395,12 @@ void Kernel_Request_Next() {
 
         case PERIODIC:
             // The task yieleded, make it ready for next time
-            prev_ttns = Cp->ttns;
-    		Cp->ttns += Cp->period;
-	        Cp->ticks_remaining = Cp->wcet;
+            prev_tons = Cp->tons;
+            Cp->tons += Cp->period;
+            Cp->ticks_remaining = Cp->wcet;
 
             // Overflow
-            if (Cp->ttns < prev_ttns) {
+            if (Cp->tons < prev_tons) {
                 Cp->clockState = Cp->clockState == EVEN ? ODD : EVEN;
             }
         break;
@@ -399,7 +412,7 @@ void Kernel_Request_Next() {
 
         default:
             // Always abort, Idle Process doesn't yield
-            OS_Abort(INVALID_PRIORITY);
+            DIRECT_ABORT(INVALID_PRIORITY);
             return;
             break;
     }
@@ -414,24 +427,7 @@ void Kernel_Request_Next() {
 }
 
 void Kernel_Request_Abort() {
-    /* Disable system clock by setting prescaler to 0 */
-    MASK_CLR(TCCR4B, 0b111);
-
-    /* Blink the built-in LED in accordance with the error code */
-    BIT_SET(DDRB, 7); /* Set PB7 as output */
-    BIT_CLR(PORTB, 7);
-    uint8_t ctr;
-
-    for(;;) {
-        LOG("OS Abort. Error code: %d\n", request_info->abort_code);
-        for (ctr = 0; ctr < request_info->abort_code; ctr += 1) {
-            BIT_SET(PORTB, 7);
-            _delay_ms(200);
-            BIT_CLR(PORTB, 7);
-            _delay_ms(200);
-        }
-        _delay_ms(1000);
-    }
+    utils_abort(request_info->abort_code);
 }
 
 void Kernel_Request_Terminate() {
@@ -449,13 +445,13 @@ void Kernel_Request_Terminate() {
             killed_task = deque(&rr_tasks);
             break;
         default:
-            OS_Abort(INVALID_PRIORITY);
+            DIRECT_ABORT(INVALID_PRIORITY);
             return;
             break;
     }
 
     if (killed_task != Cp) {
-        OS_Abort(WRONG_TASK_ORDER);
+        DIRECT_ABORT(WRONG_TASK_ORDER);
         return;
     }
 
@@ -473,7 +469,7 @@ void Kernel_Request_Terminate() {
 void Kernel_Request_MsgSend() {
     // Periodic tasks cannot send
     if (Cp->priority == PERIODIC) {
-        OS_Abort(PERIODIC_MSG);
+        DIRECT_ABORT(PERIODIC_MSG);
         return;
     }
 
@@ -522,7 +518,7 @@ void Kernel_Request_MsgSend() {
 void Kernel_Request_MsgRecv() {
     // Periodic tasks cannot receive
     if (Cp->priority == PERIODIC) {
-        OS_Abort(PERIODIC_MSG);
+        DIRECT_ABORT(PERIODIC_MSG);
         return;
     }
 
@@ -556,7 +552,7 @@ void Kernel_Request_MsgRecv() {
 void Kernel_Request_MsgRply() {
     // Periodic tasks cannot reply
     if (Cp->priority == PERIODIC) {
-        OS_Abort(PERIODIC_MSG);
+        DIRECT_ABORT(PERIODIC_MSG);
         return;
     }
 
@@ -590,7 +586,7 @@ void Kernel_Request_MsgRply() {
 void Kernel_Request_MsgASend() {
     // Check if process id is valid
     if (!VALID_ID(request_info->msg_to)) {
-        OS_Abort(INVALID_REQ_INFO);
+        DIRECT_ABORT(INVALID_REQ_INFO);
         return;
     }
 
@@ -631,10 +627,12 @@ void Kernel_Request_Timer() {
 
         case PERIODIC:
             // Tick ended during periodic task
-    		Cp->ticks_remaining -= 1;
+            Cp->ticks_remaining -= 1;
+
             if (Cp->ticks_remaining <= 0) {
                 // Task ran over it's worst case execution time
-                OS_Abort(TIMING_VIOLATION);
+                LOG("Ran out of time!\n");
+                DIRECT_ABORT(TIMING_VIOLATION);
                 return;
             }
         break;
@@ -642,6 +640,7 @@ void Kernel_Request_Timer() {
         case RR:
             // Tick ended during round robin task
             Cp->ticks_remaining -= 1;
+
             if (Cp->ticks_remaining <= 0) {
                 // Let it go again
                 Cp->ticks_remaining = 1;
@@ -651,7 +650,7 @@ void Kernel_Request_Timer() {
         default:
             // Timer can interrupt the idle process
             if (Cp != &IdleProcess) {
-                OS_Abort(INVALID_PRIORITY);
+                DIRECT_ABORT(INVALID_PRIORITY);
                 return;
             }
         break;
@@ -669,10 +668,8 @@ void Kernel_Request_Timer() {
     // You were running before the tick, so you're ready now
     Cp->state = READY;
 
-    // Do not dispatch for periodic
-    if (Cp->priority != PERIODIC) {
-        Dispatch();
-    }
+    // Dispatch the next task
+    Dispatch();
 }
 
 void Kernel_Request_GetArg() {
@@ -720,7 +717,7 @@ static void Next_Kernel_Request() {
             request_info = NULL;
         } else {
             if (KernelActive) {
-                OS_Abort(NO_REQUEST_INFO);
+                DIRECT_ABORT(NO_REQUEST_INFO);
                 return;
             }
         }
@@ -733,7 +730,7 @@ static void Next_Kernel_Request() {
         /* if this task makes a kernel request, it will return to here! */
         /* request_info should be valid again! */
         if (!request_info) {
-            OS_Abort(NO_REQUEST_INFO);
+            DIRECT_ABORT(NO_REQUEST_INFO);
             return;
         }
 
@@ -749,7 +746,7 @@ static void Next_Kernel_Request() {
             /* It's up to the handler to decide if it should dispatch */
             request_handlers[request_info->request]();
         } else {
-            OS_Abort(INVALID_REQ_INFO);
+            DIRECT_ABORT(INVALID_REQ_INFO);
             return;
         }
     }
@@ -831,7 +828,7 @@ void Kernel_Init() {
     KERNEL_REQUEST_PARAMS info = {
         .request = CREATE,
         .priority = SYSTEM,
-        .code = setup,
+        .code = create,
         .arg = 0
     };
 
@@ -871,10 +868,12 @@ int main(void) {
     BIT_SET(DDRB, 6);
     BIT_SET(PORTB, 6);
 
-    // Debug pins
+    // Idle pin
     BIT_SET(DDRD, 0);
-    BIT_SET(DDRD, 1);
     BIT_CLR(PORTD, 0);
+
+    // Debug pin
+    BIT_SET(DDRD, 1);
     BIT_CLR(PORTD, 1);
 
     Kernel_Init();
@@ -882,7 +881,7 @@ int main(void) {
     Kernel_Start();
 
     /* Control should never reach this point */
-    OS_Abort(FAILED_START);
+    DIRECT_ABORT(FAILED_START);
 
     return -1;
 }
