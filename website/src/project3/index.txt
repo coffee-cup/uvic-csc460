@@ -1,5 +1,6 @@
 index.md
 rtos.md
 hardware.md
+roomba.md
 signals.md
 game.md
