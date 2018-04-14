@@ -1,4 +1,4 @@
-# Signal Processing Tools
+# Hardware Interfaces
 
 ## Universal Asynchronous Receiver Transmitter (UART)
 
