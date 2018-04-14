@@ -6,6 +6,10 @@ Brief overview of components used
 
 ### Open Interface
 
+### Movement
+
+I'll put that movement diagram thing here.
+
 ## ATMega2560
 
 ## Servos
@@ -13,4 +17,3 @@ Brief overview of components used
 ## Joysticks
 
 ## Lasers
-
