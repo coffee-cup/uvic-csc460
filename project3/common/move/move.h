@@ -5,7 +5,7 @@
 #include "utils.h"
 #include "common.h"
 
-#define MAX_SPEED (300)
+#define MAX_SPEED (500)
 #define DEADBAND (20)
 
 typedef struct move_type {
