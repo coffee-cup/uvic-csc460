@@ -119,10 +119,16 @@ Following the design pattern of a simple base station, the heart of the computat
 
 As such, the file containing the control code for the remote station RTOS is significantly longer. The remote station uses a combination of Periodic tasks and Round Robin tasks to complete its requirements. During setup the control code initializes 4 periodic tasks for receiving data, reading light sensor data, updating pan-and-tilt kit state, and moving the pan-and-tilt kit in accordance to requested state. A Round Robin task is created immediately as well to initialize the Roomba - this task is long running, and when complete it creates another (5th) Periodic task for issuing movement commands to the Roomba. [View the whole remote station control code file here.](https://github.com/coffee-cup/uvic-csc460/blob/master/project3/remote/user.cpp)
 
-## Round robin queuing
+## Periodic task queuing fairness
+
+One of the bugs in the operating system that went undiscovered in testing during project 2 was to do with dispatching between multiple Periodic tasks. Consider two periodic tasks, one with high frequency (low period) but low worst-case execution time and the second with high period and high worst-case execution. That is, the first task runs often but does not take long, and the second task takes a long time, but runs infrequently.
+
+The problem encountered with this scenario was that the kernel would not dispatch from one periodic task to another when clock ticks occurred. This would cause the high frequency task to be delayed until after the long running task completed. Often this means that the high frequency task has missed it's start time, causing a timing violation. The fix is to treat all tasks fairly, regardless of priority. If multiple periodic tasks are ready to run, or are running at any point in time, then they should get equal share of the hardware.
+
+The following screenshots illustrate this issue.
 
 *Need to go to school for some logic capture screenshots*
 
 ## Aborting from within kernel
 
-*Zev todo*
+Some abort cases were going unnoticed since the system wide function `OS_Abort(ABORT_CODE error)` could not be successfully called from within the Kernel. As implemented, `OS_Abort` caused the system to create a `Kernel_Request` call, which causes the system to attempt to context switch into the kernel. If the caller was already the kernel, then the current process pointer would become mangled, and would cause the hardware to perform a hard reset, resulting in the system rebooting and the error disappearing. A fix for this was to have the kernel jump directly to the error handler without performing a call to `Kernel_Request`.
