@@ -4,7 +4,7 @@
 
 ## Movement
 
-Our Roomba used two main types of movement, autonomous and user controlled. We used the direct drive function so we could control the speeds and direction and each well individually. This gave us more fine grained control over how the Roomba moved in comparison to the other drive function.
+Our Roomba used two main types of movement, autonomous and user controlled. We used the direct drive function so we could control the speeds and direction and each well individually. This gave us more fine grained control over how the Roomba moved in comparison to the other drive function. When choosing a move to make we use percentage based speeds between 0 and 100. This allows us to adjust a single `MAX_SPEED` variable which controls how fast the Roomba moves at max speed.
 
 ### User Movement
 
@@ -39,7 +39,6 @@ void choose_user_move(Move *move, uint16_t joyX, uint16_t joyY) {
         }
 
         y = cmap_u(y, -100, 100, -25, 25);
-
         set_speeds(move,
                    cmap_u(left_x + y, -75, 75, -100, 100),
                    cmap_u(right_x + y, -75, 75, -100, 100));
@@ -48,7 +47,7 @@ void choose_user_move(Move *move, uint16_t joyX, uint16_t joyY) {
         forward(move, y);
     } else if (abs_u(x) > DEADBAND) {
         // Spin drive
-        spin_right(move, x / 100 * 50);
+        spin_right(move, x);
     } else {
         // Stop
         stop(move);
