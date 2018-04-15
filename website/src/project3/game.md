@@ -1,8 +1,8 @@
 # Capture the Tower Game
 
-The end goal of project 3 was to build a Roomba that could play a _Capture the Tower Game_. The game involves two teams of two positioned on opposite sides of the room. Each time has a _castle_ to defend. If your castle is shot with a laser for more than 5 seconds then your team loses. Each Roomba robot also has a light sensor mounted inside a large cup (to increase the target-able area). If the light sensor is shot then the robot is instantly dead and can no longer move or shoot its laser. Each Roomba also is equipped with a shield, a piece of styrofoam or cardboard, that can be used to block the laser. In the middle of the game floor is a _river_. The river is implemented as two virtual walls. These walls send out infrared signals so are invisible to the human eye, but detectable by the Roombas. Crossing the walls will result in the Roomba being eliminated. A box was placed on both sides of the river which could be used as cover from the enemy team.
+The end goal of project 3 was to build a Roomba that could play a _Capture the Tower Game_. The game involves two teams of two positioned on opposite sides of the room. Each time has a _castle_ to defend. If your castle is shot with a laser for more than 5 seconds then your team loses. Each Roomba robot also has a light sensor mounted inside a large cup (to increase the target-able area). If the light sensor is shot then the robot is instantly dead and can no longer move or shoot its laser. Each Roomba also is equipped with a shield, a piece of styrofoam or cardboard, that can be used to block the lasers. In the middle of the game floor is a _river_. The river is implemented as two virtual walls. These walls send out infrared signals that are invisible to the human eye, but detectable by the Roomba's sensors. Crossing the walls will result in the Roomba being eliminated. A box was placed on both sides of the river which could be used as cover from the enemy team.
 
-The castle is simply a light sensor and some LEDs. The light sensor is placed inside of a red solo cup to make the detectable area larger. The LEDs indicate if the castle is currently being hit (one or two lights on) or if the castle is dead (lights flashing). A rough diagram of the game layout is shown in the following figure.
+The castle is simply a light sensor and some LEDs. Light sensors on the castle and robots are placed inside of a red solo cup to make the detectable area larger. The LEDs indicate if the castle is currently being hit (one or two lights on) or if the castle is dead (lights flashing). A rough diagram of the game layout is shown in the following figure.
 
 ![Capture the Tower Game Layout](https://i.imgur.com/fT2Jrv5.png)
 
@@ -42,11 +42,11 @@ void modeChange(void) TASK ({
 })
 ```
 
-This mode state was used to determine allowed user movements. Autonomous movements were allowed in both modes but in stay mode the user was only able to spin. When choosing a user move while playing the game, we simply looked at which mode we were in, if it was stay mode we restricted the movement to spinning.
+The mode state was used to determine which movements the driver could make. Autonomous movements were allowed in both modes but in stay mode the user was only able to spin. When determining movement while playing the game, we simply looked at which mode we were in, if it was stay mode we restricted the movement to spinning only.
 
 ### Laser Energy
 
-The laser only had enough energy for 30 seconds of shooting. We implemented this feature with a simple counter,
+The laser only had enough energy for 30 seconds of continuous fire. We implemented this feature with a simple counter,
 
 ```c
 // 30 seconds === 30000 ms
@@ -100,7 +100,7 @@ The values that we used for $\alpha$ and the threshold are
 - $\alpha = 0.5$
 - $\text{threshold} = 30$
 
-When we detected a laser shooting us we would play a sound and change the onboard LED to red. No movement was allowed to be made and the laser would not shoot.
+When we detected a laser shooting us we would play a sound and change the Roomba's main LED to red. No movement was allowed to be made and the laser would not shoot.
 
 ## Results
 
@@ -108,7 +108,7 @@ The full setup of our Roomba can be seen in the following image,
 
 ![Roomba Full Setup](https://i.imgur.com/IE97pyn.jpg)
 
-We made a controller using cardboard, tape, and zip ties. The Arduino on the controller was powered using a portable battery. This was super convenient as it allowed us to walk around and control the Roomba wirelessly. The controller we made can be seen in the following image.
+We built a portable controller by mounting some components on cardboard using twist ties. The Arduino on the controller was powered using a battery. This was super convenient as it allowed us to walk around and control the Roomba wirelessly. The controller we made can be seen in the following image.
 
 ![Game Controller](https://i.imgur.com/RVRYPa9.jpg)
 
