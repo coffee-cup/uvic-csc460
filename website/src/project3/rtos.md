@@ -20,7 +20,7 @@ extern "C" {
 Where the project directory for project 2 was mostly flat, we needed a way to include the operating system in multiple projects. For this we renamed the `libs` directory to `common`
 and created two sub-projects in the project 3 directory. This way the individual "base" and "remote" stations could include the same code and could be independently built using the associated Makefile.
 
-+-------------------------------+--------------------------------+
++-------------------------------|--------------------------------+
 |  Project 2                    |  Project 3                     |
 +===============================+================================+
 |<div class ="tree-dirs">       |<div class="tree-dirs">         |
@@ -48,7 +48,7 @@ and created two sub-projects in the project 3 directory. This way the individual
 |                               |         ├── Makefile           |
 |                               |         └── user.cpp           |
 |</div>                         |</div>                          |
-+-------------------------------+--------------------------------+
++-------------------------------|--------------------------------+
 
 
 ### Base Station
@@ -125,9 +125,14 @@ One of the bugs in the operating system that went undiscovered in testing during
 
 The problem encountered with this scenario was that the kernel would not dispatch from one periodic task to another when clock ticks occurred. This would cause the high frequency task to be delayed until after the long running task completed. Often this means that the high frequency task has missed it's start time, causing a timing violation. The fix is to treat all tasks fairly, regardless of priority. If multiple periodic tasks are ready to run, or are running at any point in time, then they should get equal share of the hardware.
 
-The following screenshots illustrate this issue.
+The following logic capture screenshot shows show the result of 3 tasks flipping a bit when our RTOS was **unfair** to period tasks.
 
-*Need to go to school for some logic capture screenshots*
+![Broken - Periodic Task Unfairness](https://i.imgur.com/XeRPyYO.png)
+
+The following shows a logic captures screenshot after we fixed the periodic task fairness.
+
+![Working - Periodic Task Fairness](https://i.imgur.com/PW4VDR4.png)
+
 
 ## Aborting from within kernel
 
