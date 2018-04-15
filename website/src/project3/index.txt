@@ -5,4 +5,5 @@ interfaces.md
 roomba.md
 signals.md
 game.md
+closing.md
 appendix.md
