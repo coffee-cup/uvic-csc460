@@ -125,14 +125,30 @@ One of the bugs in the operating system that went undiscovered in testing during
 
 The problem encountered with this scenario was that the kernel would not dispatch from one periodic task to another when clock ticks occurred. This would cause the high frequency task to be delayed until after the long running task completed. Often this means that the high frequency task has missed it's start time, causing a timing violation. The fix is to treat all tasks fairly, regardless of priority. If multiple periodic tasks are ready to run, or are running at any point in time, then they should get equal share of the hardware.
 
-The following logic capture screenshot shows show the result of 3 tasks flipping a bit when our RTOS was **unfair** to period tasks.
+The following logic trance screenshots illustrate this issue. The first 3 traces show tasks, the signal goes high when it begins executing and goes low when it ends its execution. The 4th trace is the system clock. In both cases the tasks have the same timings:
 
-![Broken - Periodic Task Unfairness](https://i.imgur.com/XeRPyYO.png)
+ * Task A::
+    - Period: 5 ticks
+    - Worst Case Execution Time: 3 ticks
+    - Delay: 10 ticks
+ * Task B::
+    - Period: 5 ticks
+    - Worst Case Execution Time: 3 ticks
+    - Delay: 12 ticks
+ * Task B::
+    - Period: 10 ticks
+    - Worst Case Execution Time: 9 ticks
+    - Delay: 13 ticks
 
-The following shows a logic captures screenshot after we fixed the periodic task fairness.
+[working]: https://i.imgur.com/ZlD5nxu.png "Long running periodic tasks are forced to yield to other periodic tasks"
+[broken]: https://i.imgur.com/vge8ZnO.png "Periodic tasks do not yield for when others should start"
 
-![Working - Periodic Task Fairness](https://i.imgur.com/PW4VDR4.png)
 
+![Periodic tasks do not yield for when others should start][broken]
+
+![Long running periodic tasks are forced to yield to other periodic tasks][working]
+
+One argument against this change might have been that no two periodic tasks should be running at the same time, but abiding by this restriction was difficult in practice. With this change in place however, we need to be mindful to having too many periodic tasks, as the number of periodic tasks running now affects the worst case execution time of all other periodic tasks.
 
 ## Aborting from within kernel
 
