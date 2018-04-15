@@ -1,6 +1,58 @@
 # Roomba
 
+All of the control with the Roomba occurred over via UART. We created a C++ class to entirley dealt with communicating with the Roomba. You can [view the header file here](https://github.com/coffee-cup/uvic-csc460/blob/master/project3/common/Roomba/Roomba.h).
+
 ## Open Interface
+
+We used [this open interface specification](http://www.irobotweb.com/~/media/MainSite/PDFs/About/STEM/Create/iRobot_Roomba_600_Open_Interface_Spec.pdf) to understand what commands to send in order to control the Roomba and query the onboard sensors.
+
+### Initialization
+
+Before the Roomba could be controlled, it first needed to be initialized. A baud rate control (BRC) pin was used to set the UART baud rate to a predefined value. When the BRC pin was flipped low 3 times the baud rate was set to $19200$. Using this baud rate we sent a command to enable the serial open interface. The baud rate was then set to a much higher value of $57600$. If initialization was successful we logged the power capacity.
+
+### Sending Commands
+
+As commands were sent to the Roomba over serial, we simply used our [UART library](#universal-asynchronous-receiver-transmitter-uart). Commands are defined as single byte opcodes. The commands we used are defined as an enum.
+
+```c
+    enum OI_COMMAND {
+        RESET = 7U,       // reset the Roomba as if the battery was removed and replaced
+        START_SCI = 128U, // start the Roomba's serial command interface
+        BAUD = 129U,      // set the SCI's baudrate (default on full power cycle is 115200)
+        SAFE = 131U,      // enter safe mode (aka. control)
+        FULL = 132U,      // enter full mode
+        POWER = 133U,     // put the Roomba to sleep
+        SPOT = 134U,      // start spot cleaning cycle
+        CLEAN = 135U,     // start normal cleaning cycle
+        MAX = 136U,       // start maximum time cleaning cycle
+        DRIVE = 137U,     // control wheels
+        MOTORS = 138U,    // turn cleaning motors on or off
+        LEDS = 139U,      // activate LEDs
+        SONG = 140U,      // load a song into memory
+        PLAY = 141U,      // play a song that was loaded using SONG
+        SENSORS = 142U,   // retrieve one of the sensor packets
+        DOCK = 143U,      // force the Roomba to seek its dock.
+        DIRECT_DRIVE = 145U, // control each wheels speed individually
+        STOP_SCI = 173U,  // stop the Roomba's SCI
+
+    };
+```
+
+Some commands, such as driving, required additional data to be sent. The data bytes were sent immediately following the opcode. Multiple byte values were sent high byte first. For example, our code for the direct drive command is,
+
+```c
+void Roomba::direct_drive(int16_t left_speed, int16_t right_speed) {
+    issue_cmd(OI_COMMAND::DIRECT_DRIVE);
+    issue_cmd(HIGH_BYTE(right_speed));
+    issue_cmd(LOW_BYTE(right_speed));
+    issue_cmd(HIGH_BYTE(left_speed));
+    issue_cmd(LOW_BYTE(left_speed));
+}
+```
+
+### Reading Sensors
+
+The Roomba is equipped with multiple onboard sensors. To query a sensor, the sensor opcode followed by the specific sensor opcode needs to be sent over UART. The result of the query is returned over UART after a small 50ms delay. If the data being returned is multiple bytes, the high byte is sent first.
 
 ## Movement
 
