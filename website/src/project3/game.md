@@ -108,10 +108,10 @@ The full setup of our Roomba can be seen in the following image,
 
 ![Roomba Full Setup](https://i.imgur.com/IE97pyn.jpg)
 
-We made a controller using cardboard, tape, and zip ties. The Arduino on the controller was powered using a portable battery. This was super convient as it allowed us to walk around and control the Roomba wirelessly. The controller we made can be seen in the following image.
+We made a controller using cardboard, tape, and zip ties. The Arduino on the controller was powered using a portable battery. This was super convenient as it allowed us to walk around and control the Roomba wirelessly. The controller we made can be seen in the following image.
 
 ![Game Controller](https://i.imgur.com/RVRYPa9.jpg)
 
-Even though we did not win the overall competition, we were very happy with our final robot. It was responsive, had good movement controls, and successfully used our project 2 RTOS. We even configured a game joystick to control our Roomba by sending UDP packets from a NodeJS server running on our computers to the remote station. A video of our Roomba moving with the joystick is shown in the following video.
+Even though we did not win the overall competition, we were very happy with our final robot. It was responsive, had good movement controls, and successfully used our project 2 RTOS. We even [configured a game joystick to control our Roomba](https://gist.github.com/zevisert/f0bc9b3c979e013e004884dfd8b6e4e5) by sending UDP packets from a NodeJS server running on our computers to the remote station. A video of our Roomba moving with the joystick is shown in the following video.
 
 <iframe width="720" height="360" src="https://www.youtube.com/embed/Mu4KXoZp-OU?mute=1" frameborder="0" allow="encrypted-media" allowfullscreen></iframe>
