@@ -1,6 +1,6 @@
 # Roomba
 
-All of the control with the Roomba occurred over via UART. We created a C++ class to entirley dealt with communicating with the Roomba. You can [view the header file here](https://github.com/coffee-cup/uvic-csc460/blob/master/project3/common/Roomba/Roomba.h).
+All of the control with the Roomba occurred via UART. We created a C++ class to abstract away the UART communication into an easy to use interface. You can [view the header file here](https://github.com/coffee-cup/uvic-csc460/blob/master/project3/common/Roomba/Roomba.h).
 
 ## Open Interface
 
