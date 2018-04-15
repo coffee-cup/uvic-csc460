@@ -4,7 +4,7 @@ The end goal of project 3 was to build a Roomba that could play a _Capture the T
 
 The castle is simply a light sensor and some LEDs. The light sensor is placed inside of a red solo cup to make the detectable area larger. The LEDs indicate if the castle is currently being hit (one or two lights on) or if the castle is dead (lights flashing). A rough diagram of the game layout is shown in the following figure.
 
-![Capture the Tower Game Layout](https://i.imgur.com/XWfsI8I.png)
+![Capture the Tower Game Layout](https://i.imgur.com/fT2Jrv5.png)
 
 ## Rules
 
