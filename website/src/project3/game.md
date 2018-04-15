@@ -11,7 +11,7 @@ The castle is simply a light sensor and some LEDs. The light sensor is placed in
 The game rules, from the course website, are as follows
 
 > A group wins if it can "destroy" (shoot down) the other group's castle, or "kills" (shoot down) the other group's robots. Since each robot is equipped with a shield, so it can defend itself or its castle. A robot's movement is required to switch from "cruise" mode to "stand still" mode every minute. That is, it is allowed to move freely within its playing field for one minute, and then it must remain stationary, except that it is allowed to spin, for another minute, and so on. The laser has only enough "energy" to turn on for 30 seconds in total; that is, it cannot be turned on all the time. When a robot runs out of energy, then it can only use its shield but it can't shoot.
-
+>
 > Each round is run for about 5 minutes. At the end of each round, if both castles remain, then the group with the most surviving robot wins.
 
 ## Implementation
