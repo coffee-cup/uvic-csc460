@@ -143,6 +143,7 @@ The following logic trance screenshots illustrate this issue. The first 3 traces
 [working]: https://i.imgur.com/ZlD5nxu.png "Long running periodic tasks are forced to yield to other periodic tasks"
 [broken]: https://i.imgur.com/vge8ZnO.png "Periodic tasks do not yield for when others should start"
 
+The vertical lines show when Task A and B should have started for the second time.
 
 ![Periodic tasks do not yield for when others should start][broken]
 
