@@ -1,4 +1,4 @@
-# Real time operating system
+# Changes to the Real Time Operating System
 
 Users of our RTOS can create Tasks to complete their computations, and Tasks have 3 levels of priority, System, Periodic, and Round Robin. System tasks preempt all other tasks, and run until completion or yield. Periodic tasks are designed to be executed on a given period, they must yield before a given worst-case execution time, and are able to preempt Round Robin tasks but not System tasks. Round Robin tasks are the lowest priority, they are executed only when no other task is executing, and run until preemption, termination, or yield.
 

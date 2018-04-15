@@ -1,7 +1,7 @@
 index.md
 rtos.md
-interfaces.md
 hardware.md
+interfaces.md
 roomba.md
 signals.md
 game.md
