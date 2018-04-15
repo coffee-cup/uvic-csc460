@@ -20,7 +20,7 @@ extern "C" {
 Where the project directory for project 2 was mostly flat, we needed a way to include the operating system in multiple projects. For this we renamed the `libs` directory to `common`
 and created two sub-projects in the project 3 directory. This way the individual "base" and "remote" stations could include the same code and could be independently built using the associated Makefile.
 
-+-------------------------------|--------------------------------+
++-------------------------------+--------------------------------+
 |  Project 2                    |  Project 3                     |
 +===============================+================================+
 |<div class ="tree-dirs">       |<div class="tree-dirs">         |
@@ -48,7 +48,7 @@ and created two sub-projects in the project 3 directory. This way the individual
 |                               |         ├── Makefile           |
 |                               |         └── user.cpp           |
 |</div>                         |</div>                          |
-+-------------------------------|--------------------------------+
++-------------------------------+--------------------------------+
 
 
 ### Base Station
