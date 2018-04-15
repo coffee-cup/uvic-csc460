@@ -52,7 +52,7 @@ void Roomba::direct_drive(int16_t left_speed, int16_t right_speed) {
 
 ### Reading Sensors
 
-The Roomba is equipped with multiple onboard sensors. To query a sensor, the query sensor command opcode followed by the sensor identifier needs to be sent over UART. The result of the query is returned over UART after a 50ms delay. If the data being returned is multiple bytes, the high byte is sent first.
+The Roomba is equipped with multiple onboard sensors. To query a sensor, the sensor command opcode followed by the sensor identifier needs to be sent over UART. The result of the query is returned over UART after a 50ms delay. If the data being returned is multiple bytes, the high byte is sent first.
 
 ## Movement
 
@@ -60,7 +60,7 @@ Our Roomba used two main types of movement, autonomous and user controlled. We u
 
 ### User Movement
 
-The user was the main operator of the Roomba. The x and y positional information from a single joystick is sent from the base station to the remote station. On the remote station we convert this 16 bit value (0-1023) to left and right wheel speeds for the Roomba. We use four different movement modes. These are,
+The user was the main operator of the Roomba. The x and y positional information from a single joystick is sent from the base station to the remote station. On the remote station we convert this 10 bit value (0-1023) to left and right wheel speeds for the Roomba. We use four different movement modes. These are,
 
 - angled,
 - spin,

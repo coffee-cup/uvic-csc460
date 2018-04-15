@@ -2,7 +2,7 @@
 
 Users of our RTOS can create Tasks to complete their computations, and Tasks have 3 levels of priority, System, Periodic, and Round Robin. System tasks preempt all other tasks, and run until completion or yield. Periodic tasks are designed to be executed on a given period, they must yield before a given worst-case execution time, and are able to preempt Round Robin tasks but not System tasks. Round Robin tasks are the lowest priority, they are executed only when no other task is executing, and run until preemption, termination, or yield.
 
-Briefly, real time operating systems (RTOS) are a type of operating system, specifically those which are intended to serve real-time applications by providing a guarantee that events or data is processed at a specific moment in *time*. That is, an RTOS facilitates construction of a system where the correct behaviour is dependant on both the timing of specific computations, and the results of such computations. More information on real time operating systems, their design, and our implementation is available in the [project 2 report](/project2). For project 3 we used our RTOS, although some changes had to be made, detailed below.
+Briefly, real time operating systems (RTOS) are a type of operating system, specifically those which are intended to serve real-time applications by providing a guarantee that events or data are processed at a specific moment in *time*. That is, an RTOS facilitates construction of a system where the correct behaviour is dependant on both the timing of specific computations, and the results of such computations. More information on real time operating systems, their design, and our implementation is available in the [project 2 report](/project2). For project 3 we used our RTOS, although some changes had to be made, detailed below.
 
 
 ## Shared libraries
@@ -20,7 +20,7 @@ extern "C" {
 Where the project directory for project 2 was mostly flat, we needed a way to include the operating system in multiple projects. For this we renamed the `libs` directory to `common`
 and created two sub-projects in the project 3 directory. This way the individual "base" and "remote" stations could include the same code and could be independently built using the associated Makefile.
 
-+-------------------------------+--------------------------------+
++-------------------------------|--------------------------------+
 |  Project 2                    |  Project 3                     |
 +===============================+================================+
 |<div class ="tree-dirs">       |<div class="tree-dirs">         |
@@ -48,7 +48,7 @@ and created two sub-projects in the project 3 directory. This way the individual
 |                               |         ├── Makefile           |
 |                               |         └── user.cpp           |
 |</div>                         |</div>                          |
-+-------------------------------+--------------------------------+
++-------------------------------|--------------------------------+
 
 
 ### Base Station
